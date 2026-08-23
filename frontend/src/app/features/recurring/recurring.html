@@ -1,0 +1,45 @@
+<div class="container">
+  <header class="head-row">
+    <div>
+      <h1 class="page-title">Pagos recurrentes</h1>
+      <p class="page-subtitle">Gastos e ingresos que se repiten (suscripciones, salarios…)</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon> Nuevo pago
+    </button>
+  </header>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    <div class="rec-grid">
+      @for (r of items(); track r.id) {
+        <mat-card class="rec-card">
+          <mat-card-content>
+            <div class="rec-head">
+              <mat-icon class="rec-icon" [class.income]="r.type === 'income'" [class.expense]="r.type === 'expense'">
+                {{ r.type === 'income' ? 'south' : 'north' }}
+              </mat-icon>
+              <div class="rec-info">
+                <span class="rec-name">{{ r.name }}</span>
+                <span class="rec-meta">{{ r.category }} · {{ r.walletId ? 'billetera ' + r.walletId : 'sin billetera' }}</span>
+              </div>
+              <span class="rec-amount" [class.income]="r.type === 'income'">
+                {{ format(r.amount, r.currency) }}
+              </span>
+            </div>
+            @if (r.fee > 0) {
+              <div class="rec-fee">+ comisión {{ format(r.fee, r.currency) }}</div>
+            }
+            <div class="rec-actions">
+              <button mat-stroked-button color="primary" (click)="execute(r)">Ejecutar</button>
+              <button mat-icon-button (click)="delete(r)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      } @empty {
+        <mat-card><mat-card-content class="empty">Sin pagos recurrentes.</mat-card-content></mat-card>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,53 @@
+.wallet-form {
+  display: flex;
+  flex-direction: column;
+  padding-top: 8px;
+}
+
+.form-row {
+  margin-bottom: 4px;
+}
+
+.form-row.two {
+  display: flex;
+  gap: 12px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+.full {
+  width: 100%;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.color-label {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+
+  &.selected {
+    border-color: #000;
+    box-shadow: 0 0 0 2px #fff inset;
+  }
+}

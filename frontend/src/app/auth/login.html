@@ -1,0 +1,46 @@
+<div class="login-wrap">
+  <mat-card class="login-card">
+    <mat-card-title class="login-title">Walletter</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Usuario</mat-label>
+          <input matInput formControlName="username" autocomplete="username" />
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            [type]="hidePassword ? 'password' : 'text'"
+            autocomplete="current-password"
+          />
+          <mat-icon matPrefix>lock</mat-icon>
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="hidePassword ? 'Mostrar contraseña' : 'Ocultar contraseña'"
+          >
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <mat-checkbox formControlName="remember" color="primary">Recordarme</mat-checkbox>
+
+        <button
+          mat-raised-button
+          color="primary"
+          class="full-width login-btn"
+          type="submit"
+          [disabled]="form.invalid || loading"
+        >
+          {{ loading ? 'Ingresando…' : 'Iniciar sesión' }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

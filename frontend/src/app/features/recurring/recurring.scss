@@ -1,0 +1,91 @@
+.head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.spinner {
+  margin: 40px auto;
+}
+
+.rec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.rec-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rec-icon {
+  font-size: 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  padding: 8px;
+
+  &.income {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.expense {
+    background: #fdecea;
+    color: #c62828;
+  }
+}
+
+.rec-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.rec-name {
+  font-weight: 600;
+}
+
+.rec-meta {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.rec-amount {
+  font-weight: 700;
+  font-size: 1.1rem;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
+}
+
+.rec-fee {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 6px;
+}
+
+.rec-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.empty {
+  text-align: center;
+  padding: 32px;
+  color: rgba(0, 0, 0, 0.5);
+}

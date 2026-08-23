@@ -1,0 +1,71 @@
+<div class="container">
+  <h1 class="page-title">Reportes</h1>
+  <p class="page-subtitle">Resumen de ingresos, gastos y gastos por categoría</p>
+
+  @if (stats(); as s) {
+    <div class="stat-cards">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <span class="stat-label">Ingresos</span>
+          <span class="stat-value income">+{{ format(s.total_income) }}</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <span class="stat-label">Gastos</span>
+          <span class="stat-value expense">-{{ format(s.total_expense) }}</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <span class="stat-label">Neto</span>
+          <span class="stat-value" [class.negative]="s.net_balance < 0">{{ format(s.net_balance) }}</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <span class="stat-label">Balance total</span>
+          <span class="stat-value">{{ format(s.total_balance) }}</span>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <mat-card class="section">
+    <mat-card-header>
+      <mat-card-title>Gastos por categoría</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (loading()) {
+        <mat-spinner class="spinner" />
+      } @else {
+        @if (byCategory().length === 0) {
+          <p class="empty">Sin datos por categoría.</p>
+        } @else {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="byCategory()" class="bycat-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Categoría</th>
+                <td mat-cell *matCellDef="let r">{{ r.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                <td mat-cell *matCellDef="let r" [class.income]="r.type === 'income'">
+                  {{ r.type === 'income' ? 'Ingreso' : 'Gasto' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef class="right">Total</th>
+                <td mat-cell *matCellDef="let r" class="right" [class.income]="r.type === 'income'">
+                  {{ format(r.total) }}
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columns"></tr>
+              <tr mat-row *matRowDef="let row; columns: columns"></tr>
+            </table>
+          </div>
+        }
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

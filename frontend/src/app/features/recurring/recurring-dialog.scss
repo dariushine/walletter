@@ -1,0 +1,25 @@
+.rec-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+}
+
+.pair {
+  display: flex;
+  gap: 12px;
+
+  .full {
+    flex: 1;
+  }
+}
+
+.type-radio {
+  display: flex;
+  gap: 16px;
+  margin: 8px 0;
+}
+
+.full {
+  width: 100%;
+}

@@ -1,0 +1,38 @@
+<div class="container">
+  <header class="head-row">
+    <div>
+      <h1 class="page-title">Categorías</h1>
+      <p class="page-subtitle">Organiza tus transacciones por categoría</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon> Nueva categoría
+    </button>
+  </header>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    <div class="cat-grid">
+      @for (c of categories(); track c.id) {
+        <mat-card class="cat-card">
+          <mat-card-content>
+            <div class="cat-head">
+              <mat-icon class="cat-icon" [style.color]="c.color || '#3f51b5'">
+                {{ c.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
+              </mat-icon>
+              <span class="cat-name">{{ c.name }}</span>
+              <span class="cat-type" [class.income]="c.type === 'income'">
+                {{ c.type === 'income' ? 'Ingreso' : 'Gasto' }}
+              </span>
+            </div>
+            <button mat-icon-button class="delete-btn" (click)="delete(c)" aria-label="Eliminar">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-content>
+        </mat-card>
+      } @empty {
+        <mat-card><mat-card-content class="empty">Sin categorías.</mat-card-content></mat-card>
+      }
+    </div>
+  }
+</div>

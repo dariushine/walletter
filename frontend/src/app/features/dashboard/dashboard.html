@@ -1,0 +1,99 @@
+<div class="container">
+  <header class="head">
+    <h1 class="page-title">📱 Gestor de Finanzas</h1>
+    <p class="page-subtitle">Gestiona tus billeteras, transacciones y exchanges desde cualquier dispositivo</p>
+  </header>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (stats(); as st) {
+      <!-- Balance total -->
+      <mat-card class="balance-card section">
+        <mat-card-content>
+          <div class="balance-main">
+            <span class="balance-label">Balance total</span>
+            <span class="balance-value">{{ format(st.total_balance) }}</span>
+          </div>
+          <div class="balance-stats">
+            <div class="stat">
+              <span class="stat-label">Ingresos</span>
+              <span class="stat-value income">+{{ format(st.total_income) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Gastos</span>
+              <span class="stat-value expense">-{{ format(st.total_expense) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Neto</span>
+              <span class="stat-value" [class.negative]="st.net_balance < 0">{{ format(st.net_balance) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Billeteras -->
+      <mat-card class="section">
+        <mat-card-header>
+          <mat-card-title>Billeteras</mat-card-title>
+          <span class="spacer"></span>
+          <a mat-button color="primary" routerLink="/wallets">Ver todas</a>
+        </mat-card-header>
+        <mat-card-content>
+          @if (wallets().length === 0) {
+            <p class="empty">Aún no hay billeteras. Crea una en la sección Billeteras.</p>
+          } @else {
+            <div class="wallet-grid">
+              @for (w of wallets(); track w.id) {
+                <a class="wallet-card" [routerLink]="['/wallets', w.id]">
+                  <mat-icon class="wallet-icon" [style.color]="w.color || '#3f51b5'">
+                    {{ w.icon || (w.type === 'cash' ? 'payments' : 'account_balance_wallet') }}
+                  </mat-icon>
+                  <div class="wallet-info">
+                    <span class="wallet-name">{{ w.name }}</span>
+                    <span class="wallet-alias">{{ w.alias || w.currency }}</span>
+                  </div>
+                  <span class="wallet-balance">{{ format(w.balance, w.currency) }}</span>
+                </a>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Últimas transacciones -->
+      <mat-card class="section">
+        <mat-card-header>
+          <mat-card-title>Últimas transacciones</mat-card-title>
+          <span class="spacer"></span>
+          <a mat-button color="primary" routerLink="/transactions">Ver todas</a>
+        </mat-card-header>
+        <mat-card-content>
+          @if (recent().length === 0) {
+            <p class="empty">Sin transacciones recientes.</p>
+          } @else {
+            <mat-list>
+              @for (t of recent(); track t.id) {
+                <mat-list-item class="tx-item">
+                  <mat-icon matListItemIcon [style.color]="t.type === 'income' ? '#2e7d32' : '#c62828'">
+                    {{ t.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
+                  </mat-icon>
+                  <span matListItemTitle>{{ t.description || t.category }}</span>
+                  <span matListItemMeta>
+                    <span class="amount" [class.income]="t.type === 'income'">
+                      {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, t.walletCurrency) }}
+                    </span>
+                  </span>
+                </mat-list-item>
+              }
+            </mat-list>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <p class="footnote">
+        📱 App móvil-friendly &nbsp;|&nbsp; 💰 Billeteras múltiples &nbsp;|&nbsp; 💱 Exchanges
+      </p>
+    }
+  }
+</div>

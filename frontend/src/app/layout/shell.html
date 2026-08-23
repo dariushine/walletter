@@ -1,0 +1,40 @@
+<mat-drawer-container class="shell" autosize>
+  <mat-drawer #drawer mode="over" class="shell-drawer" opened="false">
+    <div class="drawer-brand">
+      <mat-icon>account_balance</mat-icon>
+      <span>Walletter</span>
+    </div>
+    <mat-nav-list>
+      @for (item of navItems; track item.routerLink) {
+        <a
+          mat-list-item
+          [routerLink]="item.routerLink"
+          routerLinkActive="active-link"
+          (click)="drawer.close()"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-drawer>
+
+  <mat-drawer-content>
+    <mat-toolbar color="primary" class="shell-toolbar">
+      <button mat-button (click)="toggleDrawer()" aria-label="Menú">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="toolbar-title">Walletter</span>
+      <span class="spacer"></span>
+      @if (authEnabled | async) {
+        <button mat-icon-button (click)="logout()" aria-label="Cerrar sesión">
+          <mat-icon>logout</mat-icon>
+        </button>
+      }
+    </mat-toolbar>
+
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </mat-drawer-content>
+</mat-drawer-container>

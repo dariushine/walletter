@@ -1,0 +1,67 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Editar billetera' : 'Nueva billetera' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="wallet-form">
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="name" required />
+      </mat-form-field>
+    </div>
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Alias</mat-label>
+        <input matInput formControlName="alias" />
+      </mat-form-field>
+    </div>
+    <div class="form-row two">
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo</mat-label>
+        <mat-select formControlName="type">
+          @for (t of types; track t.value) {
+            <mat-option [value]="t.value">{{ t.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Moneda</mat-label>
+        <mat-select formControlName="currency">
+          @for (c of currencies; track c) {
+            <mat-option [value]="c">{{ c }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>{{ isEdit ? 'Balance (ajuste)' : 'Balance inicial' }}</mat-label>
+        <input matInput formControlName="balance" type="number" />
+      </mat-form-field>
+    </div>
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Ícono (Material icon)</mat-label>
+        <input matInput formControlName="icon" />
+      </mat-form-field>
+    </div>
+    <div class="form-row color-row">
+      <span class="color-label">Color</span>
+      <div class="color-picker">
+        @for (c of colors; track c) {
+          <button
+            type="button"
+            class="color-dot"
+            [style.background]="c"
+            [class.selected]="form.value.color === c"
+            (click)="form.patchValue({ color: c })"
+          ></button>
+        }
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || loading">
+    {{ loading ? 'Guardando…' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

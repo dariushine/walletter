@@ -1,0 +1,134 @@
+.spinner {
+  margin: 40px auto;
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+  color: #fff;
+}
+
+.balance-main {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.balance-label {
+  opacity: 0.85;
+  font-size: 0.9rem;
+}
+
+.balance-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.balance-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  opacity: 0.85;
+  font-size: 0.8rem;
+}
+
+.stat-value {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.stat-value.income {
+  color: #b9f6ca;
+}
+
+.stat-value.expense {
+  color: #ffcdd2;
+}
+
+.stat-value.negative {
+  color: #ffcdd2;
+}
+
+.wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.wallet-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.wallet-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.wallet-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.wallet-name {
+  font-weight: 600;
+}
+
+.wallet-alias {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.wallet-balance {
+  font-weight: 700;
+}
+
+.tx-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.amount {
+  font-weight: 700;
+}
+
+.amount.income {
+  color: #2e7d32;
+}
+
+.empty {
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  padding: 20px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.footnote {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 0.8rem;
+  margin-top: 24px;
+}

@@ -1,0 +1,71 @@
+<div class="container">
+  <button mat-button (click)="goBack()" class="back-btn">
+    <mat-icon>arrow_back</mat-icon> Transacciones
+  </button>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (tx(); as t) {
+      <mat-card class="tx-hero">
+        <mat-card-content>
+          <div class="hero-head">
+            <mat-icon class="hero-icon" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+              {{ t.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
+            </mat-icon>
+            <div class="hero-info">
+              <h1 class="hero-name">{{ t.description || t.category }}</h1>
+              <span class="hero-meta">{{ t.category }} · {{ t.walletName }} · {{ t.date }} {{ t.time }}</span>
+            </div>
+            <span class="hero-amount" [class.income]="t.type === 'income'">
+              {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, t.walletCurrency) }}
+            </span>
+          </div>
+          @if (t.fee > 0) {
+            <div class="fee-line">Comisión: {{ format(t.fee, t.walletCurrency) }}</div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section">
+        <mat-card-header>
+          <mat-card-title>Editar</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="editForm" class="edit-form">
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Descripción</mat-label>
+              <input matInput formControlName="description" />
+            </mat-form-field>
+            <div class="row-two">
+              <mat-form-field appearance="outline">
+                <mat-label>Categoría</mat-label>
+                <input matInput formControlName="categoryName" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Monto</mat-label>
+                <input matInput formControlName="amount" type="number" step="0.01" />
+              </mat-form-field>
+            </div>
+            <div class="row-two">
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha</mat-label>
+                <input matInput formControlName="date" type="date" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Hora</mat-label>
+                <input matInput formControlName="time" type="time" />
+              </mat-form-field>
+            </div>
+            <div class="actions">
+              <button mat-raised-button color="primary" (click)="saveEdit()" [disabled]="busy()">
+                {{ busy() ? 'Guardando…' : 'Guardar cambios' }}
+              </button>
+              <button mat-flat-button color="warn" (click)="delete()">Eliminar</button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>

@@ -1,0 +1,46 @@
+<div class="container">
+  <header class="head-row">
+    <div>
+      <h1 class="page-title">Billeteras</h1>
+      <p class="page-subtitle">Gestiona tus monederos y sus saldos</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon> Nueva billetera
+    </button>
+  </header>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (wallets().length === 0) {
+      <mat-card>
+        <mat-card-content class="empty-card">
+          <p class="empty">Aún no hay billeteras.</p>
+          <button mat-raised-button color="primary" (click)="openCreate()">Crear la primera</button>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <div class="wallet-grid">
+        @for (w of wallets(); track w.id) {
+          <mat-card class="wallet-card" [routerLink]="['/wallets', w.id]">
+            <mat-card-content>
+              <div class="wallet-head">
+                <mat-icon class="wallet-icon" [style.color]="w.color || '#3f51b5'">
+                  {{ w.icon || 'account_balance_wallet' }}
+                </mat-icon>
+                <div class="wallet-name-block">
+                  <span class="wallet-name">{{ w.name }}</span>
+                  <span class="wallet-alias">{{ w.alias || w.type }}</span>
+                </div>
+              </div>
+              <div class="wallet-balance-row">
+                <span class="wallet-currency">{{ w.currency }}</span>
+                <span class="wallet-balance">{{ format(w.balance, w.currency) }}</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>

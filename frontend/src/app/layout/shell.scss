@@ -1,0 +1,45 @@
+.shell {
+  height: 100vh;
+}
+
+.shell-drawer {
+  width: 260px;
+}
+
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  background: #3f51b5;
+  mat-icon {
+    color: #fff;
+  }
+}
+
+.active-link {
+  background: rgba(63, 81, 181, 0.12);
+  border-left: 3px solid #3f51b5;
+}
+
+.shell-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.toolbar-title {
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.shell-content {
+  padding: 16px;
+}

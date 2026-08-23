@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Ejecutar «{{ data.item.name }}»</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="rec-form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Billetera</mat-label>
+      <mat-select formControlName="walletId">
+        @for (w of data.wallets; track w.id) {
+          <mat-option [value]="w.id">{{ w.name }} ({{ w.currency }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <div class="pair">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Fecha</mat-label>
+        <input matInput formControlName="date" type="date" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Hora</mat-label>
+        <input matInput formControlName="time" type="time" />
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Descripción</mat-label>
+      <input matInput formControlName="description" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="loading">
+    {{ loading ? 'Ejecutando…' : 'Ejecutar' }}
+  </button>
+</mat-dialog-actions>

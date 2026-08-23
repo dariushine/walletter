@@ -1,0 +1,54 @@
+<div class="container">
+  <button mat-button (click)="goBack()" class="back-btn">
+    <mat-icon>arrow_back</mat-icon> Exchanges
+  </button>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (ex(); as e) {
+      <mat-card class="section">
+        <mat-card-content>
+          <div class="ex-flow">
+            <div class="side from">
+              <span class="label">Origen</span>
+              <span class="name">{{ e.fromWalletName }} ({{ e.fromCurrency }})</span>
+              <span class="amount-out">-{{ format(e.fromAmount, e.fromCurrency) }}</span>
+            </div>
+            <mat-icon class="arrow">arrow_forward</mat-icon>
+            <div class="side to">
+              <span class="label">Destino</span>
+              <span class="name">{{ e.toWalletName }} ({{ e.toCurrency }})</span>
+              <span class="amount-in">+{{ format(e.toAmount, e.toCurrency) }}</span>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+          <div class="details">
+            <div class="detail-row">
+              <span>Tasa</span><strong>{{ e.rate.toLocaleString('es-VE', { minimumFractionDigits: 2 }) }}</strong>
+            </div>
+            @if (e.fee > 0) {
+              <div class="detail-row">
+                <span>Comisión débito</span><strong>{{ format(e.fee, e.fromCurrency) }}</strong>
+              </div>
+            }
+            @if (e.creditFee > 0) {
+              <div class="detail-row">
+                <span>Comisión crédito</span><strong>{{ format(e.creditFee, e.toCurrency) }}</strong>
+              </div>
+            }
+            <div class="detail-row">
+              <span>Descripción</span><strong>{{ e.description || '—' }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Fecha</span><strong>{{ e.createdAt | date: 'medium' }}</strong>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-flat-button color="warn" (click)="delete()">Eliminar</button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  }
+</div>

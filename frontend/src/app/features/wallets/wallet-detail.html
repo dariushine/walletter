@@ -1,0 +1,54 @@
+<div class="container">
+  <button mat-button (click)="back()" class="back-btn">
+    <mat-icon>arrow_back</mat-icon> Billeteras
+  </button>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (report(); as r) {
+      <mat-card class="wallet-hero">
+        <mat-card-content>
+          <div class="hero-head">
+            <mat-icon class="hero-icon" [style.color]="r.wallet.color || '#3f51b5'">
+              {{ r.wallet.icon || 'account_balance_wallet' }}
+            </mat-icon>
+            <div>
+              <h1 class="hero-name">{{ r.wallet.name }}</h1>
+              <span class="hero-alias">{{ r.wallet.alias || r.wallet.type }} · {{ r.wallet.currency }}</span>
+            </div>
+            <span class="hero-balance">{{ format(r.wallet.balance, r.wallet.currency) }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section">
+        <mat-card-header>
+          <mat-card-title>Transacciones</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (r.transactions.length === 0) {
+            <p class="empty">Esta billetera no tiene transacciones.</p>
+          } @else {
+            <mat-list>
+              @for (t of r.transactions; track t.id) {
+                <a mat-list-item [routerLink]="['/transactions', t.id]">
+                  <mat-icon matListItemIcon [style.color]="t.type === 'income' ? '#2e7d32' : '#c62828'">
+                    {{ t.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
+                  </mat-icon>
+                  <span matListItemTitle>{{ t.description || t.category }}</span>
+                  <span matListItemLine>{{ fmtDate(t.datetimeUtc, timezone()) }} · {{ t.category }}</span>
+                  <span matListItemMeta>
+                    <span class="amount" [class.income]="t.type === 'income'">
+                      {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, r.wallet.currency) }}
+                    </span>
+                  </span>
+                </a>
+              }
+            </mat-list>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>

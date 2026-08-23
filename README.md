@@ -3,7 +3,7 @@
 Sistema de finanzas personales. Monorepo:
 
 - **`backend/`** — API REST en **.NET 10 + ASP.NET Core + Entity Framework Core** (Clean Architecture).
-- **`frontend/`** — frontend **Angular** (pendiente, se construye en un sprint posterior).
+- **`frontend/`** — frontend **Angular 22** (standalone + Material), SPA que consume la API.
 
 > El backend preserva la **lógica de negocio** del sistema financiero previo
 > (rework en NestJS/Prisma), pero implementado desde cero con entidades,

@@ -1,0 +1,10 @@
+.tz-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    min-width: 300px;
+  }
+}

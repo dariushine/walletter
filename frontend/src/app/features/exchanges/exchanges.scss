@@ -1,0 +1,75 @@
+.head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.spinner {
+  margin: 40px auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.ex-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.55);
+    font-weight: 600;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba(63, 81, 181, 0.05);
+    }
+  }
+
+  .from,
+  .to {
+    font-weight: 600;
+  }
+
+  .amount-out {
+    color: #c62828;
+    font-size: 0.85rem;
+  }
+
+  .amount-in {
+    color: #2e7d32;
+    font-size: 0.85rem;
+  }
+
+  .rate {
+    font-weight: 600;
+  }
+
+  .date {
+    color: rgba(0, 0, 0, 0.55);
+    white-space: nowrap;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 32px;
+  color: rgba(0, 0, 0, 0.5);
+}

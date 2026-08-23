@@ -1,0 +1,71 @@
+.rate-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.rate-card {
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &.bcv {
+    background: #e8eaf6;
+  }
+
+  &.paralelo {
+    background: #fff3e0;
+  }
+
+  &.date {
+    background: #e0f2f1;
+  }
+}
+
+.rate-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.rate-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+
+  &.sm {
+    font-size: 1rem;
+    align-self: center;
+  }
+}
+
+.rate-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: baseline;
+
+  mat-form-field {
+    min-width: 180px;
+    flex: 1;
+  }
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.rates-table {
+  width: 100%;
+}
+
+.spinner {
+  margin: 20px auto;
+}
+
+.empty {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}

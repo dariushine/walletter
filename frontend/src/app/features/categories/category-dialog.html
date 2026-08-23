@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Nueva categoría</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="cat-form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" required />
+    </mat-form-field>
+    <mat-radio-group formControlName="type" class="type-radio">
+      <mat-radio-button value="expense" color="warn">Gasto</mat-radio-button>
+      <mat-radio-button value="income" color="primary">Ingreso</mat-radio-button>
+    </mat-radio-group>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Color</mat-label>
+      <input matInput formControlName="color" type="color" class="color-input" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || loading">
+    {{ loading ? 'Guardando…' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

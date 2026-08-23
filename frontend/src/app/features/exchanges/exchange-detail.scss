@@ -1,0 +1,69 @@
+.back-btn {
+  margin-bottom: 8px;
+}
+
+.spinner {
+  margin: 40px auto;
+}
+
+.ex-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0 16px;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  .label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .name {
+    font-weight: 600;
+  }
+
+  &.to {
+    text-align: right;
+  }
+}
+
+.amount-out {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.amount-in {
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.arrow {
+  font-size: 32px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.details {
+  padding-top: 12px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}

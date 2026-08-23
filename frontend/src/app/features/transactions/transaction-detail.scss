@@ -1,0 +1,94 @@
+.back-btn {
+  margin-bottom: 8px;
+}
+
+.spinner {
+  margin: 40px auto;
+}
+
+.tx-hero {
+  margin-bottom: 24px;
+}
+
+.hero-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 10px;
+
+  &.income {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.expense {
+    background: #fdecea;
+    color: #c62828;
+  }
+}
+
+.hero-info {
+  flex: 1;
+}
+
+.hero-name {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.hero-meta {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.9rem;
+}
+
+.hero-amount {
+  font-size: 1.6rem;
+  font-weight: 700;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
+}
+
+.fee-line {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.row-two {
+  display: flex;
+  gap: 12px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+.full {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}

@@ -1,0 +1,19 @@
+.ex-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+}
+
+.pair {
+  display: flex;
+  gap: 12px;
+
+  .full {
+    flex: 1;
+  }
+}
+
+.full {
+  width: 100%;
+}

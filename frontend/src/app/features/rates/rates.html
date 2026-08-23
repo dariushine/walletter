@@ -1,0 +1,96 @@
+<div class="container">
+  <h1 class="page-title">Tasas</h1>
+  <p class="page-subtitle">Tasas de cambio BCV / paralelo (VES por USD)</p>
+
+  @if (effective(); as e) {
+    <div class="rate-cards">
+      <mat-card class="rate-card bcv">
+        <mat-card-content>
+          <span class="rate-label">BCV</span>
+          <span class="rate-value">{{ fmt(e.vps.bcv) }}</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="rate-card paralelo">
+        <mat-card-content>
+          <span class="rate-label">Paralelo</span>
+          <span class="rate-value">{{ fmt(e.vps.paralelo) }}</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="rate-card date">
+        <mat-card-content>
+          <span class="rate-label">Fecha</span>
+          <span class="rate-value sm">{{ e.date }}</span>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <mat-card class="section">
+    <mat-card-header>
+      <mat-card-title>Registrar / editar tasa del día</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" class="rate-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha</mat-label>
+          <input matInput formControlName="date" type="date" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>BCV (VES/USD)</mat-label>
+          <input matInput formControlName="bcv" type="number" step="0.01" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Paralelo (VES/USD)</mat-label>
+          <input matInput formControlName="paralelo" type="number" step="0.01" />
+        </mat-form-field>
+        <button mat-raised-button color="primary" (click)="upsert()" [disabled]="form.invalid">
+          Guardar
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="section">
+    <mat-card-header>
+      <mat-card-title>Historial</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (loading()) {
+        <mat-spinner class="spinner" />
+      } @else {
+        @if (rates().length === 0) {
+          <p class="empty">Sin tasas registradas.</p>
+        } @else {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="rates()" class="rates-table">
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                <td mat-cell *matCellDef="let r">{{ r.date }}</td>
+              </ng-container>
+              <ng-container matColumnDef="bcv">
+                <th mat-header-cell *matHeaderCellDef>BCV</th>
+                <td mat-cell *matCellDef="let r">{{ fmt(r.bcv) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="paralelo">
+                <th mat-header-cell *matHeaderCellDef>Paralelo</th>
+                <td mat-cell *matCellDef="let r">{{ fmt(r.paralelo) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="source">
+                <th mat-header-cell *matHeaderCellDef>Fuente</th>
+                <td mat-cell *matCellDef="let r">{{ r.source || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                  <button mat-icon-button (click)="remove(r)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columns"></tr>
+              <tr mat-row *matRowDef="let row; columns: columns"></tr>
+            </table>
+          </div>
+        }
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

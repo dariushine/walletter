@@ -1,0 +1,61 @@
+<div class="container">
+  <header class="head-row">
+    <div>
+      <h1 class="page-title">Exchanges</h1>
+      <p class="page-subtitle">Cambios de divisa entre billeteras</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon> Nuevo exchange
+    </button>
+  </header>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (exchanges().length === 0) {
+      <mat-card><mat-card-content class="empty">Aún no hay exchanges registrados.</mat-card-content></mat-card>
+    } @else {
+      <mat-card>
+        <mat-card-content class="table-wrap">
+          <table class="ex-table">
+            <thead>
+              <tr>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Monto</th>
+                <th>Tasa</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (e of exchanges(); track e.id) {
+                <tr [routerLink]="['/exchanges', e.id]">
+                  <td>
+                    <div class="from">{{ e.fromWalletName }} ({{ e.fromCurrency }})</div>
+                    <div class="amount-out">-{{ format(e.fromAmount, e.fromCurrency) }}</div>
+                  </td>
+                  <td>
+                    <div class="to">{{ e.toWalletName }} ({{ e.toCurrency }})</div>
+                    <div class="amount-in">+{{ format(e.toAmount, e.toCurrency) }}</div>
+                  </td>
+                  <td>
+                    <mat-icon>arrow_forward</mat-icon>
+                  </td>
+                  <td class="rate">{{ e.rate.toLocaleString('es-VE', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="date">{{ e.createdAt | date: 'short' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </mat-card-content>
+        <mat-paginator
+          [length]="total()"
+          [pageSize]="limit"
+          [pageIndex]="page - 1"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onPage($event)"
+        />
+      </mat-card>
+    }
+  }
+</div>

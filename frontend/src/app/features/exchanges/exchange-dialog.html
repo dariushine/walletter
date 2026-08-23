@@ -1,0 +1,67 @@
+<h2 mat-dialog-title>Nuevo exchange</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="ex-form">
+    <div class="pair">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Billetera origen</mat-label>
+        <mat-select formControlName="fromWalletId">
+          @for (w of data.wallets; track w.id) {
+            <mat-option [value]="w.id">{{ w.name }} ({{ w.currency }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Billetera destino</mat-label>
+        <mat-select formControlName="toWalletId">
+          @for (w of data.wallets; track w.id) {
+            <mat-option [value]="w.id">{{ w.name }} ({{ w.currency }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="pair">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Monto origen</mat-label>
+        <input matInput formControlName="fromAmount" type="number" min="0" step="0.01" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Monto destino</mat-label>
+        <input matInput formControlName="toAmount" type="number" min="0" step="0.01" />
+      </mat-form-field>
+    </div>
+
+    <div class="pair">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Comisión débito</mat-label>
+        <input matInput formControlName="fee" type="number" min="0" step="0.01" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Comisión crédito</mat-label>
+        <input matInput formControlName="creditFee" type="number" min="0" step="0.01" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Descripción</mat-label>
+      <input matInput formControlName="description" />
+    </mat-form-field>
+
+    <div class="pair">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Fecha</mat-label>
+        <input matInput formControlName="date" type="date" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Hora</mat-label>
+        <input matInput formControlName="time" type="time" />
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || loading()">
+    {{ loading() ? 'Guardando…' : 'Registrar' }}
+  </button>
+</mat-dialog-actions>
