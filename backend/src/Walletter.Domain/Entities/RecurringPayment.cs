@@ -1,0 +1,22 @@
+namespace Walletter.Domain.Entities;
+
+/// <summary>
+/// Pago recurrente. Al ejecutarlo se genera una transacción real.
+/// </summary>
+public class RecurringPayment
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public int Amount { get; set; } // centavos
+    public int Fee { get; set; }
+    public string Currency { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty; // income | expense
+    public int CategoryId { get; set; }
+    public int? WalletId { get; set; }
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    public Category Category { get; set; } = null!;
+}

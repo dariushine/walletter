@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:3002
+      - AUTH_USERNAME=${AUTH_USERNAME:-}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-}
+      - JWT_SECRET=${JWT_SECRET:-}
+    volumes:
+      - walletter-data:/app/data
+    restart: unless-stopped
+
+  # El frontend (Angular) se añadirá en una sesión posterior. Cuando exista:
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: frontend/Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=/api  # o la URL del backend
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped
+
+volumes:
+  walletter-data:

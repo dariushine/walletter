@@ -1,0 +1,38 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# SQLite databases (nunca commitees datos)
+backend/src/Walletter.Api/data/
+data/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.db.bak
+*.db.old-*
+
+# Node / Angular (cuando exista frontend)
+node_modules/
+dist/
+frontend/node_modules/
+frontend/.angular/
+
+# Env / secrets
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

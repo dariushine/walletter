@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Walletter.Api/Walletter.Api.csproj" />
+    <Project Path="src/Walletter.Application/Walletter.Application.csproj" />
+    <Project Path="src/Walletter.Domain/Walletter.Domain.csproj" />
+    <Project Path="src/Walletter.Infrastructure/Walletter.Infrastructure.csproj" />
+  </Folder>
+</Solution>
