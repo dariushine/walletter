@@ -30,7 +30,7 @@ public class SettingsService
     public async Task<object> Get(CancellationToken ct = default)
     {
         var tz = await GetUserTimeZone(ct);
-        return new { timezone = tz, name = "Finance API", version = "2.0.0" };
+        return new { timezone = tz, name = "Walletter API", version = "2.0.0" };
     }
 
     public async Task<object> SetTimeZone(string tz, CancellationToken ct = default)

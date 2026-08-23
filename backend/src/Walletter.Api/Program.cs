@@ -51,6 +51,6 @@ if (!builder.Configuration["ASPNETCORE_URLS"]?.Contains(':') == true)
     app.Urls.Add($"http://0.0.0.0:{port}");
 }
 
-Console.WriteLine($"[Finance] API (ASP.NET Core + EF Core) iniciada");
+Console.WriteLine($"[Walletter] API (ASP.NET Core + EF Core) iniciada");
 
 await app.RunAsync();

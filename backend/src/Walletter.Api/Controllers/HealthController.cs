@@ -14,7 +14,7 @@ public class HealthController : ControllerBase
         {
             status = "healthy",
             timestamp = DateTime.UtcNow,
-            service = "Finance API (ASP.NET Core + EF Core)",
+            service = "Walletter API (ASP.NET Core + EF Core)",
             version = "2.0.0",
         });
 }
