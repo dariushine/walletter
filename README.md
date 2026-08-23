@@ -80,10 +80,29 @@ Ver `.env.example`.
 
 ## Docker
 
+### Producción (imágenes compiladas)
+
 ```bash
-docker compose up -d
-# API en http://localhost:3002
+docker compose up -d --build
+# Frontend en http://localhost:3000, API en http://localhost:3002
 ```
+
+### Desarrollo (hot reload con bind mounts)
+
+Sin rebuiltar: usa los targets `dev` de los Dockerfiles y monta el código fuente
+como bind, con hot reload en ambos servicios.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Frontend (ng serve) en http://localhost:3000 → proxy /api → backend:3002
+# Backend (dotnet watch) en http://localhost:3002
+```
+
+- **Backend**: imagen `sdk:10.0` + `dotnet watch run`; bind de `./backend`
+  (los `bin/obj` se conservan del contenedor para no mezclarlos con el host).
+- **Frontend**: imagen `node:22` + `ng serve --host 0.0.0.0 --port 4200`; bind de
+  `./frontend` (`node_modules`/`dist` se conservan del contenedor). El proxy
+  `/api` apunta al backend por nombre de red via `API_UPSTREAM`.
 
 ## Endpoints (todos bajo `/api`)
 

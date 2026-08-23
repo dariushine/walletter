@@ -1,0 +1,55 @@
+# Override de DESARROLLO — hot reload en ambos servicios con bind mounts.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# (NO usar en producción; solo para iterar sin rebuildear la imagen.)
+#
+# Devuelve los targets `dev` de cada Dockerfile (backend: SDK + dotnet watch;
+# frontend: node + ng serve) y monta el código fuente como bind para hot reload.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:3002
+      - AUTH_USERNAME=${AUTH_USERNAME:-}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-}
+      - JWT_SECRET=${JWT_SECRET:-}
+    volumes:
+      # Bind del código fuente para hot reload (dotnet watch).
+      - ./backend:/app/backend
+      # Conservar los artefactos de build del contenedor (obj/bin) sobre el bind,
+      # para no mezclarlos con los del host (rutas NuGet / runtime linux).
+      - /app/backend/src/Walletter.Api/bin
+      - /app/backend/src/Walletter.Api/obj
+      - /app/backend/src/Walletter.Domain/bin
+      - /app/backend/src/Walletter.Domain/obj
+      - /app/backend/src/Walletter.Application/bin
+      - /app/backend/src/Walletter.Application/obj
+      - /app/backend/src/Walletter.Infrastructure/bin
+      - /app/backend/src/Walletter.Infrastructure/obj
+      - walletter-data:/app/data
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: dev
+    ports:
+      - "3000:4200"
+    environment:
+      # ng serve escucha en 0.0.0.0:4200 y el proxy reenvía /api al backend por red.
+      - API_UPSTREAM=http://backend:3002
+    volumes:
+      # Bind del código fuente + Angular dev server con hot reload.
+      - ./frontend:/app/frontend
+      # Conservar node_modules del contenedor (instalado para Linux) sobre el bind.
+      - /app/frontend/node_modules
+      - /app/frontend/dist
+    depends_on:
+      - backend
+    restart: unless-stopped
