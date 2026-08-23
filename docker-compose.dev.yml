@@ -39,10 +39,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
-    ports:
-      - "3000:4200"
     environment:
-      # ng serve escucha en 0.0.0.0:4200 y el proxy reenvía /api al backend por red.
+      # ng serve escucha en el puerto 80 interno; el mapeo 3000:80 viene del base.
+      # El proxy reenvía /api al backend por red.
       - API_UPSTREAM=http://backend:3002
     volumes:
       # Bind del código fuente + Angular dev server con hot reload.

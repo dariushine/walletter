@@ -32,7 +32,10 @@ WORKDIR /app/frontend
 COPY package.json package-lock.json ./
 RUN npm install --include=dev --no-audit --no-fund
 
-EXPOSE 4200
+EXPOSE 80
 ENV NODE_ENV=development
 
-CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
+# Escucha en el puerto 80 (mismo binding interno que Nginx en prod), así el
+# mapeo base `3000:80` del compose sirve para ambos y el override dev no
+# redeclara ports (evita el conflicto 'port already allocated').
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "80"]
