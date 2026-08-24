@@ -8,27 +8,32 @@
     <mat-spinner class="spinner" />
   } @else {
     @if (stats(); as st) {
-      <!-- Balance total -->
+      <!-- Balance total + tasas -->
       <mat-card class="balance-card section">
         <mat-card-content>
           <div class="balance-main">
-            <span class="balance-label">Balance total</span>
+            <div class="balance-top">
+              <span class="balance-label">Balance total</span>
+              <div class="balance-icons">
+                <mat-icon>attach_money</mat-icon>
+                <mat-icon>show_chart</mat-icon>
+              </div>
+            </div>
             <span class="balance-value">{{ saldoNum(st.total_balance) }}</span>
+            <span class="balance-updated">{{ updatedLabel() }}</span>
           </div>
-          <div class="balance-stats">
-            <div class="stat">
-              <span class="stat-label">Ingresos</span>
-              <span class="stat-value income">+{{ saldoNum(st.total_income) }}</span>
+
+          <!-- Tasas USD/VES -->
+          @if (bcv() !== null || paralelo() !== null) {
+            <div class="rate-pills">
+              @if (bcv() !== null) {
+                <span class="rate-pill">BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}</span>
+              }
+              @if (paralelo() !== null) {
+                <span class="rate-pill">Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}</span>
+              }
             </div>
-            <div class="stat">
-              <span class="stat-label">Gastos</span>
-              <span class="stat-value expense">-{{ saldoNum(st.total_expense) }}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Neto</span>
-              <span class="stat-value" [class.negative]="st.net_balance < 0">{{ saldoNum(st.net_balance) }}</span>
-            </div>
-          </div>
+          }
         </mat-card-content>
       </mat-card>
 

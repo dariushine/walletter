@@ -13,6 +13,25 @@
   margin-bottom: 16px;
 }
 
+.balance-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.balance-icons {
+  display: flex;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.5);
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+}
+
 .balance-label {
   opacity: 0.85;
   font-size: 0.9rem;
@@ -21,6 +40,27 @@
 .balance-value {
   font-size: 2.2rem;
   font-weight: 700;
+  margin-top: 2px;
+}
+
+.balance-updated {
+  opacity: 0.75;
+  font-size: 0.78rem;
+  margin-top: 4px;
+}
+
+.rate-pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rate-pill {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .balance-stats {

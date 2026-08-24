@@ -39,6 +39,11 @@ export class Dashboard implements OnInit {
   /** Tasa Bs/USD del día para el equivalente de billeteras VES. */
   private rate = signal<number | null>(null);
 
+  /** Tasas BCV / paralelo mostradas en la tarjeta de balance. */
+  readonly bcv = signal<number | null>(null);
+  readonly paralelo = signal<number | null>(null);
+  readonly rateDate = signal<string | null>(null);
+
   wallets = signal<Wallet[]>([]);
   stats = signal<Stats | null>(null);
   recent = signal<Transaction[]>([]);
@@ -52,7 +57,12 @@ export class Dashboard implements OnInit {
 
   private loadRate(): void {
     this.api.effectiveRate().subscribe({
-      next: (e) => this.rate.set(e.vps?.bcv ?? e.vps?.paralelo ?? null),
+      next: (e) => {
+        this.bcv.set(e.vps?.bcv ?? null);
+        this.paralelo.set(e.vps?.paralelo ?? null);
+        this.rateDate.set(e.date ?? null);
+        this.rate.set(e.vps?.bcv ?? e.vps?.paralelo ?? null);
+      },
       error: () => undefined,
     });
   }
@@ -104,6 +114,20 @@ export class Dashboard implements OnInit {
 
   name(currency: string): string {
     return currencyName(currency);
+  }
+
+  /** Texto de la hora de actualización de las tasas. */
+  updatedLabel(): string {
+    const d = this.rateDate();
+    if (!d) return 'Actualizado recién';
+    const [y, m, day] = d.split('-').map(Number);
+    if (!y || !m || !day) return 'Actualizado recién';
+    const dt = new Date(y, m - 1, day);
+    const now = new Date();
+    const sameDay = dt.toDateString() === now.toDateString();
+    const time = dt.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+    if (sameDay) return `Actualizado hoy ${time}`;
+    return `Actualizado ${dt.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })} ${time}`;
   }
 
   /** Texto bajo el saldo: denominación (USD) o equivalente≈ en USD con tasa (VES). */
