@@ -75,12 +75,13 @@
       }
 
       <mat-card class="section">
-        <mat-card-header class="tx-header">
-          <mat-card-title>
-            Transacciones
-            <span class="tx-count" [hidden]="r.transactions.length === 0">{{ filteredTx().length }}</span>
-          </mat-card-title>
-          <span class="header-actions">
+        <div class="tx-header">
+          <div class="tx-header-left">
+            <mat-icon class="tx-header-icon">calendar_today</mat-icon>
+            <span class="tx-header-title">Transacciones</span>
+            <span class="tx-count-badge" [hidden]="r.transactions.length === 0">{{ filteredTx().length }}</span>
+          </div>
+          <div class="header-actions">
             <button mat-flat-button color="primary" (click)="exportCSV()" aria-label="Exportar CSV">
               <mat-icon>file_download</mat-icon>
               Exportar
@@ -93,8 +94,8 @@
                 }
               </mat-select>
             </mat-form-field>
-          </span>
-        </mat-card-header>
+          </div>
+        </div>
         <mat-card-content>
           @if (r.transactions.length === 0) {
             <p class="empty">Esta billetera no tiene transacciones.</p>
