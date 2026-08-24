@@ -45,31 +45,11 @@
     <mat-card class="section">
       <div class="card-head">
         <span class="card-title">Tokens de API</span>
-        <button mat-flat-button color="primary" (click)="createToken()" [disabled]="tokenForm.invalid">
+        <button mat-flat-button color="primary" (click)="createToken()">
           <mat-icon>add</mat-icon> Nuevo token
         </button>
       </div>
       <mat-card-content>
-        <form [formGroup]="tokenForm" class="token-form">
-          <mat-form-field appearance="outline" class="token-name-field">
-            <mat-label>Nombre del token</mat-label>
-            <input matInput formControlName="name" placeholder="Ej. Openclaw" />
-          </mat-form-field>
-          <button mat-raised-button color="primary" (click)="createToken()" [disabled]="tokenForm.invalid">
-            Crear
-          </button>
-        </form>
-
-        @if (newToken(); as token) {
-          <div class="new-token">
-            <strong>Nuevo token (cópialo ahora):</strong>
-            <code>{{ token }}</code>
-            <button mat-stroked-button (click)="newToken.set(null)">Cerrar</button>
-          </div>
-        }
-
-        <mat-divider></mat-divider>
-
         @if (tokens().length === 0) {
           <p class="empty">Sin API tokens.</p>
         } @else {

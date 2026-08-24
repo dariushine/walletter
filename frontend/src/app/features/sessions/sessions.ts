@@ -4,33 +4,26 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatListModule } from '@angular/material/list';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ApiToken, SessionInfo } from '../../models/walletter.models';
 
 @Component({
   selector: 'app-sessions',
-  imports: [ReactiveFormsModule, MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatListModule, MatFormFieldModule, MatInputModule, MatDividerModule],
+  imports: [MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatInputModule],
   templateUrl: './sessions.html',
   styleUrls: ['./sessions.scss'],
 })
 export class Sessions implements OnInit {
   private readonly api = inject(WalletterApiService);
   private readonly notifier = inject(NotificationService);
-  private readonly fb = inject(FormBuilder);
+  private readonly dialog = inject(MatDialog);
 
   sessions = signal<SessionInfo[]>([]);
   tokens = signal<ApiToken[]>([]);
   loading = signal(true);
-  newToken = signal<string | null>(null);
-
-  readonly tokenForm = this.fb.group({
-    name: ['', Validators.required],
-  });
 
   ngOnInit(): void {
     this.load();
@@ -46,7 +39,7 @@ export class Sessions implements OnInit {
         this.tokens.set(t);
         this.loading.set(false);
       },
-      error: () => (this.loading.set(false)),
+      error: () => this.loading.set(false),
     });
   }
 
@@ -60,15 +53,19 @@ export class Sessions implements OnInit {
     });
   }
 
+  /** Abre un dialogo para ingresar el nombre del token y crearlo. */
   createToken(): void {
-    if (this.tokenForm.invalid) return;
-    this.api.createApiToken(this.tokenForm.value.name!).subscribe({
-      next: (res) => {
-        this.newToken.set(res.token);
-        this.tokenForm.reset();
-        this.load();
-      },
-      error: () => undefined,
+    const ref = this.dialog.open(TokenNameDialog, { width: '380px' });
+    ref.afterClosed().subscribe((name?: string) => {
+      if (!name) return;
+      this.api.createApiToken(name).subscribe({
+        next: (res) => {
+          this.load();
+          // Muestra el token generado en un modal con aviso de copiarlo.
+          this.dialog.open(TokenCreatedDialog, { width: '440px', data: res.token });
+        },
+        error: () => this.notifier.error('No se pudo crear el token'),
+      });
     });
   }
 
@@ -80,10 +77,6 @@ export class Sessions implements OnInit {
       },
       error: () => undefined,
     });
-  }
-
-  fmtTs(ms: number): string {
-    return new Date(ms).toLocaleString('es-VE');
   }
 
   fmtDateTime(ms: number): string {
@@ -99,5 +92,87 @@ export class Sessions implements OnInit {
     if (name.includes('mac')) return 'desktop_mac';
     if (name.includes('linux')) return 'laptop';
     return 'devices';
+  }
+}
+
+/** Dialogo para ingresar el nombre del nuevo API token. */
+@Component({
+  selector: 'app-token-name-dialog',
+  imports: [ReactiveFormsModule, MatDialogTitle, MatDialogContent, MatDialogActions, MatInputModule, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>Nuevo token</h2>
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre del token *</mat-label>
+        <input matInput formControlName="name" placeholder="Ej. Openclaw" autocomplete="off" />
+      </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="cancel()">Cancelar</button>
+      <button mat-raised-button color="primary" (click)="accept()" [disabled]="form.invalid">Aceptar</button>
+    </mat-dialog-actions>
+  `,
+})
+export class TokenNameDialog {
+  private readonly fb = inject(FormBuilder);
+  private readonly dialogRef = inject(MatDialogRef<TokenNameDialog>);
+
+  readonly form = this.fb.group({
+    name: ['', Validators.required],
+  });
+
+  accept(): void {
+    if (this.form.invalid) return;
+    this.dialogRef.close(this.form.value.name);
+  }
+
+  cancel(): void {
+    this.dialogRef.close();
+  }
+}
+
+/** Modal que muestra el token generado y avisa que se debe copiar. */
+@Component({
+  selector: 'app-token-created-dialog',
+  imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>Token creado</h2>
+    <mat-dialog-content>
+      <p class="token-warning">Copia este token ahora, no se mostrará más nunca:</p>
+      <code class="token-value">{{ token }}</code>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-raised-button color="primary" (click)="copy()">Copiar</button>
+      <button mat-button (click)="close()">Cerrar</button>
+    </mat-dialog-actions>
+  `,
+  styles: [`
+    .full { width: 100%; }
+    .token-warning { color: rgba(0,0,0,0.7); }
+    .token-value {
+      display: block;
+      word-break: break-all;
+      background: #fffde7;
+      border: 1px solid #fbc02d;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+  `],
+})
+export class TokenCreatedDialog {
+  readonly token = inject<string>(MAT_DIALOG_DATA);
+  private readonly dialogRef = inject(MatDialogRef<TokenCreatedDialog>);
+  private readonly notifier = inject(NotificationService);
+
+  copy(): void {
+    navigator.clipboard?.writeText(this.token).then(
+      () => this.notifier.success('Token copiado'),
+      () => this.notifier.error('No se pudo copiar')
+    );
+  }
+
+  close(): void {
+    this.dialogRef.close();
   }
 }
