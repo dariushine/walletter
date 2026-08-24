@@ -7,65 +7,131 @@
     <mat-spinner class="spinner" />
   } @else {
     @if (tx(); as t) {
+      <!-- ===== Hero ===== -->
       <mat-card class="tx-hero">
-        <mat-card-content>
-          <div class="hero-head">
-            <mat-icon class="hero-icon" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-              {{ t.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
-            </mat-icon>
-            <div class="hero-info">
-              <h1 class="hero-name">{{ t.description || t.category }}</h1>
-              <span class="hero-meta">{{ t.category }} · {{ t.walletName }} · {{ t.date }} {{ t.time }}</span>
-            </div>
-            <span class="hero-amount" [class.income]="t.type === 'income'">
-              {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, t.walletCurrency) }}
-            </span>
+        <mat-card-content class="hero-content">
+          <div class="hero-badge" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+            <mat-icon>{{ t.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
           </div>
+          <span class="hero-type">{{ (t.type === 'income' ? 'Ingreso' : 'Gasto') | uppercase }} · {{ t.category | uppercase }}</span>
+          <h1 class="hero-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+            {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, t.walletCurrency) }}
+          </h1>
+          <span class="hero-note">{{ t.walletName }}</span>
           @if (t.fee > 0) {
-            <div class="fee-line">Comisión: {{ format(t.fee, t.walletCurrency) }}</div>
+            <span class="hero-fee">Comisión: {{ format(t.fee, t.walletCurrency) }}</span>
           }
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="section">
-        <mat-card-header>
-          <mat-card-title>Editar</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <form [formGroup]="editForm" class="edit-form">
-            <mat-form-field appearance="outline" class="full">
-              <mat-label>Descripción</mat-label>
-              <input matInput formControlName="description" />
-            </mat-form-field>
-            <div class="row-two">
-              <mat-form-field appearance="outline">
-                <mat-label>Categoría</mat-label>
-                <input matInput formControlName="categoryName" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Monto</mat-label>
-                <input matInput formControlName="amount" type="number" step="0.01" />
-              </mat-form-field>
-            </div>
-            <div class="row-two">
-              <mat-form-field appearance="outline">
-                <mat-label>Fecha</mat-label>
-                <input matInput formControlName="date" type="date" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Hora</mat-label>
-                <input matInput formControlName="time" type="time" />
-              </mat-form-field>
-            </div>
-            <div class="actions">
-              <button mat-raised-button color="primary" (click)="saveEdit()" [disabled]="busy()">
-                {{ busy() ? 'Guardando…' : 'Guardar cambios' }}
-              </button>
-              <button mat-flat-button color="warn" (click)="delete()">Eliminar</button>
-            </div>
-          </form>
-        </mat-card-content>
-      </mat-card>
+      <!-- ===== Dos paneles ===== -->
+      <div class="detail-grid">
+        <!-- Detalle -->
+        <mat-card class="panel">
+          <mat-card-header class="panel-head">
+            <mat-icon class="panel-icon">receipt_long</mat-icon>
+            <mat-card-title class="panel-title">Detalle</mat-card-title>
+            <button mat-icon-button class="edit-btn" (click)="editing.set(!editing())" [attr.aria-label]="editing() ? 'Cerrar edición' : 'Editar'">
+              <mat-icon>{{ editing() ? 'close' : 'edit' }}</mat-icon>
+            </button>
+          </mat-card-header>
+
+          @if (!editing()) {
+            <mat-card-content class="detail-list">
+              <div class="detail-row">
+                <span class="detail-label">Categoría</span>
+                <span class="chip chip-category">{{ t.category }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Tipo</span>
+                <span class="chip" [class.chip-income]="t.type === 'income'" [class.chip-expense]="t.type === 'expense'">
+                  {{ t.type === 'income' ? 'Ingreso' : 'Gasto' }}
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Billetera</span>
+                <span class="detail-value wallet">{{ t.walletName }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Fecha</span>
+                <span class="detail-value">{{ fmtFullDate(t.date) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Hora</span>
+                <span class="detail-value">{{ t.time }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Descripción</span>
+                <span class="detail-value">{{ t.description || '—' }}</span>
+              </div>
+              <div class="detail-row balance-row">
+                <span class="detail-label">Saldo resultante</span>
+                <span class="detail-value balance">{{ format(t.resultingBalance, t.walletCurrency) }}</span>
+              </div>
+            </mat-card-content>
+          } @else {
+            <mat-card-content>
+              <form [formGroup]="editForm" class="edit-form">
+                <mat-form-field appearance="outline" class="full">
+                  <mat-label>Descripción</mat-label>
+                  <input matInput formControlName="description" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full">
+                  <mat-label>Categoría</mat-label>
+                  <input matInput formControlName="categoryName" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full">
+                  <mat-label>Monto</mat-label>
+                  <input matInput formControlName="amount" type="number" step="0.01" />
+                </mat-form-field>
+                <div class="row-two">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha</mat-label>
+                    <input matInput formControlName="date" type="date" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Hora</mat-label>
+                    <input matInput formControlName="time" type="time" />
+                  </mat-form-field>
+                </div>
+                <div class="actions">
+                  <button mat-raised-button color="primary" (click)="saveEdit()" [disabled]="busy()">
+                    {{ busy() ? 'Guardando…' : 'Guardar' }}
+                  </button>
+                  <button mat-flat-button color="warn" (click)="delete()">Eliminar</button>
+                </div>
+              </form>
+            </mat-card-content>
+          }
+        </mat-card>
+
+        <!-- Transacciones asociadas -->
+        <mat-card class="panel">
+          <mat-card-header class="panel-head">
+            <mat-icon class="panel-icon">link</mat-icon>
+            <mat-card-title class="panel-title">Transacciones asociadas</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (t.associated.length === 0) {
+              <p class="empty">Sin transacciones asociadas.</p>
+            } @else {
+              <div class="assoc-list">
+                @for (a of t.associated; track a.id) {
+                  <div class="assoc-row">
+                    <div class="assoc-main">
+                      <span class="assoc-cat">{{ a.category }}</span>
+                      <span class="assoc-desc">{{ a.description || '—' }} · {{ a.date }}</span>
+                    </div>
+                    <span class="assoc-amount" [class.income]="a.type === 'income'" [class.expense]="a.type === 'expense'">
+                      {{ a.type === 'income' ? '+' : '-' }}{{ format(a.amount, a.walletCurrency) }}
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
     }
   }
 </div>

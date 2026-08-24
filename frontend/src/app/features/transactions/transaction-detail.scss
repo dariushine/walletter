@@ -6,72 +6,243 @@
   margin: 40px auto;
 }
 
+// ===== Hero =====
 .tx-hero {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-.hero-head {
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.hero-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 14px;
-}
+  justify-content: center;
+  margin-bottom: 12px;
 
-.hero-icon {
-  font-size: 40px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  padding: 10px;
+  mat-icon {
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+    color: #fff;
+  }
 
   &.income {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: #2e7d32;
   }
 
   &.expense {
-    background: #fdecea;
-    color: #c62828;
+    background: #ea4335;
   }
 }
 
-.hero-info {
-  flex: 1;
-}
-
-.hero-name {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.hero-meta {
-  color: rgba(0, 0, 0, 0.55);
-  font-size: 0.9rem;
+.hero-type {
+  color: #616161;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
 .hero-amount {
-  font-size: 1.6rem;
+  font-size: 2.1rem;
   font-weight: 700;
+  margin: 0 0 4px;
 
   &.income {
     color: #2e7d32;
   }
 
   &.expense {
-    color: #c62828;
+    color: #ea4335;
   }
 }
 
-.fee-line {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+.hero-note {
   color: rgba(0, 0, 0, 0.6);
+  font-size: 0.95rem;
 }
 
+.hero-fee {
+  margin-top: 6px;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 0.85rem;
+}
+
+// ===== Grid de dos paneles =====
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 16px 0;
+}
+
+.panel-icon {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.panel-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.edit-btn {
+  margin-left: auto;
+}
+
+// ===== Detalle =====
+.detail-list {
+  padding-top: 8px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.detail-label {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  font-weight: 500;
+  text-align: right;
+
+  &.balance {
+    font-weight: 700;
+    color: #1a73e8;
+  }
+}
+
+.detail-value.wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  color: #333;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  &-category {
+    border-color: #bbb;
+  }
+
+  &-income {
+    border-color: #2e7d32;
+    color: #2e7d32;
+  }
+
+  &-expense {
+    border-color: #ea4335;
+    color: #ea4335;
+  }
+}
+
+.balance-row .detail-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// ===== Transacciones asociadas =====
+.empty {
+  color: rgba(0, 0, 0, 0.45);
+  padding: 8px 0;
+}
+
+.assoc-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.assoc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.assoc-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.assoc-cat {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.assoc-desc {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.82rem;
+}
+
+.assoc-amount {
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #ea4335;
+  }
+}
+
+// ===== Edición =====
 .edit-form {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding-top: 8px;
 }
 
 .row-two {

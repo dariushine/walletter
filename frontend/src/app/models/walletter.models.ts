@@ -38,6 +38,14 @@ export interface Transaction {
   time: string; // HH:MM en la zona del usuario
 }
 
+/** Detalle de transacción (GET /api/transactions/:id) */
+export interface TransactionDetail extends Transaction {
+  /** Saldo en vivo de la billetera tras esta transacción. */
+  resultingBalance: number;
+  /** Transacciones asociadas (hijas: comisiones, asociadas). */
+  associated: Transaction[];
+}
+
 /** Respuesta paginada de transacciones */
 export interface TransactionList {
   data: Transaction[];

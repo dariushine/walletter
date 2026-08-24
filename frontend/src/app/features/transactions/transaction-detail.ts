@@ -1,4 +1,5 @@
 import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,18 +7,18 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { NotificationService } from '../../core/services/notification.service';
-import { Transaction } from '../../models/walletter.models';
+import { TransactionDetail as TransactionDetailModel } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
 
 @Component({
   selector: 'app-transaction-detail',
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     MatCardModule,
     MatIconModule,
@@ -25,7 +26,6 @@ import { todayInTimeZone } from '../../core/utils/dates';
     MatProgressSpinnerModule,
     MatFormFieldModule,
     MatInputModule,
-    MatDividerModule,
   ],
   templateUrl: './transaction-detail.html',
   styleUrls: ['./transaction-detail.scss'],
@@ -40,8 +40,9 @@ export class TransactionDetail implements OnInit {
   readonly id = input.required<number>();
   readonly timezone = this.settings.timezone;
 
-  tx = signal<Transaction | null>(null);
+  tx = signal<TransactionDetailModel | null>(null);
   loading = signal(true);
+  editing = signal(false);
   tz = 'America/Caracas';
   busy = signal(false);
 
@@ -91,6 +92,7 @@ export class TransactionDetail implements OnInit {
       .subscribe({
         next: () => {
           this.busy.set(false);
+          this.editing.set(false);
           this.notifier.success('Transacción actualizada');
           this.load();
         },
@@ -111,6 +113,19 @@ export class TransactionDetail implements OnInit {
 
   format(amount: number, currency?: string): string {
     return formatMoney(amount, currency || 'USD');
+  }
+
+  /** Formatea YYYY-MM-DD a 'jueves, 20 de agosto de 2026'. */
+  fmtFullDate(dateStr: string): string {
+    if (!dateStr) return '—';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!y || !m || !d) return dateStr;
+    return new Date(y, m - 1, d).toLocaleDateString('es-VE', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   }
 
   goBack(): void {

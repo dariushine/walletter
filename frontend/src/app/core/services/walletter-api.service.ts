@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import {
   Wallet,
   Transaction,
+  TransactionDetail,
   TransactionList,
   TransactionCreated,
   TransactionType,
@@ -111,8 +112,8 @@ export class WalletterApiService {
     return this.http.get<TransactionList>(`${this.base}/transactions`, { params: this.toParams(params) });
   }
 
-  transaction(id: number): Observable<Transaction> {
-    return this.http.get<Transaction>(`${this.base}/transactions/${id}`);
+  transaction(id: number): Observable<TransactionDetail> {
+    return this.http.get<TransactionDetail>(`${this.base}/transactions/${id}`);
   }
 
   createTransaction(data: {

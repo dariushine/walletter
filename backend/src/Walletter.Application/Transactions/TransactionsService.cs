@@ -206,9 +206,39 @@ public class TransactionsService
         var t = await _db.Transactions
             .Include(x => x.Wallet)
             .Include(x => x.Category)
+            .Include(x => x.Children).ThenInclude(c => c.Wallet)
+            .Include(x => x.Children).ThenInclude(c => c.Category)
             .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
             ?? throw new NotFoundException("Transacción no encontrada");
-        return Projected(t, TimeZone());
+
+        var tz = TimeZone();
+        var (date, time) = TimeZoneHelper.UtcToWallClock(t.DatetimeUtc, tz);
+        var associated = t.Children
+            .Where(c => !c.Deleted)
+            .OrderByDescending(c => c.DatetimeUtc)
+            .ThenByDescending(c => c.Id)
+            .Select(c => Projected(c, tz))
+            .ToList();
+
+        return new
+        {
+            id = t.Id,
+            walletId = t.WalletId,
+            walletName = t.Wallet?.Name,
+            walletCurrency = t.Wallet?.Currency,
+            category = t.Category?.Name,
+            type = t.Type,
+            amount = Money.ToNum(t.Amount),
+            description = t.Description,
+            datetimeUtc = t.DatetimeUtc,
+            fee = Money.ToNum(t.Fee),
+            parentTransactionId = t.ParentId,
+            date,
+            time,
+            // Balance en vivo de la billetera = saldo resultante tras esta transacción.
+            resultingBalance = Money.ToNum(t.Wallet?.Balance ?? 0),
+            associated,
+        };
     }
 
     public async Task<object> Update(int id, UpdateTransactionCommand cmd, CancellationToken ct = default)
