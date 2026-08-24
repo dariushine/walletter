@@ -1,0 +1,29 @@
+<h2 mat-dialog-title>{{ data ? 'Editar tasa' : 'Nueva tasa' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="rate-form-dialog">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Fecha</mat-label>
+      <input matInput formControlName="date" type="date" [readonly]="!!data" />
+    </mat-form-field>
+    <div class="pair">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>BCV (VES/USD)</mat-label>
+        <input matInput formControlName="bcv" type="number" step="0.01" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Paralelo (VES/USD)</mat-label>
+        <input matInput formControlName="paralelo" type="number" step="0.01" />
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Origen</mat-label>
+      <input matInput formControlName="source" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || loading">
+    {{ loading ? 'Guardando…' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

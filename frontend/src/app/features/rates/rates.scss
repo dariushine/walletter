@@ -1,71 +1,125 @@
-.rate-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 24px;
-}
-
-.rate-card {
-  mat-card-content {
-    display: flex;
-    flex-direction: column;
-  }
-
-  &.bcv {
-    background: #e8eaf6;
-  }
-
-  &.paralelo {
-    background: #fff3e0;
-  }
-
-  &.date {
-    background: #e0f2f1;
-  }
-}
-
-.rate-label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-.rate-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-
-  &.sm {
-    font-size: 1rem;
-    align-self: center;
-  }
-}
-
-.rate-form {
+.head-row {
   display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
   flex-wrap: wrap;
-  align-items: baseline;
+  margin-bottom: 12px;
 
-  mat-form-field {
-    min-width: 180px;
+  .top-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+.spinner {
+  margin: 40px auto;
+}
+
+/* Filtro por periodo */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  flex-wrap: wrap;
+
+  .period-select {
+    width: 220px;
+  }
+}
+
+/* Tabla */
+.table-wrap {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.rate-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.55);
+    font-weight: 600;
+  }
+
+  tbody tr:hover {
+    background: rgba(63, 81, 181, 0.04);
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  .date {
+    white-space: nowrap;
+  }
+
+  .origin {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .actions-cell {
+    white-space: nowrap;
+
+    .del {
+      color: #c62828;
+    }
+  }
+}
+
+/* Diálogo */
+.full {
+  width: 100%;
+}
+
+.pair {
+  display: flex;
+  gap: 12px;
+
+  .full {
     flex: 1;
   }
 }
 
-.table-wrap {
-  overflow-x: auto;
+.rate-form-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
 }
 
-.rates-table {
+/* Estado vacío */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  gap: 8px;
+  color: rgba(0, 0, 0, 0.45);
   width: 100%;
 }
 
-.spinner {
-  margin: 20px auto;
+.empty-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  opacity: 0.5;
 }
 
-.empty {
-  text-align: center;
-  color: rgba(0, 0, 0, 0.5);
-  padding: 24px;
+.empty-text {
+  margin: 0;
+  font-size: 1rem;
 }

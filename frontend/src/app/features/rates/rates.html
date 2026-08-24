@@ -1,96 +1,79 @@
 <div class="container">
-  <h1 class="page-title">Tasas</h1>
-  <p class="page-subtitle">Tasas de cambio BCV / paralelo (VES por USD)</p>
-
-  @if (effective(); as e) {
-    <div class="rate-cards">
-      <mat-card class="rate-card bcv">
-        <mat-card-content>
-          <span class="rate-label">BCV</span>
-          <span class="rate-value">{{ fmt(e.vps.bcv) }}</span>
-        </mat-card-content>
-      </mat-card>
-      <mat-card class="rate-card paralelo">
-        <mat-card-content>
-          <span class="rate-label">Paralelo</span>
-          <span class="rate-value">{{ fmt(e.vps.paralelo) }}</span>
-        </mat-card-content>
-      </mat-card>
-      <mat-card class="rate-card date">
-        <mat-card-content>
-          <span class="rate-label">Fecha</span>
-          <span class="rate-value sm">{{ e.date }}</span>
-        </mat-card-content>
-      </mat-card>
+  <header class="head-row">
+    <div>
+      <h1 class="page-title">Tasas Diarias</h1>
+      <p class="page-subtitle">Gestiona las tasas BCV y paralelo por día</p>
     </div>
-  }
+    <div class="top-actions">
+      <button mat-stroked-button color="primary" (click)="syncToday()">
+        <mat-icon>sync</mat-icon> Sincronizar hoy
+      </button>
+      <button mat-flat-button color="primary" (click)="openNew()">
+        <mat-icon>add</mat-icon> Nueva tasa
+      </button>
+    </div>
+  </header>
 
-  <mat-card class="section">
-    <mat-card-header>
-      <mat-card-title>Registrar / editar tasa del día</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="form" class="rate-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Fecha</mat-label>
-          <input matInput formControlName="date" type="date" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>BCV (VES/USD)</mat-label>
-          <input matInput formControlName="bcv" type="number" step="0.01" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Paralelo (VES/USD)</mat-label>
-          <input matInput formControlName="paralelo" type="number" step="0.01" />
-        </mat-form-field>
-        <button mat-raised-button color="primary" (click)="upsert()" [disabled]="form.invalid">
-          Guardar
-        </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card class="section">
-    <mat-card-header>
-      <mat-card-title>Historial</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      @if (loading()) {
-        <mat-spinner class="spinner" />
-      } @else {
-        @if (rates().length === 0) {
-          <p class="empty">Sin tasas registradas.</p>
-        } @else {
-          <div class="table-wrap">
-            <table mat-table [dataSource]="rates()" class="rates-table">
-              <ng-container matColumnDef="date">
-                <th mat-header-cell *matHeaderCellDef>Fecha</th>
-                <td mat-cell *matCellDef="let r">{{ r.date }}</td>
-              </ng-container>
-              <ng-container matColumnDef="bcv">
-                <th mat-header-cell *matHeaderCellDef>BCV</th>
-                <td mat-cell *matCellDef="let r">{{ fmt(r.bcv) }}</td>
-              </ng-container>
-              <ng-container matColumnDef="paralelo">
-                <th mat-header-cell *matHeaderCellDef>Paralelo</th>
-                <td mat-cell *matCellDef="let r">{{ fmt(r.paralelo) }}</td>
-              </ng-container>
-              <ng-container matColumnDef="source">
-                <th mat-header-cell *matHeaderCellDef>Fuente</th>
-                <td mat-cell *matCellDef="let r">{{ r.source || '—' }}</td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let r">
-                  <button mat-icon-button (click)="remove(r)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="columns"></tr>
-              <tr mat-row *matRowDef="let row; columns: columns"></tr>
-            </table>
-          </div>
+  <!-- Filtro por periodo -->
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="period-select">
+      <mat-label>Periodo</mat-label>
+      <mat-select [(ngModel)]="selectedPeriod">
+        @for (p of periods; track p.value) {
+          <mat-option [value]="p.value">{{ p.label }}</mat-option>
         }
-      }
-    </mat-card-content>
-  </mat-card>
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="applyPeriod()">Aplicar</button>
+  </div>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (rates().length === 0) {
+      <mat-card>
+        <mat-card-content class="empty-state">
+          <mat-icon class="empty-icon">trending_up</mat-icon>
+          <p class="empty-text">Sin tasas registradas.</p>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <mat-card>
+        <mat-card-content class="table-wrap">
+          <table class="rate-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>BCV</th>
+                <th>Paralelo</th>
+                <th>Origen</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of pagedRates(); track r.id) {
+                <tr>
+                  <td class="date">{{ r.date }}</td>
+                  <td>{{ fmt(r.bcv) }}</td>
+                  <td>{{ fmt(r.paralelo) }}</td>
+                  <td class="origin">{{ r.source || '—' }}</td>
+                  <td class="right actions-cell">
+                    <button mat-icon-button (click)="edit(r)" aria-label="Editar"><mat-icon>edit</mat-icon></button>
+                    <button mat-icon-button (click)="remove(r)" class="del" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </mat-card-content>
+        <mat-paginator
+          [length]="total()"
+          [pageSize]="limit"
+          [pageIndex]="page - 1"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onPage($event)"
+        />
+      </mat-card>
+    }
+  }
 </div>
