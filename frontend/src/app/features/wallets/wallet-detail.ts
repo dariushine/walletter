@@ -70,6 +70,10 @@ export class WalletDetail implements OnInit {
     return formatInTimeZone(utc, tz || 'America/Caracas', 'yyyy-MM-dd');
   }
 
+  fmtTime(utc: string, tz: string | null | undefined): string {
+    return formatInTimeZone(utc, tz || 'America/Caracas', 'HH:mm');
+  }
+
   back(): void {
     this.router.navigate(['/wallets']);
   }
@@ -92,5 +96,18 @@ export class WalletDetail implements OnInit {
       },
       error: () => undefined,
     });
+  }
+
+  /** Monto con signo + moneda, p.ej. '-1.500,00 VES'. */
+  montoTx(t: { type: string; amount: number }, currency: string): string {
+    const sign = t.type === 'income' ? '+' : '-';
+    const num = Math.abs(t.amount).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${sign}${num} ${currency ?? ''}`.trim();
+  }
+
+  /** Fee con moneda, p.ej. '14,00 VES'. */
+  feeTx(t: { fee: number }, currency: string): string {
+    const num = t.fee.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${num} ${currency ?? ''}`.trim();
   }
 }
