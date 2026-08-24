@@ -61,6 +61,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 48px;
 }
 
 .cat-actions {
@@ -68,6 +69,7 @@
   align-items: center;
   gap: 2px;
   margin-left: auto;
+  min-height: 48px;
 
   mat-icon {
     font-size: 20px;

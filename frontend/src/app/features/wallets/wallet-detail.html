@@ -121,6 +121,7 @@
                         <td class="date">{{ fmtDate(t.datetimeUtc, timezone()) }} · {{ fmtTime(t.datetimeUtc, timezone()) }}</td>
                         <td>
                           <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
                             {{ t.category }}
                           </span>
                         </td>
@@ -155,6 +156,7 @@
                       <mat-panel-title class="panel-title">
                         <span class="panel-cuando">{{ cuandoRelativo(t.datetimeUtc, timezone()) }}</span>
                         <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
                           {{ t.category }}
                         </span>
                       </mat-panel-title>
