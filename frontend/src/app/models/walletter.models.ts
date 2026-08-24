@@ -210,6 +210,47 @@ export interface CategoryStat {
   total: number;
 }
 
+/** Reporte financiero en USD (GET /api/reports) */
+export interface ReportData {
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    totalTransactions: number;
+    net: number;
+    walletCount: number;
+  };
+  monthly: {
+    month: string;
+    income: number;
+    expense: number;
+    net: number;
+    transactionCount: number;
+  }[];
+  byCategory: {
+    category: string;
+    count: number;
+    total: number;
+  }[];
+  byCategoryTotal: number;
+  walletBalances: {
+    name: string;
+    balance: number;
+    currency: string;
+  }[];
+  exchangeStats: {
+    totalExchanges: number;
+    totalFromAmount: number;
+    totalToAmount: number;
+    totalFee: number;
+  };
+  meta?: {
+    period?: string;
+    rateType?: string;
+    from?: string;
+    to?: string;
+  };
+}
+
 /** Sesión de acceso (GET /api/auth/sessions) */
 export interface SessionInfo {
   jti: string;

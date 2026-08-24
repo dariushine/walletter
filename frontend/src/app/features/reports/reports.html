@@ -1,71 +1,240 @@
 <div class="container">
-  <h1 class="page-title">Reportes</h1>
-  <p class="page-subtitle">Resumen de ingresos, gastos y gastos por categoría</p>
-
-  @if (stats(); as s) {
-    <div class="stat-cards">
-      <mat-card class="stat-card">
-        <mat-card-content>
-          <span class="stat-label">Ingresos</span>
-          <span class="stat-value income">+{{ format(s.total_income) }}</span>
-        </mat-card-content>
-      </mat-card>
-      <mat-card class="stat-card">
-        <mat-card-content>
-          <span class="stat-label">Gastos</span>
-          <span class="stat-value expense">-{{ format(s.total_expense) }}</span>
-        </mat-card-content>
-      </mat-card>
-      <mat-card class="stat-card">
-        <mat-card-content>
-          <span class="stat-label">Neto</span>
-          <span class="stat-value" [class.negative]="s.net_balance < 0">{{ format(s.net_balance) }}</span>
-        </mat-card-content>
-      </mat-card>
-      <mat-card class="stat-card">
-        <mat-card-content>
-          <span class="stat-label">Balance total</span>
-          <span class="stat-value">{{ format(s.total_balance) }}</span>
-        </mat-card-content>
-      </mat-card>
+  <header class="head">
+    <div>
+      <h1 class="page-title">Reportes</h1>
+      <p class="page-subtitle">Análisis y estadísticas de tus finanzas</p>
     </div>
-  }
+    <div class="head-actions">
+      <!-- Toggle BCV / Paralelo -->
+      <div class="rate-toggle">
+        <button
+          type="button"
+          class="rate-btn"
+          [class.active]="rateType() === 'bcv'"
+          (click)="setRate('bcv')"
+        >BCV</button>
+        <button
+          type="button"
+          class="rate-btn"
+          [class.active]="rateType() === 'paralelo'"
+          (click)="setRate('paralelo')"
+        >Paralelo</button>
+      </div>
 
-  <mat-card class="section">
-    <mat-card-header>
-      <mat-card-title>Gastos por categoría</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      @if (loading()) {
-        <mat-spinner class="spinner" />
-      } @else {
-        @if (byCategory().length === 0) {
-          <p class="empty">Sin datos por categoría.</p>
-        } @else {
-          <div class="table-wrap">
-            <table mat-table [dataSource]="byCategory()" class="bycat-table">
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Categoría</th>
-                <td mat-cell *matCellDef="let r">{{ r.name }}</td>
-              </ng-container>
-              <ng-container matColumnDef="type">
-                <th mat-header-cell *matHeaderCellDef>Tipo</th>
-                <td mat-cell *matCellDef="let r" [class.income]="r.type === 'income'">
-                  {{ r.type === 'income' ? 'Ingreso' : 'Gasto' }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef class="right">Total</th>
-                <td mat-cell *matCellDef="let r" class="right" [class.income]="r.type === 'income'">
-                  {{ format(r.total) }}
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="columns"></tr>
-              <tr mat-row *matRowDef="let row; columns: columns"></tr>
-            </table>
-          </div>
-        }
-      }
-    </mat-card-content>
-  </mat-card>
+      <!-- Selector de rango -->
+      <mat-form-field appearance="outline" class="period-field">
+        <mat-select [value]="period()" (selectionChange)="setPeriod($event.value)">
+          @for (p of periods; track p.id) {
+            <mat-option [value]="p.id">{{ p.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Exportar -->
+      <button mat-stroked-button color="primary" (click)="exportReport()" [disabled]="!data()">
+        <mat-icon>file_download</mat-icon>
+        Exportar
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (data(); as d) {
+      <!-- Métricas del encabezado -->
+      <div class="stat-cards">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <span class="stat-icon"><mat-icon>attach_money</mat-icon></span>
+            <div class="stat-body">
+              <span class="stat-label">Ingresos Totales</span>
+              <span class="stat-value income">{{ fmtUsd(d.summary.totalIncome) }}</span>
+              <span class="stat-sub">{{ d.summary.totalTransactions }} transacciones</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <span class="stat-icon expense"><mat-icon>trending_down</mat-icon></span>
+            <div class="stat-body">
+              <span class="stat-label">Gastos Totales</span>
+              <span class="stat-value expense">{{ fmtUsd(d.summary.totalExpenses) }}</span>
+              @if (d.summary.totalIncome > 0) {
+                <span class="stat-sub">{{ pct(d.summary.totalExpenses / d.summary.totalIncome * 100) }} de ingresos</span>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <span class="stat-icon" [class.positive]="d.summary.net >= 0" [class.negative]="d.summary.net < 0">
+              <mat-icon>trending_up</mat-icon>
+            </span>
+            <div class="stat-body">
+              <span class="stat-label">Balance Neto</span>
+              <span class="stat-value" [class.income]="d.summary.net >= 0" [class.expense]="d.summary.net < 0">
+                {{ fmtUsd(d.summary.net) }}
+              </span>
+              <span class="chip status-chip" [class.pos]="d.summary.net >= 0" [class.neg]="d.summary.net < 0">
+                <mat-icon>trending_up</mat-icon>
+                {{ d.summary.net >= 0 ? 'Positivo' : 'Negativo' }}
+              </span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <span class="stat-icon"><mat-icon>account_balance_wallet</mat-icon></span>
+            <div class="stat-body">
+              <span class="stat-label">Billeteras Activas</span>
+              <span class="stat-value">{{ d.summary.walletCount }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Performance Mensual + Gastos por Categoría -->
+      <div class="report-grid">
+        <mat-card class="section">
+          <mat-card-header>
+            <mat-card-title>Performance Mensual</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (d.monthly.length === 0) {
+              <p class="empty">No hay datos mensuales disponibles.</p>
+            } @else {
+              <div class="table-wrap">
+                <table class="rpt-table">
+                  <thead>
+                    <tr>
+                      <th>Mes</th>
+                      <th class="right">Ingresos</th>
+                      <th class="right">Gastos</th>
+                      <th class="right">Neto</th>
+                      <th class="right">Transacciones</th>
+                      <th class="center">Tendencia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of d.monthly; track m.month; let i = $index) {
+                      <tr>
+                        <td>{{ monthLabel(m.month) }}</td>
+                        <td class="right income">{{ fmtUsd(m.income) }}</td>
+                        <td class="right expense">{{ fmtUsd(m.expense) }}</td>
+                        <td class="right" [class.income]="m.net >= 0" [class.expense]="m.net < 0">{{ fmtUsd(m.net) }}</td>
+                        <td class="right"><span class="chip count-chip">{{ m.transactionCount }}</span></td>
+                        <td class="center">
+                          @if (i > 0) {
+                            <span class="chip trend-chip" [class.pos]="m.net >= d.monthly[i - 1].net" [class.neg]="m.net < d.monthly[i - 1].net">
+                              <mat-icon>{{ m.net >= d.monthly[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
+                              {{ trendPct(d.monthly[i - 1].net, m.net) }}
+                            </span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="section">
+          <mat-card-header>
+            <mat-card-title>Gastos por Categoría</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (d.byCategory.length === 0) {
+              <p class="empty">No hay datos por categoría.</p>
+            } @else {
+              @for (c of d.byCategory.slice(0, 6); track c.category) {
+                <div class="cat-row">
+                  <div class="cat-top">
+                    <span class="cat-name">{{ c.category }}</span>
+                    <span class="cat-total">{{ fmtUsd(c.total) }}</span>
+                  </div>
+                  <div class="cat-bar">
+                    <div class="cat-fill" [style.width.%]="catWidth(c.total)"></div>
+                  </div>
+                </div>
+              }
+              @if (d.byCategory.length > 6) {
+                <p class="cat-more">+{{ d.byCategory.length - 6 }} categorías más</p>
+              }
+              <div class="cat-total-row">
+                <span class="cat-total-label">Total</span>
+                <span class="cat-total-amount expense">{{ fmtUsd(d.byCategoryTotal || d.summary.totalExpenses) }}</span>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Balances por Billetera + Estadísticas de Exchanges -->
+      <div class="report-grid">
+        <mat-card class="section">
+          <mat-card-header>
+            <mat-card-title>Balances por Billetera</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (d.walletBalances.length === 0) {
+              <p class="empty">No hay billeteras configuradas.</p>
+            } @else {
+              <div class="table-wrap">
+                <table class="rpt-table">
+                  <thead>
+                    <tr>
+                      <th>Billetera</th>
+                      <th>Moneda</th>
+                      <th class="right">Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (w of d.walletBalances; track w.name) {
+                      <tr>
+                        <td>{{ w.name }}</td>
+                        <td><span class="chip count-chip">{{ w.currency }}</span></td>
+                        <td class="right balance-cell">{{ fmtWallet(w.balance, w.currency) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="section">
+          <mat-card-header>
+            <mat-card-title>Estadísticas de Exchanges</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="exch-grid">
+              <div class="exch-card">
+                <span class="exch-value primary">{{ d.exchangeStats.totalExchanges }}</span>
+                <span class="exch-label">Exchanges Totales</span>
+              </div>
+              <div class="exch-card">
+                <span class="exch-value warn">{{ fmtUsd(d.exchangeStats.totalFee) }}</span>
+                <span class="exch-label">Comisiones</span>
+              </div>
+              <div class="exch-card">
+                <span class="exch-value expense">{{ fmtUsd(d.exchangeStats.totalFromAmount) }}</span>
+                <span class="exch-label">Total Enviado</span>
+              </div>
+              <div class="exch-card">
+                <span class="exch-value income">{{ fmtUsd(d.exchangeStats.totalToAmount) }}</span>
+                <span class="exch-label">Total Recibido</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+  }
 </div>

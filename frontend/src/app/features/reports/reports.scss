@@ -1,6 +1,71 @@
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.page-subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  margin: 2px 0 0;
+}
+
+/* Toggle rate BCV/Paralelo (estilo de pill compacta) */
+.rate-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rate-btn {
+  background: #fff;
+  color: rgba(0, 0, 0, 0.7);
+  border: none;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  + .rate-btn {
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+  }
+
+  &.active {
+    background: #3f51b5;
+    color: #fff;
+  }
+}
+
+.period-field {
+  width: 170px;
+}
+
+.spinner {
+  margin: 40px auto;
+  display: block;
+}
+
+/* Tarjetas de métricas del encabezado */
 .stat-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
   margin-bottom: 24px;
 }
@@ -8,19 +73,51 @@
 .stat-card {
   mat-card-content {
     display: flex;
-    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
   }
 }
 
+.stat-icon {
+  display: inline-flex;
+  color: #3f51b5;
+  margin-top: 2px;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  &.expense {
+    color: #d32f2f;
+  }
+
+  &.positive {
+    color: #2e7d32;
+  }
+
+  &.negative {
+    color: #d32f2f;
+  }
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+}
+
 .stat-label {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.55);
+  font-weight: 600;
 }
 
 .stat-value {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 700;
+  line-height: 1.2;
 
   &.income {
     color: #2e7d32;
@@ -29,30 +126,223 @@
   &.expense {
     color: #c62828;
   }
+}
 
-  &.negative {
+.stat-sub {
+  font-size: 0.72rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 2px;
+}
+
+/* Chips de estado */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.status-chip {
+  margin-top: 4px;
+  align-self: flex-start;
+
+  &.pos {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.neg {
+    background: #fdecea;
     color: #c62828;
+  }
+}
+
+.count-chip {
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.trend-chip {
+  &.pos {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.neg {
+    background: #fdecea;
+    color: #c62828;
+  }
+}
+
+/* Grid de dos columnas */
+.report-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
   }
 }
 
 .table-wrap {
   overflow-x: auto;
+  padding: 0;
 }
 
-.bycat-table {
+.rpt-table {
   width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.55);
+    font-weight: 600;
+    white-space: nowrap;
+  }
 
   .right {
     text-align: right;
   }
+
+  .center {
+    text-align: center;
+  }
+
+  .income {
+    color: #2e7d32;
+  }
+
+  .expense {
+    color: #c62828;
+  }
+
+  .balance-cell {
+    font-weight: 600;
+  }
 }
 
-.income {
-  color: #2e7d32;
+/* Gastos por categoría */
+.cat-row {
+  margin-bottom: 14px;
 }
 
-.spinner {
-  margin: 20px auto;
+.cat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.cat-name {
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.cat-total {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cat-bar {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.cat-fill {
+  height: 100%;
+  background: #d32f2f;
+  border-radius: 6px;
+  transition: width 0.3s;
+}
+
+.cat-more {
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 8px 0 0;
+}
+
+.cat-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.cat-total-label {
+  font-weight: 700;
+}
+
+.cat-total-amount {
+  font-weight: 700;
+}
+
+/* Estadísticas de exchanges */
+.exch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.exch-card {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+}
+
+.exch-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+
+  &.primary {
+    color: #3f51b5;
+  }
+
+  &.warn {
+    color: #fb8c00;
+  }
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
+}
+
+.exch-label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 2px;
 }
 
 .empty {

@@ -3,6 +3,7 @@ using Walletter.Application.Categories;
 using Walletter.Application.Exchanges;
 using Walletter.Application.Rates;
 using Walletter.Application.Recurring;
+using Walletter.Application.Reports;
 using Walletter.Application.Settings;
 using Walletter.Application.Stats;
 using Walletter.Application.Transactions;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<ExchangesService>();
         services.AddScoped<RatesService>();
         services.AddScoped<StatsService>();
+        services.AddScoped<ReportsService>();
         services.AddScoped<RecurringService>();
         services.AddScoped<AuthService>();
         return services;

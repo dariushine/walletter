@@ -20,6 +20,7 @@ import {
   Settings,
   Stats,
   CategoryStat,
+  ReportData,
   SessionInfo,
   ApiToken,
   WalletReport,
@@ -283,6 +284,11 @@ export class WalletterApiService {
 
   statsByCategory(): Observable<CategoryStat[]> {
     return this.http.get<CategoryStat[]>(`${this.base}/stats/by-category`);
+  }
+
+  // ===== Reports =====
+  reports(params: { period?: string; rate?: string; tz?: string } = {}): Observable<ReportData> {
+    return this.http.get<ReportData>(`${this.base}/reports`, { params: this.toParams(params) });
   }
 
   // ===== Health =====
