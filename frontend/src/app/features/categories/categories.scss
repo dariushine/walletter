@@ -78,6 +78,14 @@
   font-size: 30px;
   width: 30px;
   height: 30px;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #d32f2f;
+  }
 }
 
 .cat-name {

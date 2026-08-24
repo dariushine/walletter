@@ -41,8 +41,8 @@
         <mat-card class="cat-card">
           <mat-card-content>
             <div class="cat-head">
-              <mat-icon class="cat-icon" [style.color]="c.color || '#3f51b5'">
-                {{ c.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
+              <mat-icon class="cat-icon" [class.income]="c.type === 'income'" [class.expense]="c.type === 'expense'">
+                {{ c.type === 'income' ? 'arrow_upward' : 'arrow_downward' }}
               </mat-icon>
               <span class="cat-name">{{ c.name }}</span>
               <span class="cat-actions">
