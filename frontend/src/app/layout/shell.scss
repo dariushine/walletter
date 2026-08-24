@@ -2,6 +2,7 @@
   height: 100vh;
 }
 
+/* Drawer móvil */
 .shell-drawer {
   width: 260px;
 }
@@ -15,9 +16,15 @@
   font-weight: 700;
   color: #fff;
   background: #3f51b5;
+
   mat-icon {
     color: #fff;
   }
+}
+
+.drawer-footer {
+  padding: 12px 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .active-link {
@@ -25,6 +32,7 @@
   border-left: 3px solid #3f51b5;
 }
 
+/* Toolbar */
 .shell-toolbar {
   position: sticky;
   top: 0;
@@ -40,6 +48,103 @@
   flex: 1 1 auto;
 }
 
+/* ===== Cuerpo (escritorio): sidebar fija + contenido ===== */
+.app-body {
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #1e1e2e;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s ease;
+}
+
+.sidebar-collapsed {
+  width: 68px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 18px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+  overflow: hidden;
+
+  mat-icon {
+    color: #fff;
+    flex-shrink: 0;
+  }
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 0.15s;
+
+  mat-icon {
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  &.active-link {
+    background: rgba(63, 81, 181, 0.85);
+    color: #fff;
+    border-left: none;
+
+    mat-icon {
+      color: #fff;
+    }
+  }
+
+  &:hover:not(.active-link) {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.side-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.collapse-btn {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .shell-content {
-  padding: 16px;
+  flex: 1;
+  padding: 24px;
+  overflow-x: hidden;
 }

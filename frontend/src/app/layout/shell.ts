@@ -1,10 +1,11 @@
-import { Component, ViewChild, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
+import { MatTooltip } from '@angular/material/tooltip';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
@@ -30,13 +31,14 @@ interface NavItem {
     MatButton,
     MatIconButton,
     MatListModule,
+    MatTooltip,
     AsyncPipe,
   ],
   templateUrl: './shell.html',
   styleUrls: ['./shell.scss'],
 })
 export class Shell {
-  @ViewChild('drawer') drawer!: MatDrawer;
+  drawer!: MatDrawer;
 
   readonly navItems: NavItem[] = [
     { routerLink: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
@@ -55,7 +57,10 @@ export class Shell {
   get authEnabled(): Observable<boolean> {
     return this.authStore.authEnabled;
   }
+
   readonly isHandset = signal<boolean>(false);
+  /** Menú colapsado (solo iconos) en escritorio. */
+  readonly collapsed = signal<boolean>(false);
 
   constructor(
     private readonly authStore: AuthStore,
@@ -64,6 +69,8 @@ export class Shell {
   ) {
     breakpointObserver.observe('(max-width: 900px)').subscribe((state) => {
       this.isHandset.set(state.matches);
+      // Al pasar a escritorio, restablecer a expandido.
+      if (!state.matches) this.collapsed.set(false);
     });
   }
 
@@ -72,6 +79,10 @@ export class Shell {
   }
 
   toggleDrawer(): void {
-    this.drawer.toggle();
+    this.drawer?.toggle();
+  }
+
+  toggleCollapsed(): void {
+    this.collapsed.set(!this.collapsed());
   }
 }
