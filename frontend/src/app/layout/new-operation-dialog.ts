@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogContent, MatDialogActions, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -10,9 +10,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { WalletterApiService } from '../core/services/walletter-api.service';
 import { NotificationService } from '../core/services/notification.service';
-import { Wallet } from '../models/walletter.models';
+import { Wallet, Category } from '../models/walletter.models';
 import { todayInTimeZone } from '../core/utils/dates';
 
 export interface NewOperationDialogData {
@@ -35,11 +36,12 @@ export interface NewOperationDialogData {
     MatProgressSpinnerModule,
     MatTabsModule,
     MatRadioModule,
+    MatAutocompleteModule,
   ],
   templateUrl: './new-operation-dialog.html',
   styleUrls: ['./new-operation-dialog.scss'],
 })
-export class NewOperationDialog {
+export class NewOperationDialog implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(WalletterApiService);
   private readonly notifier = inject(NotificationService);
@@ -50,6 +52,11 @@ export class NewOperationDialog {
   today = todayInTimeZone(this.data.tz || 'America/Caracas');
   /** Tab activa: 0 = Transacción, 1 = Exchange. */
   readonly activeTab = signal(0);
+
+  /** Todas las categorías activas del backend. */
+  readonly allCategories = signal<Category[]>([]);
+  /** Categorías que coinciden con lo escrito (filtradas por tipo). */
+  readonly filteredCategories = signal<Category[]>([]);
 
   readonly txForm = this.fb.group({
     walletId: [this.data.wallets[0]?.id ?? null, Validators.required],
@@ -76,6 +83,48 @@ export class NewOperationDialog {
 
   setTab(tab: number): void {
     this.activeTab.set(tab);
+  }
+
+  ngOnInit(): void {
+    this.loadCategories();
+    // Refiltra las sugerencias cuando cambia la escritura del campo categoría.
+    this.txForm.controls.categoryName.valueChanges.subscribe(() => this.filterCategories());
+  }
+
+  /** Carga las categorías activas del backend (según el tipo elegido). */
+  private loadCategories(): void {
+    const type = this.txForm.value.type as 'income' | 'expense';
+    this.api.categories(type).subscribe({
+      next: (cats) => {
+        this.allCategories.set(cats.filter((c) => c.isActive));
+        this.filterCategories();
+      },
+      error: () => undefined,
+    });
+  }
+
+  /** Filtra las categorías por el texto escrito (case-insensitive). */
+  filterCategories(): void {
+    const q = (this.txForm.controls.categoryName.value ?? '').toLowerCase().trim();
+    if (!q) {
+      this.filteredCategories.set(this.allCategories());
+      return;
+    }
+    this.filteredCategories.set(
+      this.allCategories().filter((c) => c.name.toLowerCase().includes(q))
+    );
+  }
+
+  /** true si la categoría escrita no existe aún → mostrar opción 'Nueva'. */
+  isNewCategory(): boolean {
+    const q = (this.txForm.controls.categoryName.value ?? '').trim();
+    if (!q) return false;
+    return !this.allCategories().some((c) => c.name.toLowerCase() === q.toLowerCase());
+  }
+
+  /** Selecciona una categoría existente. */
+  selectCategory(cat: Category): void {
+    this.txForm.controls.categoryName.setValue(cat.name);
   }
 
   save(): void {

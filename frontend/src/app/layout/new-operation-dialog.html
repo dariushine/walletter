@@ -59,10 +59,38 @@
           </mat-select>
         </mat-form-field>
 
-        <!-- Categoría -->
+        <!-- Categoría (autocompletar + opción 'Nueva') -->
         <mat-form-field appearance="outline" class="full">
           <mat-label>Categoría *</mat-label>
-          <input matInput formControlName="categoryName" placeholder="Ej: Comida" />
+          <input
+            matInput
+            formControlName="categoryName"
+            placeholder="Ej: Comida"
+            [matAutocomplete]="catAuto"
+          />
+          @if (txForm.controls.categoryName.value) {
+            <button matSuffix mat-icon-button type="button" (click)="txForm.controls.categoryName.setValue('')" aria-label="Limpiar">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+          <mat-autocomplete #catAuto="matAutocomplete" autoActiveFirstOption>
+            @for (c of filteredCategories(); track c.id) {
+              <mat-option [value]="c.name" (onSelectionChange)="selectCategory(c)">
+                <span class="cat-opt">
+                  <span class="cat-dot" [style.background]="c.color || '#3f51b5'"></span>
+                  {{ c.name }}
+                </span>
+              </mat-option>
+            }
+            @if (isNewCategory()) {
+              <mat-option [value]="txForm.controls.categoryName.value" class="new-cat-opt">
+                <span class="cat-opt">
+                  {{ txForm.controls.categoryName.value }}
+                  <span class="new-chip">Nueva</span>
+                </span>
+              </mat-option>
+            }
+          </mat-autocomplete>
         </mat-form-field>
 
         <!-- Descripción -->
