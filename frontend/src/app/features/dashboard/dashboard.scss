@@ -64,19 +64,23 @@
 }
 
 .wallet-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  text-decoration: none;
-  color: inherit;
+  cursor: pointer;
   transition: box-shadow 0.2s;
 
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
   }
+
+  mat-card-content {
+    padding: 12px 14px;
+  }
+}
+
+.wallet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .wallet-icon {
@@ -85,8 +89,7 @@
   height: 30px;
 }
 
-.wallet-info {
-  flex: 1;
+.wallet-name-block {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -110,15 +113,17 @@
 }
 
 .wallet-balance-area {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 10px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .balance-line {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 
 .wallet-balance {
@@ -127,7 +132,7 @@
 }
 
 .wallet-subline {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: rgba(0, 0, 0, 0.55);
   margin-top: 2px;
 }
