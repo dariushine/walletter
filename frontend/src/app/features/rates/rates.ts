@@ -139,15 +139,22 @@ export class Rates implements OnInit {
   }
 
   syncToday(): void {
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    // Tasa por defecto/actual; el usuario la ajusta en el diálogo.
-    this.api.upsertDailyRate({ date: todayStr, bcv: 0, paralelo: 0, source: 'manual' }).subscribe({
-      next: () => {
-        this.notifier.success('Tasa de hoy registrada');
-        this.load();
+    // Consulta la tasa efectiva del día al backend (que a su vez la trae de
+    // ve.dolarapi.com) y la persiste con los valores reales de hoy.
+    this.api.effectiveRate().subscribe({
+      next: (e) => {
+        const bcv = e.vps?.bcv ?? 0;
+        const paralelo = e.vps?.paralelo ?? 0;
+        const dateStr = e.date ?? new Date().toISOString().slice(0, 10);
+        this.api.upsertDailyRate({ date: dateStr, bcv, paralelo, source: 'dolarapi' }).subscribe({
+          next: () => {
+            this.notifier.success(`Tasa de hoy sincronizada (BCV ${bcv.toLocaleString('es-VE', { maximumFractionDigits: 2 })} / Paralelo ${paralelo.toLocaleString('es-VE', { maximumFractionDigits: 2 })})`);
+            this.load();
+          },
+          error: () => this.notifier.error('Error al guardar la tasa de hoy'),
+        });
       },
-      error: () => undefined,
+      error: () => this.notifier.error('No se pudo consultar la tasa del día'),
     });
   }
 
