@@ -58,6 +58,12 @@ export class Shell {
     return this.authStore.authEnabled;
   }
 
+  /** Opciones principales de la barra inferior (móvil). */
+  readonly bottomNav: NavItem[] = this.navItems.slice(0, 4);
+
+  /** Opciones secundarias del menú lateral (sección MÁS). */
+  readonly moreNav: NavItem[] = this.navItems.slice(4);
+
   readonly isHandset = signal<boolean>(false);
   /** Menú colapsado (solo iconos) en escritorio. */
   readonly collapsed = signal<boolean>(false);
