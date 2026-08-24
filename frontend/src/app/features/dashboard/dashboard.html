@@ -154,6 +154,9 @@
                       </div>
                       <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
                       <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
+                      <div class="ver-detalles-wrap">
+                        <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
+                      </div>
                     </div>
                   </mat-expansion-panel>
                 }
