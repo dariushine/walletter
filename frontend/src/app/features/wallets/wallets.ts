@@ -9,7 +9,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Wallet } from '../../models/walletter.models';
-import { formatMoney } from '../../core/utils/money';
+import { formatMoney, currencyName } from '../../core/utils/money';
 import { WalletDialog } from './wallet-dialog';
 
 @Component({
@@ -26,6 +26,9 @@ export class Wallets implements OnInit {
 
   readonly hideBalances = this.prefs.hideBalances;
   readonly decimalSeparator = this.prefs.decimalSeparator;
+
+  /** Ids de billeteras cuyo saldo se reveló individualmente con el ojo. */
+  private readonly revealedIds = signal<Set<number>>(new Set());
 
   wallets = signal<Wallet[]>([]);
   loading = signal(true);
@@ -56,8 +59,25 @@ export class Wallets implements OnInit {
     return formatMoney(amount, currency, this.decimalSeparator());
   }
 
-  saldo(amount: number, currency: string): string {
-    if (this.hideBalances()) return '•••';
-    return this.format(amount, currency);
+  saldo(w: Wallet): string {
+    const hidden = this.hideBalances() && !this.revealedIds().has(w.id);
+    if (hidden) return '•••';
+    return this.format(w.balance, w.currency);
+  }
+
+  /** true si este saldo está oculto (no revelado). */
+  isHidden(w: Wallet): boolean {
+    return this.hideBalances() && !this.revealedIds().has(w.id);
+  }
+
+  toggleReveal(w: Wallet): void {
+    const set = new Set(this.revealedIds());
+    if (set.has(w.id)) set.delete(w.id);
+    else set.add(w.id);
+    this.revealedIds.set(set);
+  }
+
+  name(currency: string): string {
+    return currencyName(currency);
   }
 }

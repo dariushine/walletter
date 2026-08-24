@@ -104,6 +104,29 @@
   font-weight: 700;
 }
 
+.wallet-balance-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.reveal-btn {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  margin-left: 2px;
+
+  mat-icon {
+    font-size: 20px;
+    color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.wallet-currency-name {
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
 .tx-item {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }

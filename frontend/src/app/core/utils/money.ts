@@ -37,3 +37,20 @@ export function formatNumber(value: number, digits = 2, separator: DecimalSepara
   }
   return withComma;
 }
+
+/** Nombre legible de la denominación de una moneda, p.ej. 'Dólares estadounidenses'. */
+export function currencyName(currency: string): string {
+  switch ((currency || '').toUpperCase()) {
+    case 'USD':
+      return 'Dólares estadounidenses';
+    case 'VES':
+      return 'Bolívares';
+    case 'EUR':
+      return 'Euros';
+    case 'BRL':
+    case 'BR':
+      return 'Reales brasileños';
+    default:
+      return currency || '';
+  }
+}

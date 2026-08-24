@@ -56,20 +56,43 @@
 
 .wallet-balance-row {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  justify-content: flex-end;
+  align-items: center;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding-top: 10px;
 }
 
-.wallet-currency {
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.5);
+.balance-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.balance-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reveal-btn {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+
+  mat-icon {
+    font-size: 20px;
+    color: rgba(0, 0, 0, 0.5);
+  }
 }
 
 .wallet-balance {
   font-size: 1.3rem;
   font-weight: 700;
+}
+
+.wallet-currency-name {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .empty-card {

@@ -13,20 +13,20 @@
         <mat-card-content>
           <div class="balance-main">
             <span class="balance-label">Balance total</span>
-            <span class="balance-value">{{ saldo(st.total_balance) }}</span>
+            <span class="balance-value">{{ saldoNum(st.total_balance) }}</span>
           </div>
           <div class="balance-stats">
             <div class="stat">
               <span class="stat-label">Ingresos</span>
-              <span class="stat-value income">+{{ saldo(st.total_income) }}</span>
+              <span class="stat-value income">+{{ saldoNum(st.total_income) }}</span>
             </div>
             <div class="stat">
               <span class="stat-label">Gastos</span>
-              <span class="stat-value expense">-{{ saldo(st.total_expense) }}</span>
+              <span class="stat-value expense">-{{ saldoNum(st.total_expense) }}</span>
             </div>
             <div class="stat">
               <span class="stat-label">Neto</span>
-              <span class="stat-value" [class.negative]="st.net_balance < 0">{{ saldo(st.net_balance) }}</span>
+              <span class="stat-value" [class.negative]="st.net_balance < 0">{{ saldoNum(st.net_balance) }}</span>
             </div>
           </div>
         </mat-card-content>
@@ -53,7 +53,15 @@
                     <span class="wallet-name">{{ w.name }}</span>
                     <span class="wallet-alias">{{ w.alias || w.currency }}</span>
                   </div>
-                  <span class="wallet-balance">{{ saldo(w.balance, w.currency) }}</span>
+                  <div class="wallet-balance-block">
+                    <span class="wallet-balance">{{ saldo(w) }}</span>
+                    @if (isHidden(w)) {
+                      <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" aria-label="Mostrar saldo">
+                        <mat-icon>visibility_off</mat-icon>
+                      </button>
+                    }
+                    <span class="wallet-currency-name">{{ name(w.currency) }}</span>
+                  </div>
                 </a>
               }
             </div>

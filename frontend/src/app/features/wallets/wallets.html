@@ -34,8 +34,17 @@
                 </div>
               </div>
               <div class="wallet-balance-row">
-                <span class="wallet-currency">{{ w.currency }}</span>
-                <span class="wallet-balance">{{ saldo(w.balance, w.currency) }}</span>
+                <div class="balance-block">
+                  <div class="balance-line">
+                    <span class="wallet-balance">{{ saldo(w) }}</span>
+                    @if (isHidden(w)) {
+                      <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" aria-label="Mostrar saldo">
+                        <mat-icon>visibility_off</mat-icon>
+                      </button>
+                    }
+                  </div>
+                  <span class="wallet-currency-name">{{ name(w.currency) }}</span>
+                </div>
               </div>
             </mat-card-content>
           </mat-card>
