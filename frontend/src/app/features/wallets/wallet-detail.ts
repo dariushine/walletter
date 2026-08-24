@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, input, OnInit, signal, computed, AfterViewInit, ElementRef } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,7 +10,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterLink } from '@angular/router';
-import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
@@ -26,7 +25,7 @@ import { WalletDialog } from './wallet-dialog';
   templateUrl: './wallet-detail.html',
   styleUrls: ['./wallet-detail.scss'],
 })
-export class WalletDetail implements OnInit {
+export class WalletDetail implements OnInit, AfterViewInit {
   private readonly api = inject(WalletterApiService);
   private readonly settings = inject(SettingsStore);
   private readonly notifier = inject(NotificationService);
@@ -38,7 +37,9 @@ export class WalletDetail implements OnInit {
 
   report = signal<WalletReport | null>(null);
   loading = signal(true);
+  /** true si el ancho del contenido es menor a 1024px → modo móvil (acordeón). */
   isHandset = signal<boolean>(false);
+  private ro: ResizeObserver | null = null;
 
   /** Resumen de ingresos/egresos/neto calculado desde el reporte. */
   readonly summary = computed(() => {
@@ -87,10 +88,18 @@ export class WalletDetail implements OnInit {
     return {};
   }
 
-  constructor(breakpointObserver: BreakpointObserver) {
-    breakpointObserver.observe('(max-width: 800px)').subscribe((state) => {
-      this.isHandset.set(state.matches);
+  constructor(private readonly el: ElementRef<HTMLElement>) {}
+
+  ngAfterViewInit(): void {
+    // Mide el ancho REAL del contenido (.container), sin el menú lateral.
+    // Modo desktop solo cuando supera 1024px.
+    const content = this.el.nativeElement.querySelector<HTMLElement>('.container');
+    if (!content) return;
+    this.ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect?.width ?? 0;
+      this.isHandset.set(w < 1024);
     });
+    this.ro.observe(content);
   }
 
   /** Fecha relativa corta: 'Hoy', 'Ayer' o 'D-mesAbrev', + hora. */

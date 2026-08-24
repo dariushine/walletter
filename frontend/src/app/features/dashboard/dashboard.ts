@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, AfterViewInit, ElementRef } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
@@ -6,7 +6,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { RouterLink } from '@angular/router';
-import { BreakpointObserver } from '@angular/cdk/layout';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
@@ -28,12 +27,14 @@ import { todayInTimeZone } from '../../core/utils/dates';
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss'],
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnInit, AfterViewInit {
   private readonly api = inject(WalletterApiService);
   private readonly settings = inject(SettingsStore);
   private readonly prefs = inject(UiPreferenceStore);
 
+  /** true si el ancho del contenido es menor a 1024px → modo móvil. */
   readonly isHandset = signal<boolean>(false);
+  private ro: ResizeObserver | null = null;
 
   readonly timezone = this.settings.timezone;
   readonly hideBalances = this.prefs.hideBalances;
@@ -64,10 +65,18 @@ export class Dashboard implements OnInit {
   readonly loadingMore = signal(false);
   loading = signal(true);
 
-  constructor(breakpointObserver: BreakpointObserver) {
-    breakpointObserver.observe('(max-width: 800px)').subscribe((state) => {
-      this.isHandset.set(state.matches);
+  constructor(private readonly el: ElementRef<HTMLElement>) {}
+
+  ngAfterViewInit(): void {
+    // Mide el ancho REAL del contenido (.container), sin el menú lateral.
+    // Modo desktop solo cuando supera 1024px.
+    const content = this.el.nativeElement.querySelector<HTMLElement>('.container');
+    if (!content) return;
+    this.ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect?.width ?? 0;
+      this.isHandset.set(w < 1024);
     });
+    this.ro.observe(content);
   }
 
   ngOnInit(): void {
