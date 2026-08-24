@@ -4,7 +4,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { RouterLink } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
@@ -20,6 +22,7 @@ import { todayInTimeZone } from '../../core/utils/dates';
     MatListModule,
     MatProgressSpinnerModule,
     MatButtonModule,
+    MatExpansionModule,
     RouterLink,
   ],
   templateUrl: './dashboard.html',
@@ -29,6 +32,8 @@ export class Dashboard implements OnInit {
   private readonly api = inject(WalletterApiService);
   private readonly settings = inject(SettingsStore);
   private readonly prefs = inject(UiPreferenceStore);
+
+  readonly isHandset = signal<boolean>(false);
 
   readonly timezone = this.settings.timezone;
   readonly hideBalances = this.prefs.hideBalances;
@@ -58,6 +63,12 @@ export class Dashboard implements OnInit {
   /** Indica si hay un 'cargar más' en curso. */
   readonly loadingMore = signal(false);
   loading = signal(true);
+
+  constructor(breakpointObserver: BreakpointObserver) {
+    breakpointObserver.observe('(max-width: 800px)').subscribe((state) => {
+      this.isHandset.set(state.matches);
+    });
+  }
 
   ngOnInit(): void {
     this.settings.loadTimezone();

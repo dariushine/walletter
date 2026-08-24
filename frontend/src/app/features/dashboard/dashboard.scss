@@ -377,6 +377,83 @@
   flex: 1 1 auto;
 }
 
+/* ===== Acordeón de últimas transacciones (móvil) ===== */
+.dash-tx-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.panel-cuando {
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.cat-chip-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.expense {
+    background: #fdecea;
+    color: #d32f2f;
+  }
+
+  &.income {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+.panel-amount {
+  justify-content: flex-end;
+  font-weight: 700;
+
+  &.expense {
+    color: #d32f2f;
+  }
+
+  &.income {
+    color: #2e7d32;
+  }
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.pv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  span:first-child {
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
 .footnote {
   text-align: center;
   color: rgba(0, 0, 0, 0.45);

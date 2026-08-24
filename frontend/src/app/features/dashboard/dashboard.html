@@ -93,39 +93,72 @@
           @if (recent().length === 0) {
             <p class="empty">Sin transacciones recientes.</p>
           } @else {
-            <div class="table-wrap">
-              <table class="dash-tx-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Categoría</th>
-                    <th>Tipo</th>
-                    <th>Descripción</th>
-                    <th class="right">Monto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (t of recent(); track t.id) {
-                    <tr [routerLink]="['/transactions', t.id]">
-                      <td class="date">{{ txCuando(t) }}</td>
-                      <td><span class="chip cat-chip">{{ t.category }}</span></td>
-                      <td>
+            @if (!isHandset()) {
+              <div class="table-wrap">
+                <table class="dash-tx-table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Categoría</th>
+                      <th>Tipo</th>
+                      <th>Descripción</th>
+                      <th class="right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of recent(); track t.id) {
+                      <tr [routerLink]="['/transactions', t.id]">
+                        <td class="date">{{ txCuando(t) }}</td>
+                        <td><span class="chip cat-chip">{{ t.category }}</span></td>
+                        <td>
+                          <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            {{ txTipo(t) }}
+                          </span>
+                        </td>
+                        <td class="desc">{{ t.description || '—' }}</td>
+                        <td class="right">
+                          <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            {{ txMonto(t) }}
+                          </span>
+                          <span class="wallet-sub">{{ t.walletName }}</span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <!-- Acordeón: móvil -->
+              <mat-accordion multi="false" class="dash-tx-accordion">
+                @for (t of recent(); track t.id) {
+                  <mat-expansion-panel class="tx-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title class="panel-title">
+                        <span class="panel-cuando">{{ txCuando(t) }}</span>
+                        <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
+                          {{ t.category }}
+                        </span>
+                      </mat-panel-title>
+                      <mat-panel-description class="panel-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        {{ txMonto(t) }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div class="panel-body">
+                      <div class="pv-row"><span>Categoría</span><strong>{{ t.category }}</strong></div>
+                      <div class="pv-row">
+                        <span>Tipo</span>
                         <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                           {{ txTipo(t) }}
                         </span>
-                      </td>
-                      <td class="desc">{{ t.description || '—' }}</td>
-                      <td class="right">
-                        <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                          {{ txMonto(t) }}
-                        </span>
-                        <span class="wallet-sub">{{ t.walletName }}</span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                      <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
+                      <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
+                    </div>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            }
             @if (canLoadMore()) {
               <div class="ver-mas-wrap">
                 <button mat-button color="primary" (click)="loadMore()" [disabled]="loadingMore()">
