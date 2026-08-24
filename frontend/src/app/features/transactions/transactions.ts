@@ -226,4 +226,18 @@ export class Transactions implements OnInit {
   cuando(t: Transaction): string {
     return `${t.date} · ${t.time}`;
   }
+
+  /** Fecha relativa corta: 'Hoy', 'Ayer' o DD/MM, + hora. */
+  cuandoRelativo(t: Transaction): string {
+    const hoy = todayInTimeZone(this.tz);
+    const ayer = this.addDays(hoy, -1);
+    let dia = t.date;
+    if (t.date === hoy) dia = 'Hoy';
+    else if (t.date === ayer) dia = 'Ayer';
+    else {
+      const [y, m, d] = t.date.split('-');
+      dia = `${Number(d)}/${Number(m)}`;
+    }
+    return `${dia} · ${t.time}`;
+  }
 }
