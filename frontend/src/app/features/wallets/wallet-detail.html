@@ -121,7 +121,6 @@
                         <td class="date">{{ fmtDate(t.datetimeUtc, timezone()) }} · {{ fmtTime(t.datetimeUtc, timezone()) }}</td>
                         <td>
                           <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                            <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
                             {{ t.category }}
                           </span>
                         </td>
