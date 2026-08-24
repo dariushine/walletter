@@ -149,7 +149,7 @@ export class WalletterApiService {
 
   associateTransaction(
     id: number,
-    data: { amount: number; type: TransactionType; categoryName: string; description?: string; date?: string; time?: string; tz?: string }
+    data: { amount: number; type: TransactionType; categoryName: string; description?: string; fee?: number; date?: string; time?: string; tz?: string }
   ): Observable<{ success: boolean; associateId: number }> {
     return this.http.post<{ success: boolean; associateId: number }>(`${this.base}/transactions/${id}/associate`, data);
   }

@@ -19,6 +19,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { TransactionDetail as TransactionDetailModel } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
+import { EditTransactionDialog } from './transaction-edit-dialog';
 
 @Component({
   selector: 'app-transaction-detail',
@@ -176,8 +177,19 @@ export class TransactionDetail implements OnInit {
       this.blockedAction('edit');
       return;
     }
-    this.editing.set(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const t = this.tx();
+    if (!t) return;
+    const ref = this.dialog.open(EditTransactionDialog, {
+      width: '520px',
+      maxWidth: '95vw',
+      data: { tx: t, tz: this.tz },
+    });
+    ref.afterClosed().subscribe((saved) => {
+      if (saved) {
+        this.load();
+        this.notifier.success('Transacción actualizada');
+      }
+    });
   }
 
   delete(): void {
@@ -226,7 +238,7 @@ export class TransactionDetail implements OnInit {
       width: '440px',
       data: { tz: this.tz, walletCurrency: t.walletCurrency },
     });
-    ref.afterClosed().subscribe((res?: { amount: number; type: 'income' | 'expense'; categoryName: string; description?: string; date: string; time: string }) => {
+    ref.afterClosed().subscribe((res?: { amount: number; type: 'income' | 'expense'; categoryName: string; description?: string; fee?: number; date: string; time: string }) => {
       if (!res) return;
       this.api
         .associateTransaction(this.id(), {
@@ -234,6 +246,7 @@ export class TransactionDetail implements OnInit {
           type: res.type,
           categoryName: res.categoryName,
           description: res.description || undefined,
+          fee: Number(res.fee) || 0,
           date: res.date,
           time: res.time,
           tz: this.tz,
@@ -415,6 +428,10 @@ export class AddFeeDialog {
                   <input matInput formControlName="time" type="time" />
                 </mat-form-field>
               </div>
+              <mat-form-field appearance="outline" class="dlg-full">
+                <mat-label>Comisión (opcional)</mat-label>
+                <input matInput formControlName="fee" type="number" min="0" step="0.01" />
+              </mat-form-field>
             </div>
           </details>
         </form>
@@ -447,6 +464,7 @@ export class AddAssociateDialog {
     categoryName: ['', Validators.required],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     description: [''],
+    fee: [0],
     date: [this.today, Validators.required],
     time: ['12:00', Validators.required],
   });
@@ -460,6 +478,7 @@ export class AddAssociateDialog {
       type: (v.type as 'income' | 'expense')!,
       categoryName: v.categoryName!,
       description: v.description || undefined,
+      fee: Number(v.fee) || 0,
       date: v.date!,
       time: v.time!,
     });

@@ -12,6 +12,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ExchangeDetail as ExchangeDetailModel, ExchangeTransaction } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
+import { EditExchangeDialog } from './exchange-edit-dialog';
 
 @Component({
   selector: 'app-exchange-detail',
@@ -66,6 +67,22 @@ export class ExchangeDetail implements OnInit {
         },
         error: () => this.notifier.error('No se pudo eliminar el exchange'),
       });
+    });
+  }
+
+  edit(): void {
+    const e = this.ex();
+    if (!e) return;
+    const ref = this.dialog.open(EditExchangeDialog, {
+      width: '520px',
+      maxWidth: '95vw',
+      data: { ex: e },
+    });
+    ref.afterClosed().subscribe((saved) => {
+      if (saved) {
+        this.load();
+        this.notifier.success('Exchange actualizado');
+      }
     });
   }
 

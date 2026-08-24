@@ -37,6 +37,7 @@ public class AssociateTransactionCommand
     public string Type { get; set; } = string.Empty;
     public string CategoryName { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public decimal Fee { get; set; }
     public string Date { get; set; } = string.Empty;
     public string Time { get; set; } = string.Empty;
     public string? Tz { get; set; }

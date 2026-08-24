@@ -53,8 +53,7 @@
             <mat-card-title class="panel-title">Detalle</mat-card-title>
           </mat-card-header>
 
-          @if (!editing()) {
-            <mat-card-content class="detail-list">
+          <mat-card-content class="detail-list">
               <div class="detail-row">
                 <span class="detail-label">Categoría</span>
                 <span class="chip chip-category">{{ t.category }}</span>
@@ -101,44 +100,7 @@
                   </button>
                 </div>
               }
-            </mat-card-content>
-          } @else {
-            <mat-card-content>
-              <form [formGroup]="editForm" class="edit-form dlg-form">
-                <h3 class="dlg-subtitle">✏️ Editar transacción</h3>
-                <div class="dlg-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Categoría</mat-label>
-                    <input matInput formControlName="categoryName" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Monto</mat-label>
-                    <input matInput formControlName="amount" type="number" step="0.01" />
-                  </mat-form-field>
-                </div>
-                <mat-form-field appearance="outline" class="dlg-full">
-                  <mat-label>Descripción</mat-label>
-                  <input matInput formControlName="description" />
-                </mat-form-field>
-                <div class="dlg-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Fecha</mat-label>
-                    <input matInput formControlName="date" type="date" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora</mat-label>
-                    <input matInput formControlName="time" type="time" />
-                  </mat-form-field>
-                </div>
-                <div class="actions">
-                  <button mat-raised-button color="primary" (click)="saveEdit()" [disabled]="busy()">
-                    {{ busy() ? 'Guardando…' : 'Guardar' }}
-                  </button>
-                  <button mat-flat-button color="warn" (click)="delete()">Eliminar</button>
-                </div>
-              </form>
-            </mat-card-content>
-          }
+          </mat-card-content>
         </mat-card>
 
         <!-- Transacciones asociadas -->

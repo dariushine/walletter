@@ -379,14 +379,20 @@ public class TransactionsService
 
         var tz = cmd.Tz ?? TimeZone();
         var amountInt = Money.ToInt(cmd.Amount);
+        var commission = Money.ToInt(cmd.Fee);
         var datetimeUtc = TimeZoneHelper.ToUtcInstant(cmd.Date, cmd.Time, tz);
         var category = await _categories.GetOrCreateCategory(cmd.CategoryName, cmd.Type, ct);
 
-        var effect = cmd.Type == TransactionTypes.Income ? amountInt : -amountInt;
-        if (effect < 0 && t.Wallet!.Balance < amountInt)
+        // Replica la lógica de comisión del Create: en gasto el total es monto + fee;
+        // en ingreso el fee se resta del monto recibido.
+        var effect = cmd.Type == TransactionTypes.Income
+            ? amountInt - commission
+            : -(amountInt + commission);
+        var required = cmd.Type == TransactionTypes.Income ? Math.Max(commission, 0) : amountInt + commission;
+        if (t.Wallet!.Balance < required)
         {
             throw new BusinessException(
-                $"Fondos insuficientes. Balance actual: {Money.ToNum(t.Wallet.Balance)}");
+                $"Fondos insuficientes. Balance actual: {Money.ToNum(t.Wallet!.Balance)}");
         }
 
         var child = new Transaction
@@ -397,7 +403,7 @@ public class TransactionsService
             Amount = amountInt,
             Description = cmd.Description ?? "",
             DatetimeUtc = datetimeUtc,
-            Fee = 0,
+            Fee = commission,
             ParentId = id,
             Deleted = false,
             CreatedAt = DateTime.UtcNow,
