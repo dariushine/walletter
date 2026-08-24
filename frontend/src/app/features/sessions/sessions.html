@@ -18,7 +18,7 @@
           <div class="session-list">
             @for (s of sessions(); track s.jti) {
               <div class="session-row">
-                <mat-icon class="device-icon">devices</mat-icon>
+                <mat-icon class="device-icon">{{ deviceIcon(s) }}</mat-icon>
                 <div class="session-info">
                   <div class="session-top">
                     <span class="session-device">{{ s.deviceName || 'Dispositivo' }}</span>
@@ -31,11 +31,9 @@
                     @if (s.ip) { · {{ s.ip }} }
                   </div>
                 </div>
-                @if (!s.current) {
-                  <button mat-icon-button (click)="revokeSession(s.jti)" aria-label="Cerrar sesión">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                }
+                <button mat-icon-button (click)="revokeSession(s.jti)" aria-label="Cerrar sesión">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </div>
             }
           </div>

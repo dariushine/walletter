@@ -89,4 +89,15 @@ export class Sessions implements OnInit {
   fmtDateTime(ms: number): string {
     return new Date(ms).toLocaleString('es-VE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
+
+  /** Icono según el dispositivo de la sesión. */
+  deviceIcon(info: SessionInfo): string {
+    const name = (info.deviceName || '').toLowerCase();
+    if (name.includes('windows')) return 'desktop_windows';
+    if (name.includes('android')) return 'smartphone';
+    if (name.includes('iphone') || name.includes('ipad') || name.includes('ios')) return 'phone_iphone';
+    if (name.includes('mac')) return 'desktop_mac';
+    if (name.includes('linux')) return 'laptop';
+    return 'devices';
+  }
 }
