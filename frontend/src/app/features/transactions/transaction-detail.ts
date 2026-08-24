@@ -49,6 +49,11 @@ export class TransactionDetail implements OnInit {
   readonly id = input.required<number>();
   readonly timezone = this.settings.timezone;
 
+  // Observable del id: creado en un inicializador de campo (contexto de
+  // inyección) para poder recargar al navegar entre transacciones sin
+  // depender de que ngOnInit vuelva a correr.
+  private readonly id$ = toObservable(this.id);
+
   tx = signal<TransactionDetailModel | null>(null);
   loading = signal(true);
   editing = signal(false);
@@ -68,7 +73,7 @@ export class TransactionDetail implements OnInit {
     this.tz = this.settings.timezone();
     // Recarga cuando cambia el id (al navegar entre transacciones el
     // componente de ruta se reutiliza y ngOnInit no vuelve a correr).
-    toObservable(this.id).subscribe(() => {
+    this.id$.subscribe(() => {
       this.loading.set(true);
       this.load();
     });
