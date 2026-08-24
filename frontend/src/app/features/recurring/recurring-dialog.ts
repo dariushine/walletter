@@ -45,6 +45,7 @@ export class RecurringDialog {
     currency: [this.data?.item?.currency ?? 'USD', Validators.required],
     categoryName: [this.data?.item?.category ?? '', Validators.required],
     walletId: [this.data?.item?.walletId ?? null],
+    description: [this.data?.item?.description ?? ''],
   });
 
   /** Cambia el tipo: limpia la categoría y recarga sugerencias (autocomplete recarga por [type]). */
@@ -70,6 +71,7 @@ export class RecurringDialog {
       currency: v.currency!,
       categoryName: v.categoryName!,
       walletId: v.walletId ?? undefined,
+      description: v.description || undefined,
     };
 
     const request = this.isEdit

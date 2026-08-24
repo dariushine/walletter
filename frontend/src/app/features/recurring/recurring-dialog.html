@@ -1,91 +1,69 @@
-<div class="dlg">
-  <div class="dlg-head">
-    <h2 class="dlg-title">{{ isEdit ? 'Editar pago recurrente' : 'Nuevo pago recurrente' }}</h2>
-    <button mat-icon-button class="dlg-close" (click)="cancel()" aria-label="Cerrar">
-      <mat-icon>close</mat-icon>
-    </button>
-  </div>
-  <mat-dialog-content class="dlg-content">
-    <form [formGroup]="form" class="dlg-form">
-      <mat-form-field appearance="outline" class="dlg-full">
-        <mat-label>Nombre *</mat-label>
-        <input matInput formControlName="name" />
-      </mat-form-field>
+<h2 mat-dialog-title>{{ isEdit ? 'Editar pago recurrente' : 'Nuevo pago recurrente' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="rec-form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
 
-      <!-- Toggle Gasto / Ingreso -->
-      <div class="dlg-toggle">
-        <button
-          type="button"
-          class="dlg-type expense"
-          [class.active]="form.value.type === 'expense'"
-          (click)="changeType('expense')"
-        >
-          <mat-icon>remove</mat-icon> Gasto
-        </button>
-        <button
-          type="button"
-          class="dlg-type income"
-          [class.active]="form.value.type === 'income'"
-          (click)="changeType('income')"
-        >
-          <mat-icon>add</mat-icon> Ingreso
-        </button>
-      </div>
+    <mat-radio-group formControlName="type" class="type-radio">
+      <mat-radio-button value="expense" color="warn">Gasto</mat-radio-button>
+      <mat-radio-button value="income" color="primary">Ingreso</mat-radio-button>
+    </mat-radio-group>
 
-      <div class="dlg-row">
-        <app-money-input
-          formControlName="amount"
-          label="Monto *"
-          [currency]="currencyValue()"
-        />
-        <mat-form-field appearance="outline">
-          <mat-label>Moneda *</mat-label>
-          <mat-select formControlName="currency">
-            @for (c of currencies; track c) {
-              <mat-option [value]="c">{{ c }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <app-category-autocomplete
-        formControlName="categoryName"
-        [type]="form.value.type"
-        class="dlg-full"
+    <div class="form-row two">
+      <app-money-input
+        formControlName="amount"
+        label="Monto"
+        [currency]="currencyValue()"
       />
-
-      <mat-form-field appearance="outline" class="dlg-full">
-        <mat-label>Billetera</mat-label>
-        <mat-select formControlName="walletId">
-          <mat-option [value]="null">Sin asignar</mat-option>
-          @for (w of data.wallets; track w.id) {
-            <mat-option [value]="w.id">{{ w.name }} ({{ w.currency }})</mat-option>
+      <mat-form-field appearance="outline">
+        <mat-label>Moneda</mat-label>
+        <mat-select formControlName="currency">
+          @for (c of currencies; track c) {
+            <mat-option [value]="c">{{ c }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
+    </div>
 
-      <details class="dlg-details">
-        <summary>Detalles</summary>
-        <div class="dlg-details-body">
-          <app-money-input
-            formControlName="fee"
-            label="Comisión"
-            [currency]="currencyValue()"
-            [full]="true"
-          />
-        </div>
-      </details>
-    </form>
-  </mat-dialog-content>
-  <mat-dialog-actions align="end" class="dlg-action">
-    <button mat-button (click)="cancel()">Cancelar</button>
-    <button
-      mat-flat-button
-      [color]="form.value.type === 'expense' ? 'warn' : 'primary'"
-      (click)="save()"
-      [disabled]="form.invalid || loading"
-    >
-      {{ loading ? 'Guardando…' : (isEdit ? 'Guardar' : 'Crear') }}
-    </button>
-  </mat-dialog-actions>
-</div>
+    <app-category-autocomplete
+      formControlName="categoryName"
+      [type]="form.value.type"
+      class="full"
+    />
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Billetera</mat-label>
+      <mat-select formControlName="walletId">
+        <mat-option [value]="null">Sin asignar</mat-option>
+        @for (w of data.wallets; track w.id) {
+          <mat-option [value]="w.id">{{ w.name }} ({{ w.currency }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Descripción (opcional)</mat-label>
+      <input matInput formControlName="description" />
+    </mat-form-field>
+
+    <app-money-input
+      formControlName="fee"
+      label="Comisión (opcional)"
+      [currency]="currencyValue()"
+      [full]="true"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="save()"
+    [disabled]="form.invalid || loading"
+  >
+    {{ loading ? 'Guardando…' : (isEdit ? 'Guardar' : 'Crear') }}
+  </button>
+</mat-dialog-actions>

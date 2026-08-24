@@ -1,23 +1,28 @@
 .rec-form {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   padding-top: 8px;
-}
-
-.pair {
-  display: flex;
-  gap: 12px;
-
-  .full {
-    flex: 1;
-  }
+  gap: 4px;
 }
 
 .type-radio {
   display: flex;
   gap: 16px;
-  margin: 8px 0;
+  margin-bottom: 12px;
+}
+
+.form-row.two {
+  display: flex;
+  gap: 12px;
+
+  mat-form-field,
+  app-money-input {
+    flex: 1;
+  }
+
+  app-money-input {
+    display: block;
+  }
 }
 
 .full {
