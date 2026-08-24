@@ -48,20 +48,24 @@
   flex: 1 1 auto;
 }
 
-/* ===== Cuerpo (escritorio): sidebar fija + contenido ===== */
-.app-body {
+/* ===== Escritorio: layout full-height ===== */
+.desktop-wrap {
   display: flex;
-  min-height: calc(100vh - 64px);
+  height: 100vh;
+  overflow: hidden;
 }
 
+/* Sidebar fija, ocupa siempre toda la altura de la ventana. */
 .sidebar {
   width: 240px;
   flex-shrink: 0;
+  height: 100vh;
   background: #1e1e2e;
   color: rgba(255, 255, 255, 0.85);
   display: flex;
   flex-direction: column;
   transition: width 0.2s ease;
+  overflow: hidden;
 }
 
 .sidebar-collapsed {
@@ -79,6 +83,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   white-space: nowrap;
   overflow: hidden;
+  flex-shrink: 0;
 
   mat-icon {
     color: #fff;
@@ -137,14 +142,24 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .collapse-btn {
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* Columna derecha: toolbar + contenido, scrollea independiente del sidebar. */
+.right-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .shell-content {
   flex: 1;
+  overflow-y: auto;
   padding: 24px;
-  overflow-x: hidden;
 }
