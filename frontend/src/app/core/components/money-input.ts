@@ -53,7 +53,7 @@ import { formatNumber } from '../utils/money';
       .cur-suffix {
         font-size: 0.8rem;
         color: rgba(0, 0, 0, 0.6);
-        margin-right: 6px;
+        padding-right: 14px;
         letter-spacing: 0.02em;
       }
     `,
