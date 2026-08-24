@@ -8,46 +8,60 @@
   } @else {
     @if (report(); as r) {
       <mat-card class="wallet-hero">
-        <mat-card-content>
-          <div class="hero-head">
-            <mat-icon class="hero-icon" [style.color]="r.wallet.color || '#3f51b5'">
-              {{ r.wallet.icon || 'account_balance_wallet' }}
-            </mat-icon>
-            <div>
+        <!-- Cabecera: nombre + badge tipo + acciones -->
+        <div class="hero-top">
+          <div class="hero-info">
+            <div class="hero-title-row">
               <h1 class="hero-name">{{ r.wallet.name }}</h1>
-              <span class="hero-alias">{{ r.wallet.alias || r.wallet.type }} · {{ r.wallet.currency }}</span>
+              <span class="hero-type-badge">{{ (r.wallet.type || '').toUpperCase() }}</span>
             </div>
-            <span class="hero-balance">{{ format(r.wallet.balance, r.wallet.currency) }}</span>
+            <span class="hero-sub">{{ r.wallet.alias || r.wallet.type }} · {{ r.wallet.currency }}</span>
           </div>
-        </mat-card-content>
-        <mat-card-actions align="end" class="hero-actions">
-          <button mat-flat-button (click)="edit()">
-            <mat-icon>edit</mat-icon> Editar
-          </button>
-          <button mat-flat-button color="warn" (click)="remove()">
-            <mat-icon>delete</mat-icon> Eliminar
-          </button>
-        </mat-card-actions>
+          <div class="hero-actions">
+            <button mat-stroked-button (click)="edit()" class="btn-edit">
+              <mat-icon>edit</mat-icon> Editar
+            </button>
+            <button mat-stroked-button (click)="remove()" class="btn-delete">
+              <mat-icon>delete</mat-icon> Eliminar
+            </button>
+          </div>
+        </div>
+
+        <mat-divider class="hero-divider"></mat-divider>
+
+        <!-- Saldo debajo de los datos -->
+        <div class="hero-balance-block">
+          <span class="hero-balance-label">Saldo</span>
+          <span class="hero-balance">{{ format(r.wallet.balance, r.wallet.currency) }}</span>
+        </div>
       </mat-card>
 
+      <!-- Tarjetas de resumen -->
       @if (summary(); as s) {
         <div class="summary-cards">
           <mat-card class="sum-card">
             <mat-card-content>
+              <mat-icon class="sum-icon income">trending_up</mat-icon>
               <span class="sum-label">Ingresos</span>
               <span class="sum-value income">+{{ format(s.income, r.wallet.currency) }}</span>
             </mat-card-content>
           </mat-card>
           <mat-card class="sum-card">
             <mat-card-content>
+              <mat-icon class="sum-icon expense">trending_down</mat-icon>
               <span class="sum-label">Egresos</span>
               <span class="sum-value expense">-{{ format(s.expense, r.wallet.currency) }}</span>
             </mat-card-content>
           </mat-card>
           <mat-card class="sum-card">
             <mat-card-content>
+              <mat-icon class="sum-icon" [class.income]="s.net >= 0" [class.expense]="s.net < 0">
+                {{ s.net >= 0 ? 'trending_up' : 'trending_down' }}
+              </mat-icon>
               <span class="sum-label">Neto</span>
-              <span class="sum-value" [class.negative]="s.net < 0">{{ format(s.net, r.wallet.currency) }}</span>
+              <span class="sum-value" [class.income]="s.net >= 0" [class.expense]="s.net < 0">
+                {{ format(s.net, r.wallet.currency) }}
+              </span>
             </mat-card-content>
           </mat-card>
         </div>

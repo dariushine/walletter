@@ -7,40 +7,143 @@
 }
 
 .wallet-hero {
-  background: linear-gradient(135deg, #3f51b5, #5c6bc0);
-  color: #fff;
   margin-bottom: 24px;
 }
 
-.hero-head {
+/* Cabecera */
+.hero-top {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.hero-icon {
-  font-size: 44px;
-  width: 44px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  padding: 8px;
+.hero-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .hero-name {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
 }
 
-.hero-alias {
-  opacity: 0.85;
+.hero-type-badge {
+  background: #e3f2fd;
+  color: #1565c0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.hero-sub {
+  color: rgba(0, 0, 0, 0.55);
   font-size: 0.9rem;
 }
 
+/* Acciones: outlined con icono + texto de color visible */
+.hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-edit {
+  color: #1565c0;
+  border-color: rgba(21, 101, 192, 0.6);
+
+  mat-icon {
+    color: #1565c0;
+  }
+}
+
+.btn-delete {
+  color: #c62828;
+  border-color: rgba(198, 40, 40, 0.6);
+
+  mat-icon {
+    color: #c62828;
+  }
+}
+
+.hero-divider {
+  margin: 16px 0;
+}
+
+/* Saldo debajo de los datos */
+.hero-balance-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-balance-label {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
 .hero-balance {
-  margin-left: auto;
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 700;
+  color: #1565c0;
+}
+
+/* Tarjetas de resumen */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.sum-card {
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+.sum-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 4px;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
+}
+
+.sum-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.sum-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
 }
 
 .amount {
@@ -55,51 +158,4 @@
   color: rgba(0, 0, 0, 0.5);
   text-align: center;
   padding: 24px;
-}
-
-.hero-actions {
-  padding: 0 16px 12px;
-  gap: 8px;
-
-  button {
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.6);
-  }
-}
-
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin: 0 0 24px;
-}
-
-.sum-card {
-  mat-card-content {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-.sum-label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-.sum-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-
-  &.income {
-    color: #2e7d32;
-  }
-
-  &.expense {
-    color: #c62828;
-  }
-
-  &.negative {
-    color: #c62828;
-  }
 }

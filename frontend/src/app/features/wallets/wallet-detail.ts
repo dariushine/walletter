@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterLink } from '@angular/router';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
@@ -16,7 +17,7 @@ import { WalletDialog } from './wallet-dialog';
 
 @Component({
   selector: 'app-wallet-detail',
-  imports: [MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinnerModule, RouterLink],
+  imports: [MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinnerModule, MatDividerModule, RouterLink],
   templateUrl: './wallet-detail.html',
   styleUrls: ['./wallet-detail.scss'],
 })
