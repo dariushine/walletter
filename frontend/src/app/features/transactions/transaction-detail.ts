@@ -77,7 +77,14 @@ export class TransactionDetail implements OnInit {
   load(): void {
     this.api.transaction(this.id()).subscribe({
       next: (t) => {
-        this.tx.set(t);
+        // Defensivo: si el backend desplegado aún no devuelve los campos nuevos,
+        // proveer defaults para no romper el render (associated debe ser array).
+        this.tx.set({
+          ...t,
+          resultingBalance: t.resultingBalance ?? 0,
+          isExchange: t.isExchange ?? this.inferExchange(t),
+          associated: t.associated ?? [],
+        });
         this.editForm.patchValue({
           description: t.description || '',
           categoryName: t.category,
@@ -118,6 +125,22 @@ export class TransactionDetail implements OnInit {
   isExchange(): boolean {
     const t = this.tx();
     return !!t && !!t.isExchange;
+  }
+
+  /**
+   * Inferencia local de si una transacción es de exchange, usada como fallback
+   * cuando el backend desplegado todavía no devuelve el campo isExchange.
+   */
+  private inferExchange(t: TransactionDetailModel): boolean {
+    const cat = (t.category || '').toLowerCase();
+    if (cat === 'exchange_out' || cat === 'exchange_in') return true;
+    // Comisión cuyo padre es débito/crédito de exchange.
+    if (cat === 'fee' && t.parentTransactionId) {
+      const p = t.associated?.length ? t.associated.find((a) => a.id === t.parentTransactionId) : undefined;
+      const pcat = (p?.category || '').toLowerCase();
+      if (pcat === 'exchange_out' || pcat === 'exchange_in') return true;
+    }
+    return false;
   }
 
   /** Si es una comisión (fee). */
