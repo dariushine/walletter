@@ -45,16 +45,7 @@
 
   <mat-drawer-content>
     @if (isHandset()) {
-      <!-- Móvil: toolbar superior + contenido + bottom nav -->
-      <mat-toolbar color="primary" class="shell-toolbar">
-        <span class="toolbar-title">Walletter</span>
-        <span class="spacer"></span>
-        @if (authEnabled | async) {
-          <button mat-icon-button (click)="logout()" aria-label="Cerrar sesión">
-            <mat-icon>logout</mat-icon>
-          </button>
-        }
-      </mat-toolbar>
+      <!-- Móvil: contenido + bottom nav (sin toolbar superior) -->
       <main class="shell-content">
         <router-outlet />
       </main>
@@ -117,20 +108,14 @@
               >
                 <mat-icon>{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
               </button>
+              <button mat-icon-button class="logout-btn" matTooltip="Cerrar sesión" matTooltipPosition="right" (click)="logout()" aria-label="Cerrar sesión">
+                <mat-icon>logout</mat-icon>
+              </button>
             </div>
           }
         </aside>
 
         <div class="right-col">
-          <mat-toolbar color="primary" class="shell-toolbar">
-            <span class="toolbar-title">Walletter</span>
-            <span class="spacer"></span>
-            @if (authEnabled | async) {
-              <button mat-icon-button (click)="logout()" aria-label="Cerrar sesión">
-                <mat-icon>logout</mat-icon>
-              </button>
-            }
-          </mat-toolbar>
           <main class="shell-content">
             <router-outlet />
           </main>

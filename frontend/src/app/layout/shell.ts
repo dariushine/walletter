@@ -1,7 +1,6 @@
 import { Component, signal, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
-import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
 import { MatButton, MatIconButton, MatFabButton } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
@@ -31,7 +30,6 @@ interface NavItem {
     MatDrawer,
     MatDrawerContainer,
     MatDrawerContent,
-    MatToolbar,
     MatIcon,
     MatButton,
     MatIconButton,
