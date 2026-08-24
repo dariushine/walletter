@@ -53,11 +53,11 @@
           <a mat-button color="primary" routerLink="/wallets">Ver todas</a>
         </mat-card-header>
         <mat-card-content>
-          @if (wallets().length === 0) {
+          @if (visibleWallets().length === 0) {
             <p class="empty">Aún no hay billeteras. Crea una en la sección Billeteras.</p>
           } @else {
             <div class="wallet-grid">
-              @for (w of wallets(); track w.id) {
+              @for (w of visibleWallets(); track w.id) {
                 <mat-card class="wallet-card" [routerLink]="['/wallets', w.id]">
                   <mat-card-content>
                     <div class="wallet-head">

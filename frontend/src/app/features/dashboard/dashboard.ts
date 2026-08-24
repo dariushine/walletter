@@ -101,6 +101,11 @@ export class Dashboard implements OnInit {
     return this.hideBalances() && !this.totalRevealed();
   }
 
+  /** Billeteras a mostrar en el dashboard (excluye las ocultas). */
+  visibleWallets(): Wallet[] {
+    return this.wallets().filter((w) => !w.hideInDashboard);
+  }
+
   /**
    * Balance total en USD: suma todas las billeteras activas no excluidas,
    * convirtiendo las VES a USD con la tasa elegida (BCV o paralelo).
