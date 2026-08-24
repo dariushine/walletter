@@ -30,42 +30,46 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .wallet-icon {
-  font-size: 36px;
-  width: 36px;
-  height: 36px;
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
 }
 
 .wallet-name-block {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .wallet-name {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
-.wallet-alias {
-  font-size: 0.82rem;
-  color: rgba(0, 0, 0, 0.55);
+/* Alias como chip */
+.wallet-alias-chip {
+  display: inline-block;
+  width: fit-content;
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
-.wallet-balance-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+/* Área de saldo: monto a la izquierda + subline debajo */
+.wallet-balance-area {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding-top: 10px;
-}
-
-.balance-block {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .balance-line {
@@ -75,24 +79,25 @@
 }
 
 .reveal-btn {
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
 
   mat-icon {
-    font-size: 20px;
+    font-size: 19px;
     color: rgba(0, 0, 0, 0.5);
   }
 }
 
 .wallet-balance {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
-.wallet-currency-name {
+.wallet-subline {
   font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 2px;
 }
 
 .empty-card {

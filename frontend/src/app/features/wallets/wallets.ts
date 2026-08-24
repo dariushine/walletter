@@ -9,7 +9,8 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Wallet } from '../../models/walletter.models';
-import { formatMoney, currencyName } from '../../core/utils/money';
+import { formatMoney, currencyName, formatWithCode } from '../../core/utils/money';
+import { todayInTimeZone } from '../../core/utils/dates';
 import { WalletDialog } from './wallet-dialog';
 
 @Component({
@@ -33,8 +34,19 @@ export class Wallets implements OnInit {
   wallets = signal<Wallet[]>([]);
   loading = signal(true);
 
+  /** Tasa Bs/USD (bolevita: usamos BCV del día) para el equivalente de billeteras VES. */
+  private rate = signal<number | null>(null);
+
   ngOnInit(): void {
+    this.loadRate();
     this.load();
+  }
+
+  private loadRate(): void {
+    this.api.effectiveRate().subscribe({
+      next: (e) => this.rate.set(e.vps?.bcv ?? e.vps?.paralelo ?? null),
+      error: () => undefined,
+    });
   }
 
   load(): void {
@@ -61,8 +73,8 @@ export class Wallets implements OnInit {
 
   saldo(w: Wallet): string {
     const hidden = this.hideBalances() && !this.revealedIds().has(w.id);
-    if (hidden) return '•••';
-    return this.format(w.balance, w.currency);
+    if (hidden) return '••• ' + w.currency.toUpperCase();
+    return formatWithCode(w.balance, w.currency, this.decimalSeparator());
   }
 
   /** true si este saldo está oculto (no revelado). */
@@ -79,5 +91,18 @@ export class Wallets implements OnInit {
 
   name(currency: string): string {
     return currencyName(currency);
+  }
+
+  /** Texto bajo el saldo: denominación (USD) o equivalente≈ en USD con tasa (VES). */
+  subline(w: Wallet): string {
+    if ((w.currency || '').toUpperCase() === 'VES') {
+      const r = this.rate();
+      const hidden = this.isHidden(w);
+      if (!r) return '';
+      const usd = w.balance / r;
+      const equiv = hidden ? '•••' : formatWithCode(usd, 'USD', this.decimalSeparator());
+      return `≈ USD ${equiv} USD (tasa ${r.toLocaleString('es-VE', { maximumFractionDigits: 2 })})`;
+    }
+    return this.name(w.currency);
   }
 }

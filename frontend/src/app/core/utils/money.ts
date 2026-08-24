@@ -54,3 +54,13 @@ export function currencyName(currency: string): string {
       return currency || '';
   }
 }
+
+/** Código de moneda normalizado (USD, VES...). */
+export function currencyCode(currency: string): string {
+  return (currency || '').toUpperCase();
+}
+
+/** Formatea monto con el código de moneda al final: '789,89 USD'. */
+export function formatWithCode(amount: number, currency: string, separator: DecimalSeparator = ','): string {
+  return `${formatNumber(amount, 2, separator)} ${currencyCode(currency)}`;
+}
