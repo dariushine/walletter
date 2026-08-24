@@ -31,12 +31,12 @@
           @if (bcv() !== null || paralelo() !== null) {
             <div class="rate-pills">
               @if (bcv() !== null) {
-                <button mat-button class="rate-pill" [class.active]="selectedRate() === 'bcv'" (click)="toggleRate('bcv')">
+                <button type="button" class="rate-pill" [class.active]="selectedRate() === 'bcv'" (click)="toggleRate('bcv')">
                   BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
                 </button>
               }
               @if (paralelo() !== null) {
-                <button mat-button class="rate-pill" [class.active]="selectedRate() === 'paralelo'" (click)="toggleRate('paralelo')">
+                <button type="button" class="rate-pill" [class.active]="selectedRate() === 'paralelo'" (click)="toggleRate('paralelo')">
                   Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
                 </button>
               }
