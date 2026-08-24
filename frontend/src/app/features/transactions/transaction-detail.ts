@@ -282,40 +282,41 @@ export class TransactionDetail implements OnInit {
 /** Diálogo para añadir una comisión (fee) a la transacción. */
 @Component({
   selector: 'app-add-fee-dialog',
-  imports: [ReactiveFormsModule, MatDialogTitle, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
   template: `
-    <h2 mat-dialog-title>Añadir comisión</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form" class="assoc-form">
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Monto de la comisión *</mat-label>
-          <input matInput formControlName="amount" type="number" min="0" step="0.01" />
-        </mat-form-field>
-        <div class="row-two">
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha</mat-label>
-            <input matInput formControlName="date" type="date" />
+    <div class="dlg">
+      <div class="dlg-head">
+        <h2 class="dlg-title">Añadir comisión</h2>
+        <button mat-icon-button class="dlg-close" (click)="cancel()" aria-label="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <mat-dialog-content class="dlg-content">
+        <form [formGroup]="form" class="dlg-form">
+          <mat-form-field appearance="outline" class="dlg-full">
+            <mat-label>Monto de la comisión *</mat-label>
+            <input matInput formControlName="amount" type="number" min="0" step="0.01" />
           </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Hora</mat-label>
-            <input matInput formControlName="time" type="time" />
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button type="button" (click)="cancel()">Cancelar</button>
-      <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="form.invalid || loading()">
-        {{ loading() ? 'Guardando…' : 'Añadir' }}
-      </button>
-    </mat-dialog-actions>
+          <div class="dlg-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha</mat-label>
+              <input matInput formControlName="date" type="date" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Hora</mat-label>
+              <input matInput formControlName="time" type="time" />
+            </mat-form-field>
+          </div>
+        </form>
+      </mat-dialog-content>
+      <mat-dialog-actions align="end" class="dlg-action">
+        <button mat-button type="button" (click)="cancel()">Cancelar</button>
+        <button mat-flat-button color="primary" type="button" (click)="save()" [disabled]="form.invalid || loading()">
+          {{ loading() ? 'Guardando…' : 'Añadir' }}
+        </button>
+      </mat-dialog-actions>
+    </div>
   `,
-  styles: [`
-    .assoc-form { display: flex; flex-direction: column; padding-top: 8px; gap: 4px; }
-    .full { width: 100%; }
-    .row-two { display: flex; gap: 12px; }
-    .row-two mat-form-field { flex: 1; }
-  `],
 })
 export class AddFeeDialog {
   private readonly fb = inject(FormBuilder);
@@ -348,62 +349,90 @@ export class AddFeeDialog {
   selector: 'app-add-associate-dialog',
   imports: [
     ReactiveFormsModule,
-    MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
     MatFormFieldModule,
     MatInputModule,
     MatRadioModule,
     MatButtonModule,
+    MatIconModule,
   ],
   template: `
-    <h2 mat-dialog-title>Añadir transacción asociada</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form" class="assoc-form">
-        <mat-radio-group formControlName="type" class="type-radio">
-          <mat-radio-button value="expense" color="warn">Gasto</mat-radio-button>
-          <mat-radio-button value="income" color="primary">Ingreso</mat-radio-button>
-        </mat-radio-group>
-        <div class="row-two">
-          <mat-form-field appearance="outline">
-            <mat-label>Categoría *</mat-label>
-            <input matInput formControlName="categoryName" />
+    <div class="dlg">
+      <div class="dlg-head">
+        <h2 class="dlg-title">Añadir transacción asociada</h2>
+        <button mat-icon-button class="dlg-close" (click)="cancel()" aria-label="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <mat-dialog-content class="dlg-content">
+        <form [formGroup]="form" class="dlg-form">
+          <h3 class="dlg-subtitle">
+            {{ form.value.type === 'expense' ? '📤 Registrar Gasto' : '📥 Registrar Ingreso' }}
+          </h3>
+          <div class="dlg-toggle">
+            <button
+              type="button"
+              class="dlg-type expense"
+              [class.active]="form.value.type === 'expense'"
+              (click)="form.patchValue({ type: 'expense' })"
+            >
+              <mat-icon>remove</mat-icon> Gasto
+            </button>
+            <button
+              type="button"
+              class="dlg-type income"
+              [class.active]="form.value.type === 'income'"
+              (click)="form.patchValue({ type: 'income' })"
+            >
+              <mat-icon>add</mat-icon> Ingreso
+            </button>
+          </div>
+          <div class="dlg-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Categoría *</mat-label>
+              <input matInput formControlName="categoryName" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Monto *</mat-label>
+              <input matInput formControlName="amount" type="number" min="0" step="0.01" />
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline" class="dlg-full">
+            <mat-label>Descripción</mat-label>
+            <input matInput formControlName="description" />
           </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Monto *</mat-label>
-            <input matInput formControlName="amount" type="number" min="0" step="0.01" />
-          </mat-form-field>
-        </div>
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Descripción</mat-label>
-          <input matInput formControlName="description" />
-        </mat-form-field>
-        <div class="row-two">
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha</mat-label>
-            <input matInput formControlName="date" type="date" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Hora</mat-label>
-            <input matInput formControlName="time" type="time" />
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button type="button" (click)="cancel()">Cancelar</button>
-      <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="form.invalid || loading()">
-        {{ loading() ? 'Guardando…' : 'Añadir' }}
-      </button>
-    </mat-dialog-actions>
+          <details class="dlg-details">
+            <summary>Detalles</summary>
+            <div class="dlg-details-body">
+              <div class="dlg-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput formControlName="date" type="date" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Hora</mat-label>
+                  <input matInput formControlName="time" type="time" />
+                </mat-form-field>
+              </div>
+            </div>
+          </details>
+        </form>
+      </mat-dialog-content>
+      <mat-dialog-actions align="end" class="dlg-action">
+        <button mat-button type="button" (click)="cancel()">Cancelar</button>
+        <button
+          mat-flat-button
+          [color]="form.value.type === 'expense' ? 'warn' : 'primary'"
+          type="button"
+          (click)="save()"
+          [disabled]="form.invalid || loading()"
+        >
+          {{ loading() ? 'Guardando…' : (form.value.type === 'expense' ? 'Añadir Gasto' : 'Añadir Ingreso') }}
+        </button>
+      </mat-dialog-actions>
+    </div>
   `,
-  styles: [`
-    .assoc-form { display: flex; flex-direction: column; padding-top: 8px; gap: 4px; }
-    .row-two { display: flex; gap: 12px; }
-    .row-two mat-form-field { flex: 1; }
-    .full { width: 100%; }
-    .type-radio { display: flex; gap: 16px; margin-bottom: 12px; }
-  `],
 })
 export class AddAssociateDialog {
   private readonly fb = inject(FormBuilder);

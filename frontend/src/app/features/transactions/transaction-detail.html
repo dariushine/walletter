@@ -104,20 +104,23 @@
             </mat-card-content>
           } @else {
             <mat-card-content>
-              <form [formGroup]="editForm" class="edit-form">
-                <mat-form-field appearance="outline" class="full">
+              <form [formGroup]="editForm" class="edit-form dlg-form">
+                <h3 class="dlg-subtitle">✏️ Editar transacción</h3>
+                <div class="dlg-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Categoría</mat-label>
+                    <input matInput formControlName="categoryName" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Monto</mat-label>
+                    <input matInput formControlName="amount" type="number" step="0.01" />
+                  </mat-form-field>
+                </div>
+                <mat-form-field appearance="outline" class="dlg-full">
                   <mat-label>Descripción</mat-label>
                   <input matInput formControlName="description" />
                 </mat-form-field>
-                <mat-form-field appearance="outline" class="full">
-                  <mat-label>Categoría</mat-label>
-                  <input matInput formControlName="categoryName" />
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="full">
-                  <mat-label>Monto</mat-label>
-                  <input matInput formControlName="amount" type="number" step="0.01" />
-                </mat-form-field>
-                <div class="row-two">
+                <div class="dlg-row">
                   <mat-form-field appearance="outline">
                     <mat-label>Fecha</mat-label>
                     <input matInput formControlName="date" type="date" />

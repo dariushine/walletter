@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet, RecurringPayment } from '../../models/walletter.models';
@@ -19,7 +20,7 @@ const CURRENCIES = ['USD', 'VES'];
 
 @Component({
   selector: 'app-recurring-dialog',
-  imports: [ReactiveFormsModule, MatDialogTitle, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatButtonModule],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatButtonModule, MatIconModule],
   templateUrl: './recurring-dialog.html',
   styleUrls: ['./recurring-dialog.scss'],
 })
@@ -84,7 +85,7 @@ export interface RecurringExecuteData {
 
 @Component({
   selector: 'app-recurring-execute-dialog',
-  imports: [ReactiveFormsModule, MatDialogTitle, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule],
   templateUrl: './recurring-execute-dialog.html',
   styleUrls: ['./recurring-dialog.scss'],
 })
