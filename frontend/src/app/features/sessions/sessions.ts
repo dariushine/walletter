@@ -102,14 +102,16 @@ export class Sessions implements OnInit {
   template: `
     <h2 mat-dialog-title>Nuevo token</h2>
     <mat-dialog-content>
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Nombre del token *</mat-label>
-        <input matInput formControlName="name" placeholder="Ej. Openclaw" autocomplete="off" />
-      </mat-form-field>
+      <form [formGroup]="form" (ngSubmit)="accept()">
+        <mat-form-field appearance="outline" class="full" style="margin-top: 8px;">
+          <mat-label>Nombre del token *</mat-label>
+          <input matInput formControlName="name" placeholder="Ej. Openclaw" autocomplete="off" />
+        </mat-form-field>
+      </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">Cancelar</button>
-      <button mat-raised-button color="primary" (click)="accept()" [disabled]="form.invalid">Aceptar</button>
+      <button mat-button type="button" (click)="cancel()">Cancelar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Aceptar</button>
     </mat-dialog-actions>
   `,
 })
