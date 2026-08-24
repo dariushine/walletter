@@ -70,12 +70,16 @@ export class Sessions implements OnInit {
   }
 
   revokeToken(id: number): void {
-    this.api.revokeApiToken(id).subscribe({
-      next: () => {
-        this.notifier.success('Token revocado');
-        this.load();
-      },
-      error: () => undefined,
+    const ref = this.dialog.open(RevokeTokenDialog, { width: '380px' });
+    ref.afterClosed().subscribe((confirmed?: boolean) => {
+      if (!confirmed) return;
+      this.api.revokeApiToken(id).subscribe({
+        next: () => {
+          this.notifier.success('Token revocado');
+          this.load();
+        },
+        error: () => undefined,
+      });
     });
   }
 
@@ -126,6 +130,33 @@ export class TokenNameDialog {
   accept(): void {
     if (this.form.invalid) return;
     this.dialogRef.close(this.form.value.name);
+  }
+
+  cancel(): void {
+    this.dialogRef.close();
+  }
+}
+
+/** Dialogo de confirmación para revocar un token. */
+@Component({
+  selector: 'app-revoke-token-dialog',
+  imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>¿Revocar token?</h2>
+    <mat-dialog-content>
+      <p>Una vez revocado, este token dejará de funcionar y no se podrá recuperar. ¿Seguro que quieres revocarlo?</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button type="button" (click)="cancel()">Cancelar</button>
+      <button mat-raised-button color="warn" type="button" (click)="confirm()">Sí, revocar</button>
+    </mat-dialog-actions>
+  `,
+})
+export class RevokeTokenDialog {
+  private readonly dialogRef = inject(MatDialogRef<RevokeTokenDialog>);
+
+  confirm(): void {
+    this.dialogRef.close(true);
   }
 
   cancel(): void {
