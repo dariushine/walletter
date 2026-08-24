@@ -14,7 +14,7 @@ export interface RecurringDialogData {
   wallets: Wallet[];
 }
 
-const CURRENCIES = ['USD', 'VES', 'EUR', 'BRL'];
+const CURRENCIES = ['USD', 'VES'];
 
 @Component({
   selector: 'app-recurring-dialog',

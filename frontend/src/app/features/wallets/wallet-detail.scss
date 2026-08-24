@@ -56,3 +56,50 @@
   text-align: center;
   padding: 24px;
 }
+
+.hero-actions {
+  padding: 0 16px 12px;
+  gap: 8px;
+
+  button {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.sum-card {
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.sum-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.sum-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
+
+  &.negative {
+    color: #c62828;
+  }
+}

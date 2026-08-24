@@ -20,7 +20,38 @@
             <span class="hero-balance">{{ format(r.wallet.balance, r.wallet.currency) }}</span>
           </div>
         </mat-card-content>
+        <mat-card-actions align="end" class="hero-actions">
+          <button mat-flat-button (click)="edit()">
+            <mat-icon>edit</mat-icon> Editar
+          </button>
+          <button mat-flat-button color="warn" (click)="remove()">
+            <mat-icon>delete</mat-icon> Eliminar
+          </button>
+        </mat-card-actions>
       </mat-card>
+
+      @if (summary(); as s) {
+        <div class="summary-cards">
+          <mat-card class="sum-card">
+            <mat-card-content>
+              <span class="sum-label">Ingresos</span>
+              <span class="sum-value income">+{{ format(s.income, r.wallet.currency) }}</span>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="sum-card">
+            <mat-card-content>
+              <span class="sum-label">Egresos</span>
+              <span class="sum-value expense">-{{ format(s.expense, r.wallet.currency) }}</span>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="sum-card">
+            <mat-card-content>
+              <span class="sum-label">Neto</span>
+              <span class="sum-value" [class.negative]="s.net < 0">{{ format(s.net, r.wallet.currency) }}</span>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      }
 
       <mat-card class="section">
         <mat-card-header>

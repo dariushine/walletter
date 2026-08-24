@@ -39,8 +39,15 @@
     </div>
     <div class="form-row">
       <mat-form-field appearance="outline" class="full">
-        <mat-label>Ícono (Material icon)</mat-label>
-        <input matInput formControlName="icon" />
+        <mat-label>Ícono</mat-label>
+        <mat-select formControlName="icon">
+          <mat-option [value]="">Sin ícono</mat-option>
+          @for (ic of icons; track ic.value) {
+            <mat-option [value]="ic.value">
+              <mat-icon class="icon-option">{{ ic.value }}</mat-icon> {{ ic.label }}
+            </mat-option>
+          }
+        </mat-select>
       </mat-form-field>
     </div>
     <div class="form-row color-row">

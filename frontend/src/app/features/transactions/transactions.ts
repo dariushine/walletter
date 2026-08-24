@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
+import { MatButtonModule, MatFabButton } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -13,7 +13,13 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { Transaction, Wallet } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
+import { todayInTimeZone } from '../../core/utils/dates';
 import { TransactionDialog } from './transaction-dialog';
+
+interface PeriodOption {
+  value: string;
+  label: string;
+}
 
 @Component({
   selector: 'app-transactions',
@@ -21,6 +27,7 @@ import { TransactionDialog } from './transaction-dialog';
     MatCardModule,
     MatIconModule,
     MatButtonModule,
+    MatFabButton,
     MatProgressSpinnerModule,
     MatPaginatorModule,
     MatFormFieldModule,
@@ -45,8 +52,21 @@ export class Transactions implements OnInit {
 
   page = 1;
   limit = 20;
-  walletFilter: number | null = null;
   tz = 'America/Caracas';
+
+  /** Filtro de periodo seleccionado en el desplegable. */
+  selectedPeriod = 'all';
+  /** Rango de fechas aplicado (from/to) deducido del periodo elegido. */
+  private appliedFrom: string | undefined;
+  private appliedTo: string | undefined;
+
+  readonly periods: PeriodOption[] = [
+    { value: 'all', label: 'Todo' },
+    { value: 'today', label: 'Hoy' },
+    { value: 'week', label: 'Esta semana' },
+    { value: 'month', label: 'Este mes' },
+    { value: 'year', label: 'Este año' },
+  ];
 
   ngOnInit(): void {
     this.settings.loadTimezone();
@@ -61,7 +81,8 @@ export class Transactions implements OnInit {
       .transactions({
         page: this.page,
         limit: this.limit,
-        walletId: this.walletFilter ?? undefined,
+        from: this.appliedFrom,
+        to: this.appliedTo,
       })
       .subscribe({
         next: (res) => {
@@ -73,14 +94,39 @@ export class Transactions implements OnInit {
       });
   }
 
-  onPage(e: PageEvent): void {
-    this.page = e.pageIndex + 1;
-    this.limit = e.pageSize;
+  /** Aplica el rango del periodo elegido y recarga desde la página 1. */
+  applyPeriod(): void {
+    const range = this.resolveRange(this.selectedPeriod);
+    this.appliedFrom = range.from;
+    this.appliedTo = range.to;
+    this.page = 1;
     this.load();
   }
 
-  onWalletChange(): void {
-    this.page = 1;
+  private resolveRange(period: string): { from?: string; to?: string } {
+    const today = todayInTimeZone(this.tz);
+    if (period === 'today') return { from: today, to: today };
+    if (period === 'week') {
+      return { from: this.addDays(today, -6), to: today };
+    }
+    if (period === 'month') {
+      return { from: today.slice(0, 8) + '01', to: today };
+    }
+    if (period === 'year') {
+      return { from: today.slice(0, 4) + '-01-01', to: today };
+    }
+    return {}; // all
+  }
+
+  private addDays(dateStr: string, days: number): string {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  onPage(e: PageEvent): void {
+    this.page = e.pageIndex + 1;
+    this.limit = e.pageSize;
     this.load();
   }
 

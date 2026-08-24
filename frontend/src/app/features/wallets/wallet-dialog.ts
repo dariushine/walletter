@@ -10,7 +10,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet } from '../../models/walletter.models';
 
-const CURRENCIES = ['USD', 'VES', 'EUR', 'BRL'];
+const CURRENCIES = ['USD', 'VES'];
 const TYPES = [
   { value: 'cash', label: 'Efectivo' },
   { value: 'bank', label: 'Banco' },
@@ -19,6 +19,19 @@ const TYPES = [
   { value: 'other', label: 'Otro' },
 ];
 const COLORS = ['#3f51b5', '#2e7d32', '#c62828', '#e65100', '#6a1b9a', '#00838f', '#455a64'];
+const ICONS = [
+  { value: 'account_balance_wallet', label: 'Billetera' },
+  { value: 'account_balance', label: 'Banco / edificio' },
+  { value: 'payments', label: 'Efectivo' },
+  { value: 'savings', label: 'Ahorros' },
+  { value: 'credit_card', label: 'Tarjeta' },
+  { value: 'currency_bitcoin', label: 'Bitcoin' },
+  { value: 'currency_exchange', label: 'Cambio' },
+  { value: 'attach_money', label: 'Dinero ($)' },
+  { value: 'wallet', label: 'Monedero' },
+  { value: 'savings_outlined', label: 'Alcancía' },
+  { value: 'storefront', label: 'Tienda' },
+];
 
 @Component({
   selector: 'app-wallet-dialog',
@@ -46,6 +59,7 @@ export class WalletDialog {
   readonly currencies = CURRENCIES;
   readonly types = TYPES;
   readonly colors = COLORS;
+  readonly icons = ICONS;
   loading = false;
   isEdit = !!this.data?.id;
 
@@ -54,7 +68,6 @@ export class WalletDialog {
     alias: [this.data?.alias ?? ''],
     type: [this.data?.type ?? 'cash', Validators.required],
     currency: [this.data?.currency ?? 'USD', Validators.required],
-    balance: [this.data?.balance ?? 0],
     color: [this.data?.color ?? '#3f51b5'],
     icon: [this.data?.icon ?? ''],
   });
@@ -68,7 +81,7 @@ export class WalletDialog {
       alias: (value.alias as string) || undefined,
       type: value.type as string,
       currency: value.currency as string,
-      balance: Number(value.balance) || 0,
+      balance: 0,
       color: (value.color as string) || undefined,
       icon: (value.icon as string) || undefined,
     };

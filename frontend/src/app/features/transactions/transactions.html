@@ -4,30 +4,31 @@
       <h1 class="page-title">Transacciones</h1>
       <p class="page-subtitle">Registra y revisa tus ingresos y gastos</p>
     </div>
-    <button mat-raised-button color="primary" (click)="openCreate()">
-      <mat-icon>add</mat-icon> Nueva transacción
-    </button>
   </header>
 
-  <mat-card class="filter-bar">
-    <mat-card-content>
-      <mat-form-field appearance="outline" class="filter-select">
-        <mat-label>Filtrar por billetera</mat-label>
-        <mat-select [(ngModel)]="walletFilter" (selectionChange)="onWalletChange()">
-          <mat-option [value]="null">Todas</mat-option>
-          @for (w of wallets(); track w.id) {
-            <mat-option [value]="w.id">{{ w.name }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </mat-card-content>
-  </mat-card>
+  <!-- Filtro por periodo (sin recuadro blanco) -->
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="period-select">
+      <mat-label>Periodo</mat-label>
+      <mat-select [(ngModel)]="selectedPeriod">
+        @for (p of periods; track p.value) {
+          <mat-option [value]="p.value">{{ p.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="applyPeriod()">Aplicar</button>
+  </div>
 
   @if (loading()) {
     <mat-spinner class="spinner" />
   } @else {
     @if (transactions().length === 0) {
-      <mat-card><mat-card-content class="empty">Sin transacciones.</mat-card-content></mat-card>
+      <mat-card>
+        <mat-card-content class="empty-state">
+          <mat-icon class="empty-icon">receipt_long</mat-icon>
+          <p class="empty-text">Sin transacciones.</p>
+        </mat-card-content>
+      </mat-card>
     } @else {
       <mat-card>
         <mat-card-content class="table-wrap">
@@ -68,4 +69,17 @@
       </mat-card>
     }
   }
+
+  <!-- FAB para nueva transacción -->
+  <button
+    mat-fab
+    extended
+    color="primary"
+    class="fab"
+    (click)="openCreate()"
+    aria-label="Nueva transacción"
+  >
+    <mat-icon>add</mat-icon>
+    Nuevo
+  </button>
 </div>

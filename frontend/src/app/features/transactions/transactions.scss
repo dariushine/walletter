@@ -4,18 +4,23 @@
   align-items: flex-start;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .spinner {
   margin: 40px auto;
 }
 
+/* Filtro por periodo — sin recuadro blanco, alineado con el contenido. */
 .filter-bar {
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  flex-wrap: wrap;
 
-  .filter-select {
-    width: 260px;
+  .period-select {
+    width: 220px;
   }
 }
 
@@ -78,8 +83,33 @@
   }
 }
 
-.empty {
-  text-align: center;
-  padding: 32px;
-  color: rgba(0, 0, 0, 0.5);
+/* Estado vacío con respiro. */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  gap: 8px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.empty-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* FAB flotante abajo a la derecha. */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 20;
 }
