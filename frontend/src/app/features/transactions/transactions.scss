@@ -32,6 +32,10 @@
   .period-select {
     width: 220px;
   }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    padding-bottom: 0;
+  }
 }
 
 /* ===== TABLA (escritorio) ===== */
