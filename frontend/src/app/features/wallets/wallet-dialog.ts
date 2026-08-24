@@ -87,7 +87,14 @@ export class WalletDialog {
     };
 
     const request = this.isEdit
-      ? this.api.updateWallet(this.data!.id!, { name: payload.name, alias: payload.alias, color: payload.color, icon: payload.icon })
+      ? this.api.updateWallet(this.data!.id!, {
+          name: payload.name,
+          alias: payload.alias,
+          color: payload.color,
+          icon: payload.icon,
+          type: payload.type,
+          currency: payload.currency,
+        })
       : this.api.createWallet(payload);
 
     request.subscribe({

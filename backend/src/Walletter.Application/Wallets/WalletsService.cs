@@ -71,6 +71,8 @@ public class WalletsService
         if (cmd.Description != null) existing.Description = cmd.Description;
         if (cmd.Icon != null) existing.Icon = cmd.Icon;
         if (cmd.Color != null) existing.Color = cmd.Color;
+        if (cmd.Type != null) existing.Type = cmd.Type;
+        if (cmd.Currency != null) existing.Currency = cmd.Currency;
         if (cmd.Balance is decimal balance) existing.Balance = Money.ToInt(balance);
         await _db.SaveChangesAsync(ct);
         return Map(existing);

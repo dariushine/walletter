@@ -17,9 +17,11 @@
             <div class="hero-info">
               <div class="hero-title-row">
                 <h1 class="hero-name">{{ r.wallet.name }}</h1>
-                <span class="hero-type-badge">{{ (r.wallet.type || '').toUpperCase() }}</span>
+                @if (r.wallet.alias) {
+                  <span class="hero-type-badge">{{ r.wallet.alias }}</span>
+                }
               </div>
-              <span class="hero-sub">{{ r.wallet.alias || r.wallet.type }} · {{ r.wallet.currency }}</span>
+              <span class="hero-sub">{{ r.wallet.type }} · {{ r.wallet.currency }}</span>
             </div>
           </div>
           <div class="hero-actions">
