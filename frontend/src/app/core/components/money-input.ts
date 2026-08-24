@@ -34,6 +34,7 @@ import { formatNumber } from '../utils/money';
         type="text"
         [value]="display"
         (input)="onInput($event)"
+        (keydown)="onKeyDown($event)"
         (keydown.backspace)="onBackspace($event)"
         (paste)="onPaste($event)"
         (focus)="forceEnd()"
@@ -127,6 +128,20 @@ export class MoneyInput implements ControlValueAccessor {
     this.commit(next);
     // Tras el re-render, devolver el caret al final.
     queueMicrotask(() => this.forceEnd());
+  }
+
+  // --- Teclado: bloquear letras/símbolos, permitir solo dígitos + control ---
+  onKeyDown(e: KeyboardEvent): void {
+    // No interferir con atajos (copiar/pegar/seleccionar todo).
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    // Teclas de edición/navegación permitidas.
+    const nav = ['Backspace', 'Tab', 'Delete', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (nav.includes(e.key)) return;
+    // Bloquear cualquier tecla que NO sea un dígito (letras, espacio, símbolos).
+    // 'e.key.length === 1' = tecla imprimible; los .length>1 son teclas especiales.
+    if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
   }
 
   // --- Backspace: borra solo el último dígito ---
