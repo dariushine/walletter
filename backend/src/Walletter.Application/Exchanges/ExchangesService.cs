@@ -293,8 +293,24 @@ public class ExchangesService
 
     public async Task<object> Remove(int id, CancellationToken ct = default)
     {
-        var ex = await _db.Exchanges.FirstOrDefaultAsync(e => e.Id == id && !e.Deleted, ct)
+        var ex = await _db.Exchanges
+            .Include(e => e.From)
+            .Include(e => e.To)
+            .FirstOrDefaultAsync(e => e.Id == id && !e.Deleted, ct)
             ?? throw new NotFoundException("Exchange no encontrado");
+
+        // Revertir los balances del origen y destino (inverso del Create).
+        // Origen: se había restado (fromAmount + fee). Destino: se había sumado (toAmount - creditFee).
+        ex.From.Balance += ex.FromAmount + ex.Fee;
+        ex.To.Balance -= ex.ToAmount - ex.CreditFee;
+
+        // Eliminar lógicamente las transacciones del exchange (débito, crédito y comisiones).
+        var ids = new[] { ex.DebitTransactionId, ex.CreditTransactionId };
+        var txns = await _db.Transactions
+            .Where(t => ids.Contains(t.Id) || (t.ParentId != null && ids.Contains(t.ParentId.Value)))
+            .ToListAsync(ct);
+        foreach (var tx in txns) tx.Deleted = true;
+
         ex.Deleted = true;
         await _db.SaveChangesAsync(ct);
         return new { success = true };

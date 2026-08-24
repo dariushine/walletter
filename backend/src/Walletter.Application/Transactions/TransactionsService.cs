@@ -293,10 +293,14 @@ public class TransactionsService
 
     public async Task<object> Update(int id, UpdateTransactionCommand cmd, CancellationToken ct = default)
     {
-        var t = await _db.Transactions.FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
+        var t = await _db.Transactions
+            .Include(x => x.Wallet)
+            .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
             ?? throw new NotFoundException("Transacción no encontrada");
 
         var tz = cmd.Tz ?? TimeZone();
+        var oldAmount = t.Amount;
+        var oldFee = t.Fee;
         if (cmd.Description != null) t.Description = cmd.Description;
         if (cmd.Amount is decimal amount) t.Amount = Money.ToInt(amount);
         if (!string.IsNullOrEmpty(cmd.CategoryName))
@@ -308,14 +312,56 @@ public class TransactionsService
         {
             t.DatetimeUtc = TimeZoneHelper.ToUtcInstant(cmd.Date, cmd.Time, tz);
         }
+
+        // Ajustar el balance por el cambio de monto (el fee denormalizado no cambia
+        // en este update). Se aplica la fórmula del Create con el efecto nuevo vs. el original.
+        if (t.Wallet != null && t.Amount != oldAmount)
+        {
+            var oldEffect = t.Type == TransactionTypes.Income ? oldAmount - oldFee : -(oldAmount + oldFee);
+            var newEffect = t.Type == TransactionTypes.Income ? t.Amount - oldFee : -(t.Amount + oldFee);
+            var newBalance = t.Wallet.Balance + (newEffect - oldEffect);
+            if (newBalance < 0)
+                throw new BusinessException("Fondos insuficientes en la billetera tras el cambio");
+            t.Wallet.Balance = newBalance;
+        }
+
         await _db.SaveChangesAsync(ct);
         return new { success = true, id = t.Id };
     }
 
     public async Task<object> Remove(int id, CancellationToken ct = default)
     {
-        var t = await _db.Transactions.FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
+        var t = await _db.Transactions
+            .Include(x => x.Wallet)
+            .Include(x => x.Children).ThenInclude(c => c.Category)
+            .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
             ?? throw new NotFoundException("Transacción no encontrada");
+
+        if (t.Wallet != null)
+        {
+            // Revertir el efecto del padre sobre el balance (fórmula del Create:
+            // income = +monto - fee, expense = -(monto + fee); t.Fee denormalizado
+            // ya incluye los fees hijos).
+            var parentEffect = t.Type == TransactionTypes.Income
+                ? t.Amount - t.Fee
+                : -(t.Amount + t.Fee);
+            t.Wallet.Balance -= parentEffect;
+
+            // Revertir y eliminar hijos NO-fee (asociadas) con su propio efecto.
+            // Los hijos de categoría fee ya están reflejados en t.Fee del padre.
+            foreach (var child in t.Children.Where(c => !c.Deleted))
+            {
+                if (!string.Equals(child.Category?.Name, "fee", StringComparison.OrdinalIgnoreCase))
+                {
+                    var childEffect = child.Type == TransactionTypes.Income
+                        ? child.Amount - child.Fee
+                        : -(child.Amount + child.Fee);
+                    t.Wallet.Balance -= childEffect;
+                }
+                child.Deleted = true;
+            }
+        }
+
         t.Deleted = true;
         await _db.SaveChangesAsync(ct);
         return new { success = true };
