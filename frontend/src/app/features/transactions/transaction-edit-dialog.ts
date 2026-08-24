@@ -37,15 +37,10 @@ export interface EditTransactionDialogData {
       </div>
       <mat-dialog-content class="dlg-content">
         <form [formGroup]="form" class="dlg-form">
-          <div class="dlg-row">
-            <mat-form-field appearance="outline" class="dlg-full">
-              <mat-label>Categoría</mat-label>
-              <app-category-autocomplete
-                formControlName="categoryName"
-                [type]="data.tx.type"
-              />
-            </mat-form-field>
-          </div>
+          <app-category-autocomplete
+            formControlName="categoryName"
+            [type]="data.tx.type"
+          />
           <mat-form-field appearance="outline" class="dlg-full">
             <mat-label>Monto</mat-label>
             <input matInput formControlName="amount" type="number" step="0.01" />
