@@ -11,7 +11,7 @@
   margin: 40px auto;
 }
 
-/* Filtro por periodo — sin recuadro blanco, alineado con el contenido. */
+/* Filtro por periodo — sin recuadro blanco. */
 .filter-bar {
   display: flex;
   align-items: center;
@@ -24,6 +24,7 @@
   }
 }
 
+/* ===== TABLA (escritorio) ===== */
 .table-wrap {
   overflow-x: auto;
   padding: 0;
@@ -35,7 +36,7 @@
 
   th,
   td {
-    padding: 10px 14px;
+    padding: 12px 14px;
     text-align: left;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   }
@@ -52,7 +53,7 @@
     transition: background 0.15s;
 
     &:hover {
-      background: rgba(63, 81, 181, 0.05);
+      background: rgba(63, 81, 181, 0.04);
     }
   }
 
@@ -62,11 +63,11 @@
 
   .date {
     white-space: nowrap;
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(0, 0, 0, 0.7);
   }
 
   .desc {
-    font-weight: 600;
+    color: rgba(0, 0, 0, 0.75);
   }
 
   .amount {
@@ -79,11 +80,122 @@
   }
 
   .expense {
-    color: #c62828;
+    color: #d32f2f;
   }
 }
 
-/* Estado vacío con respiro. */
+/* Etiquetas / chips estilo referencia */
+.chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cat-chip {
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.tipo-chip {
+  &.expense {
+    background: #d32f2f;
+    color: #fff;
+  }
+
+  &.income {
+    background: #2e7d32;
+    color: #fff;
+  }
+}
+
+.fee-chip {
+  background: #fb8c00;
+  color: #fff;
+}
+
+.no-fee {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* ===== Acordeón (móvil) ===== */
+.tx-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tx-panel {
+  border-radius: 10px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.panel-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.panel-cuando {
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.panel-cat {
+  &.expense {
+    color: #d32f2f;
+  }
+
+  &.income {
+    color: #2e7d32;
+  }
+}
+
+.panel-amount {
+  justify-content: flex-end;
+  font-weight: 700;
+
+  &.expense {
+    color: #d32f2f;
+  }
+
+  &.income {
+    color: #2e7d32;
+  }
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.pv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  span:first-child {
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
+.ver-detalles {
+  margin-top: 4px;
+  color: #3f51b5;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.mobile-paginator {
+  margin-top: 12px;
+}
+
+/* ===== Estado vacío ===== */
 .empty-state {
   display: flex;
   flex-direction: column;

@@ -9,6 +9,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
+import { MatChipsModule } from '@angular/material/chips';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { Transaction, Wallet } from '../../models/walletter.models';
@@ -34,6 +37,9 @@ interface PeriodOption {
     MatSelectModule,
     RouterLink,
     FormsModule,
+    MatAccordion,
+    MatExpansionModule,
+    MatChipsModule,
   ],
   templateUrl: './transactions.html',
   styleUrls: ['./transactions.scss'],
@@ -44,6 +50,7 @@ export class Transactions implements OnInit {
   private readonly settings = inject(SettingsStore);
 
   readonly timezone = this.settings.timezone;
+  isHandset = signal<boolean>(false);
 
   transactions = signal<Transaction[]>([]);
   wallets = signal<Wallet[]>([]);
@@ -67,6 +74,12 @@ export class Transactions implements OnInit {
     { value: 'month', label: 'Este mes' },
     { value: 'year', label: 'Este año' },
   ];
+
+  constructor(breakpointObserver: BreakpointObserver) {
+    breakpointObserver.observe('(max-width: 800px)').subscribe((state) => {
+      this.isHandset.set(state.matches);
+    });
+  }
 
   ngOnInit(): void {
     this.settings.loadTimezone();
@@ -178,5 +191,39 @@ export class Transactions implements OnInit {
 
   format(amount: number, currency?: string): string {
     return formatMoney(amount, currency || 'USD');
+  }
+
+  /** Fecha DD/MM/AAAA a partir de YYYY-MM-DD. */
+  fecha(t: Transaction): string {
+    const [y, m, d] = t.date.split('-');
+    return `${Number(d)}/${Number(m)}/${y}`;
+  }
+
+  /** Monto con signo + moneda, p.ej. '-1.500,00 VES'. */
+  monto(t: Transaction): string {
+    const sign = t.type === 'income' ? '+' : '-';
+    const num = Math.abs(t.amount).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${sign}${num} ${t.walletCurrency ?? ''}`.trim();
+  }
+
+  /** Monto absoluto (sin signo) + moneda. */
+  montoAbs(t: Transaction): string {
+    const num = Math.abs(t.amount).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${num} ${t.walletCurrency ?? ''}`.trim();
+  }
+
+  /** Fee con moneda, p.ej. '14,00 VES'. */
+  montoAbsFee(t: Transaction): string {
+    const num = t.fee.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${num} ${t.walletCurrency ?? ''}`.trim();
+  }
+
+  tipoLabel(t: Transaction): string {
+    return t.type === 'income' ? 'Ingreso' : 'Gasto';
+  }
+
+  /** Formatea la hora + prefijo relativo (Hoy/Ayer/fecha). */
+  cuando(t: Transaction): string {
+    return `${t.date} · ${t.time}`;
   }
 }

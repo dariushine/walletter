@@ -34,55 +34,112 @@
         </mat-card-content>
       </mat-card>
     } @else {
-      <mat-card>
-        <mat-card-content class="table-wrap">
-          <table class="tx-table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Descripción</th>
-                <th>Categoría</th>
-                <th>Billetera</th>
-                <th class="right">Monto</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (t of transactions(); track t.id) {
-                <tr [routerLink]="['/transactions', t.id]">
-                  <td class="date">{{ t.date }}</td>
-                  <td class="desc">{{ t.description || '—' }}</td>
-                  <td>{{ t.category }}</td>
-                  <td>{{ t.walletName }}</td>
-                  <td class="right">
-                    <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                      {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, t.walletCurrency) }}
-                    </span>
-                  </td>
+      @if (!isHandset()) {
+        <!-- Tabla: escritorio -->
+        <mat-card>
+          <mat-card-content class="table-wrap">
+            <table class="tx-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Billetera</th>
+                  <th>Tipo</th>
+                  <th class="right">Monto</th>
+                  <th>Fee</th>
+                  <th>Descripción</th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        </mat-card-content>
+              </thead>
+              <tbody>
+                @for (t of transactions(); track t.id) {
+                  <tr [routerLink]="['/transactions', t.id]">
+                    <td class="date">{{ cuando(t) }}</td>
+                    <td><span class="chip cat-chip">{{ t.category }}</span></td>
+                    <td>{{ t.walletName }}</td>
+                    <td>
+                      <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        {{ tipoLabel(t) }}
+                      </span>
+                    </td>
+                    <td class="right">
+                      <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        {{ monto(t) }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (t.fee > 0) {
+                        <span class="chip fee-chip">{{ montoAbsFee(t) }}</span>
+                      } @else {
+                        <span class="no-fee">—</span>
+                      }
+                    </td>
+                    <td class="desc">{{ t.description || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </mat-card-content>
+          <mat-paginator
+            [length]="total()"
+            [pageSize]="limit"
+            [pageIndex]="page - 1"
+            [pageSizeOptions]="[10, 20, 50]"
+            (page)="onPage($event)"
+          />
+        </mat-card>
+      } @else {
+        <!-- Acordeón: móvil -->
+        <mat-accordion multi="false" class="tx-accordion">
+          @for (t of transactions(); track t.id) {
+            <mat-expansion-panel class="tx-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title class="panel-title">
+                  <span class="panel-cuando">{{ t.date }} · {{ t.time }}</span>
+                  <span class="panel-cat" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                    {{ t.category }}
+                  </span>
+                </mat-panel-title>
+                <mat-panel-description class="panel-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                  {{ monto(t) }}
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+              <div class="panel-body">
+                <div class="pv-row"><span>Categoría</span><strong>{{ t.category }}</strong></div>
+                <div class="pv-row">
+                  <span>Tipo</span>
+                  <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                    {{ tipoLabel(t) }}
+                  </span>
+                </div>
+                <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
+                <div class="pv-row">
+                  <span>Comisión</span>
+                  @if (t.fee > 0) {
+                    <span class="chip fee-chip">{{ montoAbsFee(t) }}</span>
+                  } @else {
+                    <span class="no-fee">—</span>
+                  }
+                </div>
+                <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
+                <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
         <mat-paginator
+          class="mobile-paginator"
           [length]="total()"
           [pageSize]="limit"
           [pageIndex]="page - 1"
           [pageSizeOptions]="[10, 20, 50]"
           (page)="onPage($event)"
         />
-      </mat-card>
+      }
     }
   }
 
   <!-- FAB para nueva transacción -->
-  <button
-    mat-fab
-    extended
-    color="primary"
-    class="fab"
-    (click)="openCreate()"
-    aria-label="Nueva transacción"
-  >
+  <button mat-fab extended color="primary" class="fab" (click)="openCreate()" aria-label="Nueva transacción">
     <mat-icon>add</mat-icon>
     Nuevo
   </button>
