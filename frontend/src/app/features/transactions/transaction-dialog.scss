@@ -15,8 +15,10 @@
   display: flex;
   gap: 12px;
 
-  mat-form-field {
+  > mat-form-field,
+  > app-money-input {
     flex: 1;
+    min-width: 0;
   }
 }
 

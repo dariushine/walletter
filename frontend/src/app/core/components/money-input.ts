@@ -48,6 +48,7 @@ import { formatNumber } from '../utils/money';
   `,
   styles: [
     `
+      :host { display: block; } // para que flex:1 funcione dentro de .form-row.two
       .money-field { width: 100%; }
       .full { width: 100%; }
       .cur-suffix {

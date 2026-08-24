@@ -24,7 +24,7 @@ const CURRENCIES = ['USD', 'VES'];
   selector: 'app-recurring-dialog',
   imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatButtonModule, MatIconModule, CategoryAutocomplete, MoneyInput],
   templateUrl: './recurring-dialog.html',
-  styleUrls: ['./recurring-dialog.scss'],
+  styleUrls: ['../transactions/transaction-dialog.scss'],
 })
 export class RecurringDialog {
   private readonly fb = inject(FormBuilder);
