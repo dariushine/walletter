@@ -3,13 +3,18 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButton, MatIconButton, MatFabButton } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltip } from '@angular/material/tooltip';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthStore } from '../core/services/auth-store';
+import { WalletterApiService } from '../core/services/walletter-api.service';
+import { SettingsStore } from '../core/services/settings-store';
+import { Wallet } from '../models/walletter.models';
+import { NewOperationDialog } from './new-operation-dialog';
 
 interface NavItem {
   routerLink: string;
@@ -30,6 +35,7 @@ interface NavItem {
     MatIcon,
     MatButton,
     MatIconButton,
+    MatFabButton,
     MatListModule,
     MatTooltip,
     AsyncPipe,
@@ -71,6 +77,9 @@ export class Shell {
   constructor(
     private readonly authStore: AuthStore,
     private readonly router: Router,
+    private readonly api: WalletterApiService,
+    private readonly settings: SettingsStore,
+    private readonly dialog: MatDialog,
     breakpointObserver: BreakpointObserver
   ) {
     breakpointObserver.observe('(max-width: 900px)').subscribe((state) => {
@@ -90,5 +99,20 @@ export class Shell {
 
   toggleCollapsed(): void {
     this.collapsed.set(!this.collapsed());
+  }
+
+  /** Carga las billeteras y abre el modal global 'Nueva operación'. */
+  openNewOperation(): void {
+    this.settings.loadTimezone();
+    this.api.wallets().subscribe({
+      next: (wallets: Wallet[]) => {
+        this.dialog.open(NewOperationDialog, {
+          width: '520px',
+          maxWidth: '95vw',
+          data: { wallets, tz: this.settings.timezone() },
+        });
+      },
+      error: () => undefined,
+    });
   }
 }

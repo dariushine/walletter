@@ -123,6 +123,21 @@
   }
 }
 
+/* ===== FAB global 'Nueva operación' ===== */
+.global-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 84px; /* por encima de la bottom nav en móvil */
+  z-index: 30;
+}
+
+@media (min-width: 901px) {
+  .global-fab {
+    bottom: 28px;
+    right: 32px;
+  }
+}
+
 /* ===== Escritorio: layout full-height ===== */
 .desktop-wrap {
   display: flex;

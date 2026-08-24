@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule, MatFabButton } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -29,7 +29,6 @@ interface PeriodOption {
     MatCardModule,
     MatIconModule,
     MatButtonModule,
-    MatFabButton,
     MatProgressSpinnerModule,
     MatPaginatorModule,
     MatFormFieldModule,
