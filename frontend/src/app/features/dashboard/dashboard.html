@@ -47,20 +47,20 @@
               @for (w of wallets(); track w.id) {
                 <a class="wallet-card" [routerLink]="['/wallets', w.id]">
                   <mat-icon class="wallet-icon" [style.color]="w.color || '#3f51b5'">
-                    {{ w.icon || (w.type === 'cash' ? 'payments' : 'account_balance_wallet') }}
+                    {{ w.icon || 'account_balance' }}
                   </mat-icon>
                   <div class="wallet-info">
                     <span class="wallet-name">{{ w.name }}</span>
-                    <span class="wallet-alias">{{ w.alias || w.currency }}</span>
+                    <span class="wallet-alias-chip">{{ w.alias || w.type }}</span>
                   </div>
-                  <div class="wallet-balance-block">
-                    <span class="wallet-balance">{{ saldo(w) }}</span>
-                    @if (isHidden(w)) {
-                      <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" aria-label="Mostrar saldo">
-                        <mat-icon>visibility_off</mat-icon>
+                  <div class="wallet-balance-area">
+                    <div class="balance-line">
+                      <span class="wallet-balance">{{ saldo(w) }}</span>
+                      <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" [attr.aria-label]="isHidden(w) ? 'Mostrar saldo' : 'Ocultar saldo'">
+                        <mat-icon>{{ isHidden(w) ? 'visibility_off' : 'visibility' }}</mat-icon>
                       </button>
-                    }
-                    <span class="wallet-currency-name">{{ name(w.currency) }}</span>
+                    </div>
+                    <span class="wallet-subline">{{ subline(w) }}</span>
                   </div>
                 </a>
               }

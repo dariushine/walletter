@@ -1,46 +1,54 @@
 <div class="container">
-  <h1 class="page-title">Ajustes</h1>
-  <p class="page-subtitle">Preferencias de la aplicación</p>
+  <h1 class="page-title">Opciones</h1>
+  <p class="page-subtitle">Configura cómo se muestran tus datos en la aplicación.</p>
 
   <!-- Ocultar saldos -->
-  <mat-card class="section">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>visibility_off</mat-icon>
-      <mat-card-title>Ocultar saldos</mat-card-title>
-      <mat-card-subtitle>Oculta los saldos en el dashboard y en la lista de billeteras</mat-card-subtitle>
-    </mat-card-header>
+  <mat-card class="option-card">
     <mat-card-content>
-      <mat-slide-toggle [checked]="hideBalances()" (change)="onHideChange($event.checked)">
-        {{ hideBalances() ? 'Saldos ocultos' : 'Saldos visibles' }}
-      </mat-slide-toggle>
+      <div class="opt-row">
+        <div class="opt-left">
+          <mat-icon class="opt-icon">visibility_off</mat-icon>
+          <div class="opt-text">
+            <span class="opt-title">Ocultar saldos</span>
+            <span class="opt-desc">Muestra el saldo oculto con un icono de ojo para revelarlo puntualmente.</span>
+          </div>
+        </div>
+        <div class="opt-right">
+          <span class="opt-state">{{ hideBalances() ? 'Activado' : 'Desactivado' }}</span>
+          <mat-slide-toggle [checked]="hideBalances()" (change)="onHideChange($event.checked)"></mat-slide-toggle>
+        </div>
+      </div>
     </mat-card-content>
   </mat-card>
 
   <!-- Separador de decimales -->
-  <mat-card class="section">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>numbers</mat-icon>
-      <mat-card-title>Separador de decimales</mat-card-title>
-      <mat-card-subtitle>Formato de los montos: coma o punto decimal</mat-card-subtitle>
-    </mat-card-header>
+  <mat-card class="option-card">
     <mat-card-content>
-      <mat-radio-group [value]="decimalSeparator()" (change)="onSepChange($event.value)">
-        <mat-radio-button value=",">Coma (1.234,56)</mat-radio-button>
-        <mat-radio-button value=".">Punto (1,234.56)</mat-radio-button>
-      </mat-radio-group>
+      <div class="opt-row">
+        <div class="opt-left">
+          <div class="opt-text">
+            <span class="opt-title">Separador de decimales</span>
+          </div>
+        </div>
+        <div class="sep-group">
+          <button type="button" class="sep-btn" [class.active]="decimalSeparator() === ','" (click)="onSepChange(',')">
+            (,)
+          </button>
+          <button type="button" class="sep-btn" [class.active]="decimalSeparator() === '.'" (click)="onSepChange('.')">
+            (.)
+          </button>
+        </div>
+      </div>
     </mat-card-content>
   </mat-card>
 
   <!-- Zona horaria -->
-  <mat-card class="section">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>schedule</mat-icon>
-      <mat-card-title>Zona horaria</mat-card-title>
-      <mat-card-subtitle>Las fechas y horas se muestran en esta zona</mat-card-subtitle>
-    </mat-card-header>
+  <mat-card class="option-card">
     <mat-card-content>
-      <div class="tz-row">
-        <mat-form-field appearance="outline">
+      <div class="tz-block">
+        <span class="opt-title">Zona horaria</span>
+        <span class="opt-desc">La zona horaria del usuario se usa para mostrar las fechas y horas de tus operaciones. El servidor guarda un único instante UTC y lo proyecta a esta zona.</span>
+        <mat-form-field appearance="outline" class="tz-select">
           <mat-label>Zona horaria</mat-label>
           <mat-select [(ngModel)]="timezone">
             @for (tz of timezones; track tz) {
@@ -48,9 +56,11 @@
             }
           </mat-select>
         </mat-form-field>
-        <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
-          {{ saving() ? 'Guardando…' : 'Guardar' }}
-        </button>
+        <div class="tz-actions">
+          <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
+            {{ saving() ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
       </div>
     </mat-card-content>
   </mat-card>

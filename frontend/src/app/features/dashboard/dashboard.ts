@@ -9,7 +9,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Wallet, Stats, Transaction } from '../../models/walletter.models';
-import { formatMoney, currencySymbol, currencyName } from '../../core/utils/money';
+import { formatMoney, currencySymbol, currencyName, formatWithCode } from '../../core/utils/money';
 
 @Component({
   selector: 'app-dashboard',
@@ -36,6 +36,9 @@ export class Dashboard implements OnInit {
   /** Ids de billeteras cuyo saldo se reveló con el ojo. */
   private readonly revealedIds = signal<Set<number>>(new Set());
 
+  /** Tasa Bs/USD del día para el equivalente de billeteras VES. */
+  private rate = signal<number | null>(null);
+
   wallets = signal<Wallet[]>([]);
   stats = signal<Stats | null>(null);
   recent = signal<Transaction[]>([]);
@@ -43,7 +46,15 @@ export class Dashboard implements OnInit {
 
   ngOnInit(): void {
     this.settings.loadTimezone();
+    this.loadRate();
     this.load();
+  }
+
+  private loadRate(): void {
+    this.api.effectiveRate().subscribe({
+      next: (e) => this.rate.set(e.vps?.bcv ?? e.vps?.paralelo ?? null),
+      error: () => undefined,
+    });
   }
 
   private load(): void {
@@ -70,8 +81,8 @@ export class Dashboard implements OnInit {
 
   /** Devuelve el monto de la billetera, o máscara, según preferencia/revelado. */
   saldo(w: Wallet): string {
-    if (this.hideBalances() && !this.revealedIds().has(w.id)) return '•••';
-    return this.format(w.balance, w.currency);
+    if (this.hideBalances() && !this.revealedIds().has(w.id)) return '••• ' + w.currency.toUpperCase();
+    return formatWithCode(w.balance, w.currency, this.decimalSeparator());
   }
 
   /** Para valores agregados (stats): máscara simple si ocultar saldos. */
@@ -93,6 +104,19 @@ export class Dashboard implements OnInit {
 
   name(currency: string): string {
     return currencyName(currency);
+  }
+
+  /** Texto bajo el saldo: denominación (USD) o equivalente≈ en USD con tasa (VES). */
+  subline(w: Wallet): string {
+    if ((w.currency || '').toUpperCase() === 'VES') {
+      const r = this.rate();
+      const hidden = this.isHidden(w);
+      if (!r) return '';
+      const usd = w.balance / r;
+      const equiv = hidden ? '•••' : formatWithCode(usd, 'USD', this.decimalSeparator());
+      return `≈ USD ${equiv} USD (tasa ${r.toLocaleString('es-VE', { maximumFractionDigits: 2 })})`;
+    }
+    return this.name(w.currency);
   }
 
   symbol(currency: string): string {

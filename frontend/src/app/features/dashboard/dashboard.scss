@@ -80,51 +80,72 @@
 }
 
 .wallet-icon {
-  font-size: 32px;
-  width: 32px;
-  height: 32px;
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
 }
 
 .wallet-info {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .wallet-name {
-  font-weight: 600;
-}
-
-.wallet-alias {
-  font-size: 0.8rem;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-.wallet-balance {
   font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
-.wallet-balance-block {
+.wallet-alias-chip {
+  display: inline-block;
+  width: fit-content;
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.wallet-balance-area {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
 }
 
-.reveal-btn {
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
-  margin-left: 2px;
-
-  mat-icon {
-    font-size: 20px;
-    color: rgba(0, 0, 0, 0.5);
-  }
+.balance-line {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.wallet-currency-name {
+.wallet-balance {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wallet-subline {
   font-size: 0.7rem;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 2px;
+}
+
+.reveal-btn {
+  width: 26px;
+  height: 26px;
+  line-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: rgba(0, 0, 0, 0.5);
+  }
 }
 
 .tx-item {
