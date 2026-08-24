@@ -29,7 +29,7 @@
             type="button"
             class="type-btn expense"
             [class.active]="txForm.value.type === 'expense'"
-            (click)="txForm.patchValue({ type: 'expense' })"
+            (click)="changeType('expense')"
           >
             <mat-icon>remove</mat-icon> Gasto
           </button>
@@ -37,7 +37,7 @@
             type="button"
             class="type-btn income"
             [class.active]="txForm.value.type === 'income'"
-            (click)="txForm.patchValue({ type: 'income' })"
+            (click)="changeType('income')"
           >
             <mat-icon>add</mat-icon> Ingreso
           </button>

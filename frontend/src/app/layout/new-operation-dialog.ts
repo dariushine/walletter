@@ -21,6 +21,10 @@ export interface NewOperationDialogData {
   tz: string;
 }
 
+/** Categorías de sistema que no se sugieren ni se pueden crear desde el modal. */
+const SYSTEM_CATEGORIES = ['fee', 'exchange_in', 'exchange_out'];
+
+
 @Component({
   selector: 'app-new-operation-dialog',
   imports: [
@@ -85,25 +89,35 @@ export class NewOperationDialog implements OnInit {
     this.activeTab.set(tab);
   }
 
+  /** Cambia el tipo (gasto/ingreso): recarga las categorías correctas y limpia el campo. */
+  changeType(type: 'expense' | 'income'): void {
+    if ((this.txForm.value.type as string) === type) return;
+    this.txForm.patchValue({ type, categoryName: '' });
+    this.loadCategories();
+  }
+
   ngOnInit(): void {
     this.loadCategories();
     // Refiltra las sugerencias cuando cambia la escritura del campo categoría.
     this.txForm.controls.categoryName.valueChanges.subscribe(() => this.filterCategories());
   }
 
-  /** Carga las categorías activas del backend (según el tipo elegido). */
+  /** Carga las categorías activas y filtra por tipo + excluye las de sistema. */
   private loadCategories(): void {
     const type = this.txForm.value.type as 'income' | 'expense';
-    this.api.categories(type).subscribe({
+    this.api.categories().subscribe({
       next: (cats) => {
-        this.allCategories.set(cats.filter((c) => c.isActive));
+        // El backend lista todas las activas; aquí filtro por tipo y excluyo sistema.
+        this.allCategories.set(
+          cats.filter((c) => c.isActive && c.type === type && !SYSTEM_CATEGORIES.includes(c.name))
+        );
         this.filterCategories();
       },
       error: () => undefined,
     });
   }
 
-  /** Filtra las categorías por el texto escrito (case-insensitive). */
+  /** Filtra las categorías sugeridas por el texto escrito (case-insensitive). */
   filterCategories(): void {
     const q = (this.txForm.controls.categoryName.value ?? '').toLowerCase().trim();
     if (!q) {
@@ -115,10 +129,12 @@ export class NewOperationDialog implements OnInit {
     );
   }
 
-  /** true si la categoría escrita no existe aún → mostrar opción 'Nueva'. */
+  /** true si la categoría escrita no existe aún y es creable → mostrar 'Nueva'. */
   isNewCategory(): boolean {
     const q = (this.txForm.controls.categoryName.value ?? '').trim();
     if (!q) return false;
+    // Las categorías de sistema NO se pueden crear.
+    if (SYSTEM_CATEGORIES.includes(q.toLowerCase())) return false;
     return !this.allCategories().some((c) => c.name.toLowerCase() === q.toLowerCase());
   }
 
@@ -139,6 +155,10 @@ export class NewOperationDialog implements OnInit {
   private saveTransaction(): void {
     if (this.txForm.invalid) {
       this.notifier.error('Completa los campos obligatorios');
+      return;
+    }
+    if (SYSTEM_CATEGORIES.includes((this.txForm.value.categoryName ?? '').toLowerCase().trim())) {
+      this.notifier.error('Esa categoría es de sistema y no puede usarse');
       return;
     }
     this.loading.set(true);
