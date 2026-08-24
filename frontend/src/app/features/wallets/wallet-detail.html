@@ -82,46 +82,85 @@
           @if (r.transactions.length === 0) {
             <p class="empty">Esta billetera no tiene transacciones.</p>
           } @else {
-            <div class="table-wrap">
-              <table class="tx-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Categoría</th>
-                    <th>Tipo</th>
-                    <th class="right">Monto</th>
-                    <th>Fee</th>
-                    <th>Descripción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (t of r.transactions; track t.id) {
-                    <tr class="clickable" [routerLink]="['/transactions', t.id]">
-                      <td class="date">{{ fmtDate(t.datetimeUtc, timezone()) }} · {{ fmtTime(t.datetimeUtc, timezone()) }}</td>
-                      <td><span class="chip cat-chip">{{ t.category }}</span></td>
-                      <td>
+            @if (!isHandset()) {
+              <div class="table-wrap">
+                <table class="tx-table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Categoría</th>
+                      <th>Tipo</th>
+                      <th class="right">Monto</th>
+                      <th>Fee</th>
+                      <th>Descripción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of r.transactions; track t.id) {
+                      <tr class="clickable" [routerLink]="['/transactions', t.id]">
+                        <td class="date">{{ fmtDate(t.datetimeUtc, timezone()) }} · {{ fmtTime(t.datetimeUtc, timezone()) }}</td>
+                        <td><span class="chip cat-chip">{{ t.category }}</span></td>
+                        <td>
+                          <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            {{ t.type === 'income' ? 'Ingreso' : 'Gasto' }}
+                          </span>
+                        </td>
+                        <td class="right">
+                          <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            {{ montoTx(t, r.wallet.currency) }}
+                          </span>
+                        </td>
+                        <td>
+                          @if (t.fee > 0) {
+                            <span class="chip fee-chip">{{ feeTx(t, r.wallet.currency) }}</span>
+                          } @else {
+                            <span class="no-fee">—</span>
+                          }
+                        </td>
+                        <td class="desc">{{ t.description || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <mat-accordion multi="false" class="tx-accordion">
+                @for (t of r.transactions; track t.id) {
+                  <mat-expansion-panel class="tx-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title class="panel-title">
+                        <span class="panel-cuando">{{ cuandoRelativo(t.datetimeUtc, timezone()) }}</span>
+                        <span class="panel-cat" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          {{ t.category }}
+                        </span>
+                      </mat-panel-title>
+                      <mat-panel-description class="panel-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        {{ montoTx(t, r.wallet.currency) }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div class="panel-body">
+                      <div class="pv-row"><span>Categoría</span><strong>{{ t.category }}</strong></div>
+                      <div class="pv-row">
+                        <span>Tipo</span>
                         <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                           {{ t.type === 'income' ? 'Ingreso' : 'Gasto' }}
                         </span>
-                      </td>
-                      <td class="right">
-                        <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                          {{ montoTx(t, r.wallet.currency) }}
-                        </span>
-                      </td>
-                      <td>
-                        @if (t.fee > 0) {
+                      </div>
+                      @if (t.fee > 0) {
+                        <div class="pv-row">
+                          <span>Comisión</span>
                           <span class="chip fee-chip">{{ feeTx(t, r.wallet.currency) }}</span>
-                        } @else {
-                          <span class="no-fee">—</span>
-                        }
-                      </td>
-                      <td class="desc">{{ t.description || '—' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      }
+                      <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
+                      <div class="ver-detalles-wrap">
+                        <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
+                      </div>
+                    </div>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            }
           }
         </mat-card-content>
       </mat-card>

@@ -279,3 +279,78 @@
 .no-fee {
   color: rgba(0, 0, 0, 0.35);
 }
+
+/* Acordeón (móvil) */
+.tx-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tx-panel {
+  border-radius: 10px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.panel-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.panel-cuando {
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.panel-cat {
+  &.expense {
+    color: #d32f2f;
+  }
+
+  &.income {
+    color: #2e7d32;
+  }
+}
+
+.panel-amount {
+  justify-content: flex-end;
+  font-weight: 700;
+
+  &.expense {
+    color: #d32f2f;
+  }
+
+  &.income {
+    color: #2e7d32;
+  }
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.pv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  span:first-child {
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
+.ver-detalles-wrap {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ver-detalles {
+  color: #3f51b5;
+  text-decoration: none;
+  font-weight: 600;
+}

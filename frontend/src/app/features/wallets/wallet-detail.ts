@@ -7,17 +7,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterLink } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { NotificationService } from '../../core/services/notification.service';
 import { WalletReport } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
-import { formatInTimeZone } from '../../core/utils/dates';
+import { formatInTimeZone, todayInTimeZone } from '../../core/utils/dates';
 import { WalletDialog } from './wallet-dialog';
 
 @Component({
   selector: 'app-wallet-detail',
-  imports: [MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinnerModule, MatDividerModule, RouterLink],
+  imports: [MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinnerModule, MatDividerModule, RouterLink, MatAccordion, MatExpansionModule],
   templateUrl: './wallet-detail.html',
   styleUrls: ['./wallet-detail.scss'],
 })
@@ -33,6 +35,7 @@ export class WalletDetail implements OnInit {
 
   report = signal<WalletReport | null>(null);
   loading = signal(true);
+  isHandset = signal<boolean>(false);
 
   /** Resumen de ingresos/egresos/neto calculado desde el reporte. */
   readonly summary = computed(() => {
@@ -46,6 +49,36 @@ export class WalletDetail implements OnInit {
     }
     return { income, expense, net: income - expense };
   });
+
+  constructor(breakpointObserver: BreakpointObserver) {
+    breakpointObserver.observe('(max-width: 800px)').subscribe((state) => {
+      this.isHandset.set(state.matches);
+    });
+  }
+
+  /** Fecha relativa corta: 'Hoy', 'Ayer' o 'D-mesAbrev', + hora. */
+  cuandoRelativo(utc: string, tz: string | null | undefined): string {
+    const tzone = tz || 'America/Caracas';
+    const fecha = formatInTimeZone(utc, tzone, 'yyyy-MM-dd');
+    const hora = formatInTimeZone(utc, tzone, 'HH:mm');
+    const hoy = todayInTimeZone(tzone);
+    const ayer = this.addDays(hoy, -1);
+    let dia = fecha;
+    if (fecha === hoy) dia = 'Hoy';
+    else if (fecha === ayer) dia = 'Ayer';
+    else {
+      const [y, m, d] = fecha.split('-');
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      dia = `${Number(d)}-${meses[Number(m) - 1]}`;
+    }
+    return `${dia} · ${hora}`;
+  }
+
+  private addDays(dateStr: string, days: number): string {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
 
   ngOnInit(): void {
     this.settings.loadTimezone();
