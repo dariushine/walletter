@@ -295,6 +295,7 @@ public class TransactionsService
     {
         var t = await _db.Transactions
             .Include(x => x.Wallet)
+            .Include(x => x.Category)
             .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
             ?? throw new NotFoundException("Transacción no encontrada");
 
@@ -325,6 +326,15 @@ public class TransactionsService
             t.Wallet.Balance = newBalance;
         }
 
+        // Si la transacción editada es una COMISIÓN (fee hijo), recalcular el fee
+        // denormalizado del padre para que siga reflejando la suma de sus comisiones.
+        if (t.ParentId != null && t.Category?.Name == "fee")
+        {
+            var parent = await _db.Transactions.FirstOrDefaultAsync(x => x.Id == t.ParentId, ct);
+            if (parent != null)
+                parent.Fee = await SumChildFees(parent.Id, ct);
+        }
+
         await _db.SaveChangesAsync(ct);
         return new { success = true, id = t.Id };
     }
@@ -333,6 +343,7 @@ public class TransactionsService
     {
         var t = await _db.Transactions
             .Include(x => x.Wallet)
+            .Include(x => x.Category)
             .Include(x => x.Children).ThenInclude(c => c.Category)
             .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
             ?? throw new NotFoundException("Transacción no encontrada");
@@ -363,6 +374,16 @@ public class TransactionsService
         }
 
         t.Deleted = true;
+
+        // Si la transacción eliminada es una COMISIÓN (fee hijo), quitar su monto del
+        // fee denormalizado del padre (la sumamos al revertir; aquí se recalcula).
+        if (t.ParentId != null && t.Category?.Name == "fee")
+        {
+            var parent = await _db.Transactions.FirstOrDefaultAsync(x => x.Id == t.ParentId, ct);
+            if (parent != null)
+                parent.Fee = await SumChildFees(parent.Id, ct);
+        }
+
         await _db.SaveChangesAsync(ct);
         return new { success = true };
     }
