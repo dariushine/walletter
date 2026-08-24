@@ -5,6 +5,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterLink } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -12,14 +15,14 @@ import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { NotificationService } from '../../core/services/notification.service';
-import { WalletReport } from '../../models/walletter.models';
+import { WalletReport, WalletReportTransaction } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
 import { formatInTimeZone, todayInTimeZone } from '../../core/utils/dates';
 import { WalletDialog } from './wallet-dialog';
 
 @Component({
   selector: 'app-wallet-detail',
-  imports: [MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinnerModule, MatDividerModule, RouterLink, MatAccordion, MatExpansionModule],
+  imports: [MatCardModule, MatIconModule, MatButtonModule, MatListModule, MatProgressSpinnerModule, MatDividerModule, RouterLink, MatAccordion, MatExpansionModule, MatFormFieldModule, MatSelectModule, FormsModule],
   templateUrl: './wallet-detail.html',
   styleUrls: ['./wallet-detail.scss'],
 })
@@ -49,6 +52,40 @@ export class WalletDetail implements OnInit {
     }
     return { income, expense, net: income - expense };
   });
+
+  /** Filtro de periodo seleccionado en la lista. */
+  selectedPeriod = 'all';
+
+  readonly periods: { value: string; label: string }[] = [
+    { value: 'all', label: 'Todo' },
+    { value: 'today', label: 'Hoy' },
+    { value: 'week', label: 'Esta semana' },
+    { value: 'month', label: 'Este mes' },
+    { value: 'year', label: 'Este año' },
+  ];
+
+  /** Transacciones del reporte filtradas por el periodo activo. */
+  readonly filteredTx = computed<WalletReportTransaction[]>(() => {
+    const r = this.report();
+    if (!r) return [];
+    const tzone = this.settings.timezone();
+    const today = todayInTimeZone(tzone);
+    const { from, to } = this.rangeFor(this.selectedPeriod, today);
+    return r.transactions.filter((t) => {
+      const d = formatInTimeZone(t.datetimeUtc, tzone, 'yyyy-MM-dd');
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    });
+  });
+
+  private rangeFor(period: string, today: string): { from?: string; to?: string } {
+    if (period === 'today') return { from: today, to: today };
+    if (period === 'week') return { from: this.addDays(today, -6), to: today };
+    if (period === 'month') return { from: today.slice(0, 8) + '01', to: today };
+    if (period === 'year') return { from: today.slice(0, 4) + '-01-01', to: today };
+    return {};
+  }
 
   constructor(breakpointObserver: BreakpointObserver) {
     breakpointObserver.observe('(max-width: 800px)').subscribe((state) => {
@@ -142,5 +179,44 @@ export class WalletDetail implements OnInit {
   feeTx(t: { fee: number }, currency: string): string {
     const num = t.fee.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return `${num} ${currency ?? ''}`.trim();
+  }
+
+  /** Exporta las transacciones filtradas de la billetera a CSV. */
+  exportCSV(): void {
+    const header = ['ID', 'Fecha', 'Hora', 'Categoria', 'Tipo', 'Credito', 'Debito', 'Moneda', 'Descripcion'];
+    const currency = this.report()?.wallet.currency ?? '';
+    const rows = this.filteredTx().map((t) => {
+      const tzone = this.settings.timezone();
+      const fecha = formatInTimeZone(t.datetimeUtc, tzone, 'yyyy-MM-dd');
+      const hora = formatInTimeZone(t.datetimeUtc, tzone, 'HH:mm');
+      return [
+        t.id,
+        fecha,
+        hora,
+        t.category ?? '',
+        t.type === 'income' ? 'Ingreso' : 'Gasto',
+        t.type === 'income' ? t.amount : '',
+        t.type === 'expense' ? t.amount : '',
+        currency,
+        t.description ?? '',
+      ];
+    });
+
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => this.csvCell(cell)).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `billetera_${this.id()}_transacciones.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private csvCell(value: unknown): string {
+    const s = value === null || value === undefined ? '' : String(value);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
   }
 }

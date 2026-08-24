@@ -75,14 +75,33 @@
       }
 
       <mat-card class="section">
-        <mat-card-header>
-          <mat-card-title>Transacciones</mat-card-title>
+        <mat-card-header class="tx-header">
+          <mat-card-title>
+            Transacciones
+            <span class="tx-count" [hidden]="r.transactions.length === 0">{{ filteredTx().length }}</span>
+          </mat-card-title>
+          <span class="header-actions">
+            <button mat-flat-button color="primary" (click)="exportCSV()" aria-label="Exportar CSV">
+              <mat-icon>file_download</mat-icon>
+              Exportar
+            </button>
+            <mat-form-field appearance="outline" class="period-select">
+              <mat-label>Periodo</mat-label>
+              <mat-select [(ngModel)]="selectedPeriod">
+                @for (p of periods; track p.value) {
+                  <mat-option [value]="p.value">{{ p.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </span>
         </mat-card-header>
         <mat-card-content>
           @if (r.transactions.length === 0) {
             <p class="empty">Esta billetera no tiene transacciones.</p>
           } @else {
-            @if (!isHandset()) {
+            @if (filteredTx().length === 0) {
+              <p class="empty">Sin transacciones en el periodo.</p>
+            } @else if (!isHandset()) {
               <div class="table-wrap">
                 <table class="tx-table">
                   <thead>
