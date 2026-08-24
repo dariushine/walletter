@@ -20,18 +20,6 @@
   width: 100%;
 }
 
-.balance-icons {
-  display: flex;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.5);
-
-  mat-icon {
-    font-size: 26px;
-    width: 26px;
-    height: 26px;
-  }
-}
-
 .balance-label {
   opacity: 0.85;
   font-size: 0.9rem;
@@ -40,6 +28,34 @@
 .balance-value {
   font-size: 2.2rem;
   font-weight: 700;
+  margin-top: 2px;
+}
+
+.balance-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.balance-card .reveal-btn {
+  width: 30px;
+  height: 30px;
+  line-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.balance-sub {
+  opacity: 0.85;
+  font-size: 0.78rem;
   margin-top: 2px;
 }
 
@@ -55,6 +71,7 @@
   flex-wrap: wrap;
 }
 
+/* Pills de tasa: mismo look original, ahora como botón toggle. */
 .rate-pill {
   background: rgba(255, 255, 255, 0.16);
   border-radius: 999px;
@@ -62,11 +79,10 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: #fff;
-  min-width: 0;
-  line-height: 1.5;
-  border: 1px solid transparent;
+  border: none;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  line-height: inherit;
+  min-width: 0;
 
   &.active {
     background: rgba(255, 255, 255, 0.92);
@@ -79,20 +95,11 @@
   }
 }
 
-.reveal-btn {
-  color: rgba(255, 255, 255, 0.9);
-
-  mat-icon {
-    font-size: 26px;
-    width: 26px;
-    height: 26px;
-  }
-}
-
-.balance-sub {
-  opacity: 0.85;
-  font-size: 0.78rem;
-  margin-top: 2px;
+.balance-chart {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .balance-stats {

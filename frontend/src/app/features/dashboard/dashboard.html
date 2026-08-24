@@ -13,14 +13,14 @@
           <div class="balance-main">
             <div class="balance-top">
               <span class="balance-label">Balance total</span>
-              <div class="balance-icons">
-                <mat-icon>attach_money</mat-icon>
-                <button mat-icon-button class="reveal-btn" (click)="toggleTotalReveal()" [attr.aria-label]="isTotalHidden() ? 'Mostrar balance total' : 'Ocultar balance total'">
-                  <mat-icon>{{ isTotalHidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
-                </button>
-              </div>
+              <mat-icon class="balance-chart">show_chart</mat-icon>
             </div>
-            <span class="balance-value">{{ totalLabel() }}</span>
+            <div class="balance-line">
+              <span class="balance-value">{{ totalLabel() }}</span>
+              <button mat-icon-button class="reveal-btn" (click)="toggleTotalReveal()" [attr.aria-label]="isTotalHidden() ? 'Mostrar balance total' : 'Ocultar balance total'">
+                <mat-icon>{{ isTotalHidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </div>
             <span class="balance-sub">en USD (tasas del {{ rateDate() ?? 'día' }})</span>
             <span class="balance-updated">{{ updatedLabel() }}</span>
           </div>
