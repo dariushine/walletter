@@ -5,9 +5,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatRadioModule } from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
+import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { NotificationService } from '../../core/services/notification.service';
 
 const TIMEZONES = [
@@ -27,16 +30,30 @@ const TIMEZONES = [
 
 @Component({
   selector: 'app-settings',
-  imports: [MatCardModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatSelectModule, MatProgressSpinnerModule, FormsModule],
+  imports: [
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatProgressSpinnerModule,
+    MatSlideToggleModule,
+    MatRadioModule,
+    FormsModule,
+  ],
   templateUrl: './settings.html',
   styleUrls: ['./settings.scss'],
 })
 export class Settings implements OnInit {
   private readonly api = inject(WalletterApiService);
   private readonly settingsStore = inject(SettingsStore);
+  private readonly prefs = inject(UiPreferenceStore);
   private readonly notifier = inject(NotificationService);
 
   readonly timezones = TIMEZONES;
+  readonly hideBalances = this.prefs.hideBalances;
+  readonly decimalSeparator = this.prefs.decimalSeparator;
+
   timezone = 'America/Caracas';
   loading = signal(true);
   saving = signal(false);
@@ -45,6 +62,14 @@ export class Settings implements OnInit {
     this.settingsStore.loadTimezone();
     this.timezone = this.settingsStore.timezone();
     this.loading.set(false);
+  }
+
+  onHideChange(checked: boolean): void {
+    this.prefs.setHideBalances(checked);
+  }
+
+  onSepChange(value: ',' | '.'): void {
+    this.prefs.setDecimalSeparator(value);
   }
 
   save(): void {

@@ -1,13 +1,11 @@
 // Utilidades de formato de dinero.
 // La app maneja montos en unidades decimales (lo que devuelve la API).
+import { DecimalSeparator } from '../services/ui-preference.store';
 
 /** Formatea un número como moneda con el símbolo dado. */
-export function formatMoney(amount: number, currency = 'USD'): string {
+export function formatMoney(amount: number, currency = 'USD', separator: DecimalSeparator = ','): string {
   const symbol = currencySymbol(currency);
-  const formatted = new Intl.NumberFormat('es-VE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  const formatted = formatNumber(amount, 2, separator);
   return `${symbol}${formatted}`;
 }
 
@@ -27,10 +25,15 @@ export function currencySymbol(currency: string): string {
   }
 }
 
-/** Formatea un número sin símbolo de moneda. */
-export function formatNumber(value: number, digits = 2): string {
-  return new Intl.NumberFormat('es-VE', {
+/** Formatea un número sin símbolo de moneda, respetando el separador decimal. */
+export function formatNumber(value: number, digits = 2, separator: DecimalSeparator = ','): string {
+  const withComma = new Intl.NumberFormat('es-VE', {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   }).format(value);
+  if (separator === '.') {
+    // Convierte el formato español (1.234,56) a inglés (1,234.56).
+    return withComma.replace(/\./g, '_TMP_').replace(/,/g, '.').replace(/_TMP_/g, ',');
+  }
+  return withComma;
 }

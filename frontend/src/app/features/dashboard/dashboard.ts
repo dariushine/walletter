@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
+import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Wallet, Stats, Transaction } from '../../models/walletter.models';
 import { formatMoney, currencySymbol } from '../../core/utils/money';
 
@@ -26,8 +27,11 @@ import { formatMoney, currencySymbol } from '../../core/utils/money';
 export class Dashboard implements OnInit {
   private readonly api = inject(WalletterApiService);
   private readonly settings = inject(SettingsStore);
+  private readonly prefs = inject(UiPreferenceStore);
 
   readonly timezone = this.settings.timezone;
+  readonly hideBalances = this.prefs.hideBalances;
+  readonly decimalSeparator = this.prefs.decimalSeparator;
 
   wallets = signal<Wallet[]>([]);
   stats = signal<Stats | null>(null);
@@ -58,7 +62,13 @@ export class Dashboard implements OnInit {
   }
 
   format(amount: number, currency = 'USD'): string {
-    return formatMoney(amount, currency);
+    return formatMoney(amount, currency, this.decimalSeparator());
+  }
+
+  /** Devuelve el monto, o máscara, según la preferencia de ocultar saldos. */
+  saldo(amount: number, currency = 'USD'): string {
+    if (this.hideBalances()) return '•••';
+    return this.format(amount, currency);
   }
 
   symbol(currency: string): string {
