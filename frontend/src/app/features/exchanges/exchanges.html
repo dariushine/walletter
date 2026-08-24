@@ -90,26 +90,20 @@
         <mat-accordion multi="false" class="ex-accordion">
           @for (e of exchanges(); track e.id) {
             <mat-expansion-panel class="ex-panel">
-              <mat-expansion-panel-header>
-                <mat-panel-title class="panel-title">
+              <mat-expansion-panel-header class="ex-header">
+                <!-- Linea 1: fecha izq + origen→destino der -->
+                <div class="ex-head-row">
                   <span class="panel-cuando">{{ fecha(e.createdAt) }} · {{ hora(e.createdAt) }}</span>
                   <span class="panel-route">{{ e.fromWalletName }} → {{ e.toWalletName }}</span>
-                </mat-panel-title>
-                <mat-panel-description class="panel-amounts">
+                </div>
+                <!-- Linea 2: monto salida izq + flecha centro + monto entrada der -->
+                <div class="ex-amount-row">
                   <span class="amount-out">{{ monto(e, e.fromAmount, e.fromCurrency, '-') }}</span>
                   <mat-icon class="route-arrow">arrow_forward</mat-icon>
                   <span class="amount-in">{{ monto(e, e.toAmount, e.toCurrency, '+') }}</span>
-                </mat-panel-description>
+                </div>
               </mat-expansion-panel-header>
               <div class="pv-body">
-                <div class="pv-row"><span>Origen</span><strong>{{ e.fromWalletName }} ({{ e.fromCurrency }})</strong></div>
-                <div class="pv-row"><span>Destino</span><strong>{{ e.toWalletName }} ({{ e.toCurrency }})</strong></div>
-                <div class="pv-row">
-                  <span>Monto salida</span><strong class="amount-out">{{ monto(e, e.fromAmount, e.fromCurrency, '-') }}</strong>
-                </div>
-                <div class="pv-row">
-                  <span>Monto entrada</span><strong class="amount-in">{{ monto(e, e.toAmount, e.toCurrency, '+') }}</strong>
-                </div>
                 <div class="pv-row">
                   <span>Tasa</span><span class="chip rate-chip">{{ e.rate }}</span>
                 </div>
