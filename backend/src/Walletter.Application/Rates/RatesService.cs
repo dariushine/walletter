@@ -143,14 +143,16 @@ public class RatesService
     {
         try
         {
-            using var resp = await _http.GetAsync($"https://dolarapi.com/v1/dolares/{casa}", ct);
+            // Venezuela: el endpoint correcto es ve.dolarapi.com y expone el rate en
+            // el campo "promedio" (con compra/venta null). dolarapi.com (global) devuelve
+            // el "blue" internacional (~1500) que NO corresponde al dólar venezolano.
+            using var resp = await _http.GetAsync($"https://ve.dolarapi.com/v1/dolares/{casa}", ct);
             if (!resp.IsSuccessStatusCode) return null;
             var json = await resp.Content.ReadAsStringAsync(ct);
             using var doc = JsonDocument.Parse(json);
-            var compra = doc.RootElement.TryGetProperty("compra", out var c) && c.ValueKind == JsonValueKind.Number ? c.GetDecimal() : 0;
-            var venta = doc.RootElement.TryGetProperty("venta", out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDecimal() : 0;
-            if (compra <= 0 && venta <= 0) return null;
-            var avg = compra > 0 && venta > 0 ? (compra + venta) / 2m : Math.Max(compra, venta);
+            var prom = doc.RootElement.TryGetProperty("promedio", out var p) && p.ValueKind == JsonValueKind.Number ? p.GetDecimal() : 0;
+            if (prom <= 0) return null;
+            var avg = prom;
             DateTime? f = null;
             if (doc.RootElement.TryGetProperty("fechaActualizacion", out var fa) && fa.ValueKind == JsonValueKind.String
                 && DateTime.TryParse(fa.GetString(), out var parsed))
