@@ -119,7 +119,11 @@
                     @for (t of r.transactions; track t.id) {
                       <tr class="clickable" [routerLink]="['/transactions', t.id]">
                         <td class="date">{{ fmtDate(t.datetimeUtc, timezone()) }} · {{ fmtTime(t.datetimeUtc, timezone()) }}</td>
-                        <td><span class="chip cat-chip">{{ t.category }}</span></td>
+                        <td>
+                          <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            {{ t.category }}
+                          </span>
+                        </td>
                         <td>
                           <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                             {{ t.type === 'income' ? 'Ingreso' : 'Gasto' }}
@@ -150,7 +154,7 @@
                     <mat-expansion-panel-header>
                       <mat-panel-title class="panel-title">
                         <span class="panel-cuando">{{ cuandoRelativo(t.datetimeUtc, timezone()) }}</span>
-                        <span class="panel-cat" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                           {{ t.category }}
                         </span>
                       </mat-panel-title>

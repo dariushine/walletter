@@ -318,9 +318,16 @@
   white-space: nowrap;
 }
 
-.cat-chip {
-  background: #f0f0f0;
-  color: rgba(0, 0, 0, 0.7);
+.cat-chip-inline {
+  &.expense {
+    background: #fdecea;
+    color: #d32f2f;
+  }
+
+  &.income {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
 }
 
 .tipo-chip {
@@ -366,16 +373,6 @@
 .panel-cuando {
   font-size: 0.78rem;
   color: rgba(0, 0, 0, 0.5);
-}
-
-.panel-cat {
-  &.expense {
-    color: #d32f2f;
-  }
-
-  &.income {
-    color: #2e7d32;
-  }
 }
 
 .panel-amount {
