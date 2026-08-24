@@ -45,15 +45,12 @@
                 {{ c.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
               </mat-icon>
               <span class="cat-name">{{ c.name }}</span>
-              <span class="cat-type" [class.income]="c.type === 'income'">
-                {{ c.type === 'income' ? 'Ingreso' : 'Gasto' }}
+              <span class="cat-actions">
+                @if (!isProtected(c)) {
+                  <button mat-icon-button (click)="edit(c)" aria-label="Editar"><mat-icon>edit</mat-icon></button>
+                  <button mat-icon-button (click)="delete(c)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
+                }
               </span>
-            </div>
-            <div class="cat-actions">
-              @if (!isProtected(c)) {
-                <button mat-icon-button (click)="edit(c)" aria-label="Editar"><mat-icon>edit</mat-icon></button>
-                <button mat-icon-button (click)="delete(c)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
-              }
             </div>
           </mat-card-content>
         </mat-card>

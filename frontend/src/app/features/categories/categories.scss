@@ -53,9 +53,7 @@
   position: relative;
 
   mat-card-content {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    padding: 4px 8px;
   }
 }
 
@@ -67,10 +65,9 @@
 
 .cat-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 4px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  padding-top: 6px;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
 
   mat-icon {
     font-size: 20px;
@@ -85,7 +82,7 @@
 
 .cat-name {
   font-weight: 600;
-  flex: 1;
+  flex: 0 1 auto;
 }
 
 .cat-type {
