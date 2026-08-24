@@ -1,10 +1,12 @@
-<h2 mat-dialog-title>Nueva transacción</h2>
+<h2 mat-dialog-title>{{ dialogTitle() }}</h2>
 <mat-dialog-content>
   <form [formGroup]="form" class="tx-form">
-    <mat-radio-group formControlName="type" class="type-radio">
-      <mat-radio-button value="expense" color="warn">Gasto</mat-radio-button>
-      <mat-radio-button value="income" color="primary">Ingreso</mat-radio-button>
-    </mat-radio-group>
+    @if (!hideType()) {
+      <mat-radio-group formControlName="type" class="type-radio">
+        <mat-radio-button value="expense" color="warn">Gasto</mat-radio-button>
+        <mat-radio-button value="income" color="primary">Ingreso</mat-radio-button>
+      </mat-radio-group>
+    }
 
     <mat-form-field appearance="outline" class="full">
       <mat-label>Billetera</mat-label>

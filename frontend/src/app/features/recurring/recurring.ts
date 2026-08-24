@@ -13,7 +13,10 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { RecurringPayment, Wallet } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
-import { RecurringDialog, RecurringExecuteDialog } from './recurring-dialog';
+import { todayInTimeZone, formatInTimeZone } from '../../core/utils/dates';
+import { RecurringDialog } from './recurring-dialog';
+import { TransactionDialog } from '../transactions/transaction-dialog';
+import { SettingsStore } from '../../core/services/settings-store';
 
 @Component({
   selector: 'app-recurring',
@@ -25,6 +28,7 @@ export class Recurring implements OnInit {
   private readonly api = inject(WalletterApiService);
   private readonly dialog = inject(MatDialog);
   private readonly notifier = inject(NotificationService);
+  private readonly settings = inject(SettingsStore);
 
   items = signal<RecurringPayment[]>([]);
   wallets = signal<Wallet[]>([]);
@@ -60,10 +64,32 @@ export class Recurring implements OnInit {
     });
   }
 
+  /**
+   * Ejecutar un pago recurrente: abre el formulario de transacción NORMAL
+   * prellenado desde el pago recurrente, pero editable (billetera, monto,
+   * comisión, fecha/hora, descripción). El tipo queda fijado (gasto/ingreso).
+   */
   execute(item: RecurringPayment): void {
-    const ref = this.dialog.open(RecurringExecuteDialog, { width: '420px', data: { item, wallets: this.wallets() } });
+    this.settings.loadTimezone();
+    const tz = this.settings.timezone();
+    const wallets = this.wallets();
+    const preset = {
+      type: item.type,
+      walletId: item.walletId ?? null,
+      categoryName: item.category ?? '',
+      amount: item.amount,
+      fee: item.fee ?? 0,
+      description: item.description ?? item.name,
+      date: todayInTimeZone(tz),
+      time: formatInTimeZone(new Date(), tz, 'HH:mm'),
+      title: `Registrar ${item.type === 'income' ? 'ingreso' : 'gasto'} recurrente`,
+    };
+    const ref = this.dialog.open(TransactionDialog, {
+      width: '460px',
+      data: { wallets, tz, preset },
+    });
     ref.afterClosed().subscribe((ok) => {
-      if (ok) this.notifier.success('Pago recurrente ejecutado');
+      if (ok) this.notifier.success('Transacción registrada');
     });
   }
 

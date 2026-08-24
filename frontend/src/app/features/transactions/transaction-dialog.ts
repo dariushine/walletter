@@ -14,9 +14,25 @@ import { Wallet } from '../../models/walletter.models';
 import { todayInTimeZone } from '../../core/utils/dates';
 import { MoneyInput } from '../../core/components/money-input';
 
+export interface TransactionDialogPreset {
+  /** Tipo fijo (gasto/ingreso). Si viene, se oculta el selector de tipo. */
+  type?: 'income' | 'expense';
+  walletId?: number | null;
+  categoryName?: string;
+  amount?: number;
+  fee?: number;
+  description?: string;
+  date?: string;
+  time?: string;
+  /** Título del diálogo (por defecto 'Nueva transacción'). */
+  title?: string;
+}
+
 export interface TransactionDialogData {
   wallets: Wallet[];
   tz: string;
+  /** Datos iniciales para prellenar el formulario (p. ej. ejecutar pago recurrente). */
+  preset?: TransactionDialogPreset;
 }
 
 @Component({
@@ -47,16 +63,17 @@ export class TransactionDialog {
 
   loading = signal(false);
   today = todayInTimeZone(this.data.tz);
+  readonly preset = this.data?.preset;
 
   readonly form = this.fb.group({
-    walletId: [this.data.wallets[0]?.id ?? null, Validators.required],
-    type: ['expense', Validators.required],
-    categoryName: ['', Validators.required],
-    amount: [0, [Validators.required, Validators.min(0.01)]],
-    description: [''],
-    fee: [0],
-    date: [this.today, Validators.required],
-    time: ['12:00', Validators.required],
+    walletId: [this.preset?.walletId ?? this.data.wallets[0]?.id ?? null, Validators.required],
+    type: [this.preset?.type ?? 'expense', Validators.required],
+    categoryName: [this.preset?.categoryName ?? '', Validators.required],
+    amount: [this.preset?.amount ?? 0, [Validators.required, Validators.min(0.01)]],
+    description: [this.preset?.description ?? ''],
+    fee: [this.preset?.fee ?? 0],
+    date: [this.preset?.date ?? this.today, Validators.required],
+    time: [this.preset?.time ?? '12:00', Validators.required],
   });
 
   save(): void {
@@ -94,5 +111,14 @@ export class TransactionDialog {
     const id = this.form.value.walletId;
     const w = this.data.wallets.find((ww) => ww.id === id);
     return w?.currency ?? null;
+  }
+
+  /** true si el tipo viene fijado por el preset → ocultar el selector de tipo. */
+  hideType(): boolean {
+    return !!this.preset?.type;
+  }
+
+  dialogTitle(): string {
+    return this.preset?.title ?? 'Nueva transacción';
   }
 }
