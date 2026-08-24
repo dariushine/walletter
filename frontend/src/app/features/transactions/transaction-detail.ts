@@ -1,4 +1,5 @@
 import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -65,7 +66,12 @@ export class TransactionDetail implements OnInit {
   ngOnInit(): void {
     this.settings.loadTimezone();
     this.tz = this.settings.timezone();
-    this.load();
+    // Recarga cuando cambia el id (al navegar entre transacciones el
+    // componente de ruta se reutiliza y ngOnInit no vuelve a correr).
+    toObservable(this.id).subscribe(() => {
+      this.loading.set(true);
+      this.load();
+    });
   }
 
   load(): void {
