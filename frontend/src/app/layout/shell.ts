@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
 import { MatToolbar } from '@angular/material/toolbar';
@@ -38,7 +38,7 @@ interface NavItem {
   styleUrls: ['./shell.scss'],
 })
 export class Shell {
-  drawer!: MatDrawer;
+  @ViewChild('drawer') drawer!: MatDrawer;
 
   readonly navItems: NavItem[] = [
     { routerLink: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
