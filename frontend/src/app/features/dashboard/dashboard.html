@@ -130,12 +130,18 @@
                 </tbody>
               </table>
             </div>
-            <div class="ver-mas-wrap">
-              <a mat-button color="primary" routerLink="/transactions">
-                Ver más
-                <mat-icon>arrow_drop_down</mat-icon>
-              </a>
-            </div>
+            @if (canLoadMore()) {
+              <div class="ver-mas-wrap">
+                <button mat-button color="primary" (click)="loadMore()" [disabled]="loadingMore()">
+                  @if (loadingMore()) {
+                    <mat-spinner diameter="18" />
+                  } @else {
+                    <mat-icon>arrow_drop_down</mat-icon>
+                  }
+                  Ver más
+                </button>
+              </div>
+            }
           }
         </mat-card-content>
       </mat-card>

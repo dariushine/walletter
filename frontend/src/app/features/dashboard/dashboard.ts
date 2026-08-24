@@ -53,6 +53,10 @@ export class Dashboard implements OnInit {
 
   wallets = signal<Wallet[]>([]);
   recent = signal<Transaction[]>([]);
+  /** Total de transacciones disponible según el backend. */
+  private recentTotal = 0;
+  /** Indica si hay un 'cargar más' en curso. */
+  readonly loadingMore = signal(false);
   loading = signal(true);
 
   ngOnInit(): void {
@@ -125,16 +129,43 @@ export class Dashboard implements OnInit {
 
   private load(): void {
     this.loading.set(true);
+    this.recentTotal = 0;
+    this.recent.set([]);
     this.api.wallets().subscribe({
       next: (w) => this.wallets.set(w),
       error: () => this.loading.set(false),
     });
-    this.api.transactions({ limit: 6 }).subscribe({
-      next: (t) => this.recent.set(t.data),
-      error: () => undefined,
+    // Carga inicial de las 5 más recientes (de 5 en 5 con 'Ver más').
+    this.loadRecent(1);
+  }
+
+  /** Carga una página de transacciones y la añade a las ya cargadas. */
+  private loadRecent(page: number): void {
+    this.api.transactions({ page, limit: 5 }).subscribe({
+      next: (res) => {
+        this.recentTotal = res.total;
+        this.recent.update((current) => [...current, ...res.data]);
+        this.loading.set(false);
+        this.loadingMore.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.loadingMore.set(false);
+      },
     });
-    // Marcar cargado cuando todas las peticiones resuelven o fallan.
-    setTimeout(() => this.loading.set(false), 600);
+  }
+
+  /** true si aún quedan transacciones por cargar. */
+  canLoadMore(): boolean {
+    return this.recent().length < this.recentTotal;
+  }
+
+  /** Carga las siguientes 5 y las agrega debajo de las ya mostradas. */
+  loadMore(): void {
+    if (this.loadingMore() || !this.canLoadMore()) return;
+    this.loadingMore.set(true);
+    const nextPage = Math.floor(this.recent().length / 5) + 1;
+    this.loadRecent(nextPage);
   }
 
   format(amount: number, currency = 'USD'): string {
