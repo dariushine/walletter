@@ -8,14 +8,19 @@
   } @else {
     @if (report(); as r) {
       <mat-card class="wallet-hero">
-        <!-- Cabecera: nombre + badge tipo + acciones -->
+        <!-- Cabecera: icono + nombre + badge tipo + acciones -->
         <div class="hero-top">
-          <div class="hero-info">
-            <div class="hero-title-row">
-              <h1 class="hero-name">{{ r.wallet.name }}</h1>
-              <span class="hero-type-badge">{{ (r.wallet.type || '').toUpperCase() }}</span>
+          <div class="hero-left">
+            <mat-icon class="hero-icon" [style.color]="r.wallet.color || '#3f51b5'">
+              {{ r.wallet.icon || (r.wallet.type === 'cash' ? 'payments' : 'account_balance_wallet') }}
+            </mat-icon>
+            <div class="hero-info">
+              <div class="hero-title-row">
+                <h1 class="hero-name">{{ r.wallet.name }}</h1>
+                <span class="hero-type-badge">{{ (r.wallet.type || '').toUpperCase() }}</span>
+              </div>
+              <span class="hero-sub">{{ r.wallet.alias || r.wallet.type }} · {{ r.wallet.currency }}</span>
             </div>
-            <span class="hero-sub">{{ r.wallet.alias || r.wallet.type }} · {{ r.wallet.currency }}</span>
           </div>
           <div class="hero-actions">
             <button mat-stroked-button (click)="edit()" class="btn-edit">

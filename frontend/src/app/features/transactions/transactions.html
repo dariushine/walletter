@@ -3,6 +3,7 @@
     <div>
       <h1 class="page-title">Transacciones</h1>
       <p class="page-subtitle">Historial de ingresos y gastos</p>
+      <span class="tx-count" [hidden]="total() === 0">{{ total() }} transacciones</span>
     </div>
     <button mat-flat-button color="primary" (click)="exportCSV()" aria-label="Exportar CSV">
       <mat-icon>file_download</mat-icon>

@@ -8,6 +8,7 @@
 
 .wallet-hero {
   margin-bottom: 24px;
+  padding: 8px;
 }
 
 /* Cabecera */
@@ -17,6 +18,18 @@
   align-items: flex-start;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.hero-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
 }
 
 .hero-info {
