@@ -18,7 +18,7 @@ import { SettingsStore } from '../../core/services/settings-store';
 import { NotificationService } from '../../core/services/notification.service';
 import { TransactionDetail as TransactionDetailModel } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
-import { todayInTimeZone } from '../../core/utils/dates';
+import { todayInTimeZone, formatInTimeZone } from '../../core/utils/dates';
 import { EditTransactionDialog } from './transaction-edit-dialog';
 import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
 import { MoneyInput } from '../../core/components/money-input';
@@ -342,11 +342,12 @@ export class AddFeeDialog {
 
   loading = signal(false);
   today = todayInTimeZone(this.data.tz);
+  nowTime = formatInTimeZone(new Date(), this.data.tz, 'HH:mm');
 
   readonly form = this.fb.group({
     amount: [0, [Validators.required, Validators.min(0.01)]],
     date: [this.today, Validators.required],
-    time: ['12:00', Validators.required],
+    time: [this.nowTime, Validators.required],
   });
 
   save(): void {
@@ -469,6 +470,7 @@ export class AddAssociateDialog {
 
   loading = signal(false);
   today = todayInTimeZone(this.data.tz);
+  nowTime = formatInTimeZone(new Date(), this.data.tz, 'HH:mm');
 
   readonly form = this.fb.group({
     type: ['expense', Validators.required],
@@ -477,7 +479,7 @@ export class AddAssociateDialog {
     description: [''],
     fee: [0],
     date: [this.today, Validators.required],
-    time: ['12:00', Validators.required],
+    time: [this.nowTime, Validators.required],
   });
 
   /** Cambia el tipo: limpia la categoría y recarga las sugerencias (el autocomplete recarga por [type]). */
