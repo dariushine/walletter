@@ -14,7 +14,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { WalletterApiService } from '../core/services/walletter-api.service';
 import { NotificationService } from '../core/services/notification.service';
 import { Wallet, Category } from '../models/walletter.models';
-import { todayInTimeZone } from '../core/utils/dates';
+import { todayInTimeZone, formatInTimeZone } from '../core/utils/dates';
 import { MoneyInput } from '../core/components/money-input';
 
 export interface NewOperationDialogData {
@@ -56,6 +56,8 @@ export class NewOperationDialog implements OnInit {
 
   loading = signal(false);
   today = todayInTimeZone(this.data.tz || 'America/Caracas');
+  /** Hora actual en la zona del usuario, p. ej. '14:05'. */
+  nowTime = formatInTimeZone(new Date(), this.data.tz || 'America/Caracas', 'HH:mm');
   /** Tab activa: 0 = Transacción, 1 = Exchange. */
   readonly activeTab = signal(0);
 
@@ -72,7 +74,7 @@ export class NewOperationDialog implements OnInit {
     description: [''],
     fee: [0],
     date: [this.today, Validators.required],
-    time: ['12:00', Validators.required],
+    time: [this.nowTime, Validators.required],
   });
 
   readonly exForm = this.fb.group({
@@ -84,7 +86,7 @@ export class NewOperationDialog implements OnInit {
     creditFee: [0],
     description: [''],
     date: [this.today, Validators.required],
-    time: ['12:00', Validators.required],
+    time: [this.nowTime, Validators.required],
   });
 
   setTab(tab: number): void {
