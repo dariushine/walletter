@@ -97,21 +97,45 @@
           @if (recent().length === 0) {
             <p class="empty">Sin transacciones recientes.</p>
           } @else {
-            <mat-list>
-              @for (t of recent(); track t.id) {
-                <mat-list-item class="tx-item">
-                  <mat-icon matListItemIcon [style.color]="t.type === 'income' ? '#2e7d32' : '#c62828'">
-                    {{ t.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}
-                  </mat-icon>
-                  <span matListItemTitle>{{ t.description || t.category }}</span>
-                  <span matListItemMeta>
-                    <span class="amount" [class.income]="t.type === 'income'">
-                      {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, t.walletCurrency) }}
-                    </span>
-                  </span>
-                </mat-list-item>
-              }
-            </mat-list>
+            <div class="table-wrap">
+              <table class="dash-tx-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Categoría</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th class="right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (t of recent(); track t.id) {
+                    <tr [routerLink]="['/transactions', t.id]">
+                      <td class="date">{{ txCuando(t) }}</td>
+                      <td><span class="chip cat-chip">{{ t.category }}</span></td>
+                      <td>
+                        <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          {{ txTipo(t) }}
+                        </span>
+                      </td>
+                      <td class="desc">{{ t.description || '—' }}</td>
+                      <td class="right">
+                        <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          {{ txMonto(t) }}
+                        </span>
+                        <span class="wallet-sub">{{ t.walletName }}</span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="ver-mas-wrap">
+              <a mat-button color="primary" routerLink="/transactions">
+                Ver más
+                <mat-icon>arrow_drop_down</mat-icon>
+              </a>
+            </div>
           }
         </mat-card-content>
       </mat-card>

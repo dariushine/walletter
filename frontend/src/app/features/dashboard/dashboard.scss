@@ -14,6 +14,7 @@
 }
 
 .balance-top {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,15 +27,21 @@
   font-weight: 700;
 }
 
+/* Iconos decorativos (dólar + flecha): absolutos a la derecha para NO
+   afectar el tamaño/posición del contenido en el otro lado del hero. */
 .balance-icons {
+  position: absolute;
+  right: 0;
+  top: 0;
   display: flex;
   gap: 8px;
   color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
 
   mat-icon {
-    font-size: 32px;
-    width: 32px;
-    height: 32px;
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
   }
 }
 
@@ -239,8 +246,109 @@
   }
 }
 
-.tx-item {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+.table-wrap {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.dash-tx-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.55);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba(63, 81, 181, 0.04);
+    }
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  .date {
+    white-space: nowrap;
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .desc {
+    color: rgba(0, 0, 0, 0.75);
+  }
+
+  .amount {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .amount.income {
+    color: #2e7d32;
+  }
+
+  .amount.expense {
+    color: #d32f2f;
+  }
+
+  .wallet-sub {
+    display: block;
+    font-size: 0.72rem;
+    color: rgba(0, 0, 0, 0.5);
+    font-weight: 400;
+  }
+}
+
+/* Chips de la tabla (mismo look que transacciones). */
+.chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cat-chip {
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.tipo-chip {
+  color: #fff;
+
+  &.expense {
+    background: #d32f2f;
+  }
+
+  &.income {
+    background: #2e7d32;
+  }
+}
+
+.ver-mas-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+  }
 }
 
 .amount {

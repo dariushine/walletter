@@ -10,6 +10,7 @@ import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Wallet, Transaction } from '../../models/walletter.models';
 import { formatMoney, currencySymbol, currencyName, formatWithCode } from '../../core/utils/money';
+import { todayInTimeZone } from '../../core/utils/dates';
 
 @Component({
   selector: 'app-dashboard',
@@ -190,5 +191,43 @@ export class Dashboard implements OnInit {
 
   symbol(currency: string): string {
     return currencySymbol(currency);
+  }
+
+  /** Fecha relativa corta (Hoy/Ayer/26-ago) + hora, estilo transacciones. */
+  txCuando(t: Transaction): string {
+    let dia = t.date || '';
+    const hoy = this.today();
+    const ayer = this.addDays(hoy, -1);
+    if (t.date === hoy) dia = 'Hoy';
+    else if (t.date === ayer) dia = 'Ayer';
+    else {
+      const [y, m, d] = (t.date || '').split('-');
+      if (y && m && d) {
+        const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        dia = `${Number(d)}-${meses[Number(m) - 1]}`;
+      }
+    }
+    return `${dia} · ${t.time || ''}`;
+  }
+
+  txTipo(t: Transaction): string {
+    return t.type === 'income' ? 'Ingreso' : 'Gasto';
+  }
+
+  /** Monto con signo + moneda; wallet en sublínea, estilo dashboard viejo. */
+  txMonto(t: Transaction): string {
+    const sign = t.type === 'income' ? '+' : '-';
+    const num = Math.abs(t.amount).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${sign}${num} ${t.walletCurrency ?? ''}`.trim();
+  }
+
+  private today(): string {
+    return todayInTimeZone(this.timezone());
+  }
+
+  private addDays(dateStr: string, days: number): string {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
   }
 }
