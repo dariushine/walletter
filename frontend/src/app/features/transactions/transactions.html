@@ -95,7 +95,7 @@
             <mat-expansion-panel class="tx-panel">
               <mat-expansion-panel-header>
                 <mat-panel-title class="panel-title">
-                  <span class="panel-cuando">{{ t.date }} · {{ t.time }}</span>
+                  <span class="panel-cuando">{{ fecha(t) }} · {{ t.time }}</span>
                   <span class="panel-cat" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                     {{ t.category }}
                   </span>
