@@ -8,10 +8,11 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { Wallet } from '../../models/walletter.models';
+import { Wallet, RecurringPayment } from '../../models/walletter.models';
 
 export interface RecurringDialogData {
   wallets: Wallet[];
+  item?: RecurringPayment; // si viene, se edita
 }
 
 const CURRENCIES = ['USD', 'VES'];
@@ -31,39 +32,44 @@ export class RecurringDialog {
 
   readonly currencies = CURRENCIES;
   loading = false;
+  isEdit = !!this.data?.item;
 
   readonly form = this.fb.group({
-    name: ['', Validators.required],
-    type: ['expense', Validators.required],
-    amount: [0, [Validators.required, Validators.min(0.01)]],
-    fee: [0],
-    currency: ['USD', Validators.required],
-    categoryName: ['', Validators.required],
-    walletId: [null as number | null],
+    name: [this.data?.item?.name ?? '', Validators.required],
+    type: [(this.data?.item?.type ?? 'expense') as 'expense' | 'income', Validators.required],
+    amount: [this.data?.item?.amount ?? 0, [Validators.required, Validators.min(0.01)]],
+    fee: [this.data?.item?.fee ?? 0],
+    currency: [this.data?.item?.currency ?? 'USD', Validators.required],
+    categoryName: [this.data?.item?.category ?? '', Validators.required],
+    walletId: [this.data?.item?.walletId ?? null],
   });
 
   save(): void {
     if (this.form.invalid) return;
     this.loading = true;
     const v = this.form.value;
-    this.api
-      .createRecurringPayment({
-        name: v.name!,
-        type: v.type as 'income' | 'expense',
-        amount: Number(v.amount) || 0,
-        fee: Number(v.fee) || 0,
-        currency: v.currency!,
-        categoryName: v.categoryName!,
-        walletId: v.walletId ?? undefined,
-      } as any)
-      .subscribe({
-        next: () => {
-          this.loading = false;
-          this.notifier.success('Pago recurrente creado');
-          this.dialogRef.close(true);
-        },
-        error: () => (this.loading = false),
-      });
+    const payload = {
+      name: v.name!,
+      type: v.type as 'income' | 'expense',
+      amount: Number(v.amount) || 0,
+      fee: Number(v.fee) || 0,
+      currency: v.currency!,
+      categoryName: v.categoryName!,
+      walletId: v.walletId ?? undefined,
+    };
+
+    const request = this.isEdit
+      ? this.api.updateRecurringPayment(this.data!.item!.id, payload as any)
+      : this.api.createRecurringPayment(payload as any);
+
+    request.subscribe({
+      next: () => {
+        this.loading = false;
+        this.notifier.success(this.isEdit ? 'Pago recurrente actualizado' : 'Pago recurrente creado');
+        this.dialogRef.close(true);
+      },
+      error: () => (this.loading = false),
+    });
   }
 
   cancel(): void {

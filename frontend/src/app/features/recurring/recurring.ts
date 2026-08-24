@@ -53,6 +53,13 @@ export class Recurring implements OnInit {
     });
   }
 
+  edit(item: RecurringPayment): void {
+    const ref = this.dialog.open(RecurringDialog, { width: '440px', data: { wallets: this.wallets(), item } });
+    ref.afterClosed().subscribe((updated) => {
+      if (updated) this.load();
+    });
+  }
+
   execute(item: RecurringPayment): void {
     const ref = this.dialog.open(RecurringExecuteDialog, { width: '420px', data: { item, wallets: this.wallets() } });
     ref.afterClosed().subscribe((ok) => {
