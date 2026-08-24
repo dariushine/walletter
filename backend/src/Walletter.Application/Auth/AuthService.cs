@@ -23,7 +23,7 @@ public class AuthService
     public bool AuthEnabled =>
         !string.IsNullOrEmpty(_options.AuthUsername) && !string.IsNullOrEmpty(_options.AuthPassword);
 
-    public async Task<LoginResult> Login(string username, string password, bool remember, CancellationToken ct = default)
+    public async Task<LoginResult> Login(string username, string password, bool remember, string? userAgent = null, string? ip = null, CancellationToken ct = default)
     {
         if (!AuthEnabled)
             throw new UnauthorizedAppException("Autenticación deshabilitada");
@@ -37,16 +37,33 @@ public class AuthService
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var expiresMs = 2592000000L; // 30 días
 
+        var deviceName = DeriveDeviceName(userAgent);
+
         _db.RefreshTokens.Add(new RefreshToken
         {
             Jti = jti,
             TokenHash = _tokens.Sha256(refreshSecret),
             CreatedAt = now,
             ExpiresAt = now + expiresMs,
+            UserAgent = userAgent,
+            Ip = ip,
+            DeviceName = deviceName,
         });
         await _db.SaveChangesAsync(ct);
 
         return new LoginResult(accessToken, refreshSecret, "Bearer", 15 * 60, remember);
+    }
+
+    private static string DeriveDeviceName(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Dispositivo";
+        var ua = userAgent.ToLowerInvariant();
+        if (ua.Contains("windows")) return "Windows";
+        if (ua.Contains("android")) return "Android";
+        if (ua.Contains("iphone") || ua.Contains("ipad")) return "iOS";
+        if (ua.Contains("macintosh")) return "Mac";
+        if (ua.Contains("linux")) return "Linux";
+        return "Dispositivo";
     }
 
     public async Task<object> Logout()
@@ -83,16 +100,20 @@ public class AuthService
         return true;
     }
 
-    public async Task<List<object>> ListSessions(CancellationToken ct = default)
+    public async Task<List<object>> ListSessions(string? currentRefreshToken, CancellationToken ct = default)
     {
+        var currentHash = string.IsNullOrEmpty(currentRefreshToken) ? null : _tokens.Sha256(currentRefreshToken);
         var rows = await _db.RefreshTokens.OrderByDescending(r => r.CreatedAt).ToListAsync(ct);
         return rows.Select(r => (object)new
         {
             jti = r.Jti,
             createdAt = r.CreatedAt,
             lastUsedAt = r.LastUsedAt,
+            expiresAt = r.ExpiresAt,
             deviceName = r.DeviceName,
-            current = false,
+            ip = r.Ip,
+            userAgent = r.UserAgent,
+            current = currentHash != null && r.TokenHash == currentHash,
         }).ToList();
     }
 

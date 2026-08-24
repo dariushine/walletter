@@ -120,7 +120,7 @@
                       <tr class="clickable" [routerLink]="['/transactions', t.id]">
                         <td class="date">{{ fmtDate(t.datetimeUtc, timezone()) }} · {{ fmtTime(t.datetimeUtc, timezone()) }}</td>
                         <td>
-                          <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          <span class="chip cat-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                             {{ t.category }}
                           </span>
                         </td>

@@ -85,4 +85,8 @@ export class Sessions implements OnInit {
   fmtTs(ms: number): string {
     return new Date(ms).toLocaleString('es-VE');
   }
+
+  fmtDateTime(ms: number): string {
+    return new Date(ms).toLocaleString('es-VE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
 }

@@ -187,7 +187,10 @@ export interface SessionInfo {
   jti: string;
   createdAt: number;
   lastUsedAt?: number | null;
+  expiresAt?: number | null;
   deviceName?: string;
+  ip?: string | null;
+  userAgent?: string;
   current: boolean;
 }
 

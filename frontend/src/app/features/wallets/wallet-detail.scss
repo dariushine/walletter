@@ -318,6 +318,12 @@
   white-space: nowrap;
 }
 
+/* Categoría gris (vista escritorio de la billetera). */
+.cat-chip {
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.7);
+}
+
 .cat-chip-inline {
   display: inline-flex;
   align-items: center;

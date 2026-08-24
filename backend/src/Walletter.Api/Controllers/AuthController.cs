@@ -33,7 +33,9 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginCommand cmd, CancellationToken ct)
     {
-        var result = await _service.Login(cmd.Username, cmd.Password, cmd.Remember, ct);
+        var userAgent = Request.Headers["User-Agent"].ToString();
+        var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _service.Login(cmd.Username, cmd.Password, cmd.Remember, userAgent, ip, ct);
 
         Response.Cookies.Append("access_token", result.AccessToken, new CookieOptions
         {
@@ -89,7 +91,10 @@ public class AuthController : ControllerBase
     [Authorize]
     [HttpGet("sessions")]
     public async Task<IActionResult> ListSessions(CancellationToken ct)
-        => Ok(await _service.ListSessions(ct));
+    {
+        var refreshToken = Request.Cookies["refresh_token"];
+        return Ok(await _service.ListSessions(refreshToken, ct));
+    }
 
     [Authorize]
     [HttpDelete("sessions/{jti}")]
