@@ -84,8 +84,25 @@
   border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.empty {
-  text-align: center;
-  padding: 32px;
-  color: rgba(0, 0, 0, 0.5);
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  gap: 8px;
+  color: rgba(0, 0, 0, 0.45);
+  width: 100%;
+}
+
+.empty-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 1rem;
 }
