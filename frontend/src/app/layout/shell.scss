@@ -128,7 +128,7 @@
   position: fixed;
   right: 20px;
   bottom: 84px; /* por encima de la bottom nav en móvil */
-  z-index: 30;
+  z-index: 1000;
 }
 
 @media (min-width: 901px) {

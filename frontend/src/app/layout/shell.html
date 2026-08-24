@@ -138,9 +138,9 @@
       </div>
     }
   </mat-drawer-content>
-
-  <!-- FAB global: siempre visible -->
-  <button mat-fab color="primary" class="global-fab" (click)="openNewOperation()" aria-label="Nueva operación">
-    <mat-icon>add</mat-icon>
-  </button>
 </mat-drawer-container>
+
+<!-- FAB global: hermano del drawer-container (fuera de su stacking context) -->
+<button mat-fab color="primary" class="global-fab" (click)="openNewOperation()" aria-label="Nueva operación">
+  <mat-icon>add</mat-icon>
+</button>
