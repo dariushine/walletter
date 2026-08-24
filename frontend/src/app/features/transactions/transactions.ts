@@ -137,6 +137,45 @@ export class Transactions implements OnInit {
     });
   }
 
+  /** Exporta las transacciones (filtradas por el periodo aplicado) a CSV. */
+  exportCSV(): void {
+    const header = ['ID', 'Fecha', 'Hora', 'Categoria', 'Tipo', 'Billetera', 'Credito', 'Debito', 'Moneda', 'Descripcion'];
+    const rows = this.transactions().map((t) => [
+      t.id,
+      t.date,
+      t.time,
+      t.category,
+      t.type === 'income' ? 'Ingreso' : 'Gasto',
+      t.walletName ?? '',
+      t.type === 'income' ? t.amount : '',
+      t.type === 'expense' ? t.amount : '',
+      t.walletCurrency ?? '',
+      t.description ?? '',
+    ]);
+
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => this.csvCell(cell)).join(','))
+      .join('\n');
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = this.tz ? todayInTimeZone(this.tz).replace(/-/g, '') : '';
+    a.href = url;
+    a.download = `transacciones${stamp ? '_' + stamp : ''}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private csvCell(value: unknown): string {
+    const s = value === null || value === undefined ? '' : String(value);
+    // Escapa comillas dobles y envuelve en comillas si hay comas, comillas o saltos.
+    if (/[",\n]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
   format(amount: number, currency?: string): string {
     return formatMoney(amount, currency || 'USD');
   }

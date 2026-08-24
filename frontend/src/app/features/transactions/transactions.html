@@ -2,8 +2,12 @@
   <header class="head-row">
     <div>
       <h1 class="page-title">Transacciones</h1>
-      <p class="page-subtitle">Registra y revisa tus ingresos y gastos</p>
+      <p class="page-subtitle">Historial de ingresos y gastos</p>
     </div>
+    <button mat-flat-button color="primary" (click)="exportCSV()" aria-label="Exportar CSV">
+      <mat-icon>file_download</mat-icon>
+      Exportar
+    </button>
   </header>
 
   <!-- Filtro por periodo (sin recuadro blanco) -->
