@@ -11,6 +11,26 @@
   margin-bottom: 20px;
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.hero-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.hero-menu button {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.danger-item {
+  color: #c62828;
+
+  mat-icon {
+    color: #c62828;
+  }
 }
 
 .hero-content {
@@ -184,6 +204,14 @@
   gap: 6px;
 }
 
+.parent-row {
+  .parent-link {
+    color: #1a73e8;
+    font-weight: 600;
+    min-width: 0;
+  }
+}
+
 // ===== Transacciones asociadas =====
 .empty {
   color: rgba(0, 0, 0, 0.45);
@@ -206,6 +234,22 @@
   &:last-child {
     border-bottom: none;
   }
+}
+
+.assoc-clickable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding-left: 6px;
+  padding-right: 6px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(26, 115, 232, 0.06);
+  }
+}
+
+.assoc-chev {
+  color: rgba(0, 0, 0, 0.35);
 }
 
 .assoc-main {

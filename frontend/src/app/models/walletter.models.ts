@@ -42,6 +42,8 @@ export interface Transaction {
 export interface TransactionDetail extends Transaction {
   /** Saldo en vivo de la billetera tras esta transacción. */
   resultingBalance: number;
+  /** true si es débito/crédito de exchange o una comisión suya. */
+  isExchange: boolean;
   /** Transacciones asociadas (hijas: comisiones, asociadas). */
   associated: Transaction[];
 }

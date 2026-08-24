@@ -9,6 +9,26 @@
     @if (tx(); as t) {
       <!-- ===== Hero ===== -->
       <mat-card class="tx-hero">
+        <div class="hero-menu">
+          <button mat-icon-button [matMenuTriggerFor]="txMenu" aria-label="Opciones">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #txMenu="matMenu">
+            <button mat-menu-item (click)="edit()">
+              <mat-icon>edit</mat-icon> Editar
+            </button>
+            <button mat-menu-item (click)="addFee()">
+              <mat-icon>add_card</mat-icon> Añadir comisión
+            </button>
+            <button mat-menu-item (click)="addAssociated()">
+              <mat-icon>link</mat-icon> Añadir transacción asociada
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item class="danger-item" (click)="delete()">
+              <mat-icon>delete</mat-icon> Eliminar
+            </button>
+          </mat-menu>
+        </div>
         <mat-card-content class="hero-content">
           <div class="hero-badge" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
             <mat-icon>{{ t.type === 'income' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
@@ -31,9 +51,6 @@
           <mat-card-header class="panel-head">
             <mat-icon class="panel-icon">receipt_long</mat-icon>
             <mat-card-title class="panel-title">Detalle</mat-card-title>
-            <button mat-icon-button class="edit-btn" (click)="editing.set(!editing())" [attr.aria-label]="editing() ? 'Cerrar edición' : 'Editar'">
-              <mat-icon>{{ editing() ? 'close' : 'edit' }}</mat-icon>
-            </button>
           </mat-card-header>
 
           @if (!editing()) {
@@ -68,6 +85,14 @@
                 <span class="detail-label">Saldo resultante</span>
                 <span class="detail-value balance">{{ format(t.resultingBalance, t.walletCurrency) }}</span>
               </div>
+              @if (t.parentTransactionId) {
+                <div class="detail-row parent-row">
+                  <span class="detail-label">Transacción padre</span>
+                  <button mat-button class="parent-link" (click)="goToTransaction(t.parentTransactionId!)">
+                    #{{ t.parentTransactionId }}
+                  </button>
+                </div>
+              }
             </mat-card-content>
           } @else {
             <mat-card-content>
@@ -117,7 +142,7 @@
             } @else {
               <div class="assoc-list">
                 @for (a of t.associated; track a.id) {
-                  <div class="assoc-row">
+                  <div class="assoc-row assoc-clickable" (click)="goToTransaction(a.id)">
                     <div class="assoc-main">
                       <span class="assoc-cat">{{ a.category }}</span>
                       <span class="assoc-desc">{{ a.description || '—' }} · {{ a.date }}</span>
@@ -125,6 +150,7 @@
                     <span class="assoc-amount" [class.income]="a.type === 'income'" [class.expense]="a.type === 'expense'">
                       {{ a.type === 'income' ? '+' : '-' }}{{ format(a.amount, a.walletCurrency) }}
                     </span>
+                    <mat-icon class="assoc-chev">chevron_right</mat-icon>
                   </div>
                 }
               </div>

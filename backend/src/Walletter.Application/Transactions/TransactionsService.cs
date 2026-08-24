@@ -206,6 +206,7 @@ public class TransactionsService
         var t = await _db.Transactions
             .Include(x => x.Wallet)
             .Include(x => x.Category)
+            .Include(x => x.Parent).ThenInclude(p => p!.Category)
             .Include(x => x.Children).ThenInclude(c => c.Wallet)
             .Include(x => x.Children).ThenInclude(c => c.Category)
             .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
@@ -237,8 +238,26 @@ public class TransactionsService
             time,
             // Balance en vivo de la billetera = saldo resultante tras esta transacción.
             resultingBalance = Money.ToNum(t.Wallet?.Balance ?? 0),
+            // true si es débito/crédito de exchange, o una comisión cuyo padre lo es.
+            isExchange = IsExchangeTransaction(t),
             associated,
         };
+    }
+
+    /// <summary>
+    /// Devuelve true si la transacción pertenece a un exchange: débito/crédito
+    /// (categorías exchange_out/exchange_in) o una comisión cuyo padre lo es.
+    /// </summary>
+    private static bool IsExchangeTransaction(Transaction t)
+    {
+        var cat = t.Category?.Name?.ToLowerInvariant();
+        if (cat is "exchange_out" or "exchange_in") return true;
+        if (cat == "fee")
+        {
+            var pcat = t.Parent?.Category?.Name?.ToLowerInvariant();
+            if (pcat is "exchange_out" or "exchange_in") return true;
+        }
+        return false;
     }
 
     public async Task<object> Update(int id, UpdateTransactionCommand cmd, CancellationToken ct = default)
