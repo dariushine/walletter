@@ -7,7 +7,6 @@
   @if (loading()) {
     <mat-spinner class="spinner" />
   } @else {
-    @if (stats(); as st) {
       <!-- Balance total + tasas -->
       <mat-card class="balance-card section">
         <mat-card-content>
@@ -16,21 +15,28 @@
               <span class="balance-label">Balance total</span>
               <div class="balance-icons">
                 <mat-icon>attach_money</mat-icon>
-                <mat-icon>show_chart</mat-icon>
+                <button mat-icon-button class="reveal-btn" (click)="toggleTotalReveal()" [attr.aria-label]="isTotalHidden() ? 'Mostrar balance total' : 'Ocultar balance total'">
+                  <mat-icon>{{ isTotalHidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
               </div>
             </div>
-            <span class="balance-value">{{ saldoNum(st.total_balance) }}</span>
+            <span class="balance-value">{{ totalLabel() }}</span>
+            <span class="balance-sub">en USD (tasas del {{ rateDate() ?? 'día' }})</span>
             <span class="balance-updated">{{ updatedLabel() }}</span>
           </div>
 
-          <!-- Tasas USD/VES -->
+          <!-- Tasas USD/VES: toggles para elegir la tasa del cálculo -->
           @if (bcv() !== null || paralelo() !== null) {
             <div class="rate-pills">
               @if (bcv() !== null) {
-                <span class="rate-pill">BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}</span>
+                <button mat-button class="rate-pill" [class.active]="selectedRate() === 'bcv'" (click)="toggleRate('bcv')">
+                  BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
+                </button>
               }
               @if (paralelo() !== null) {
-                <span class="rate-pill">Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}</span>
+                <button mat-button class="rate-pill" [class.active]="selectedRate() === 'paralelo'" (click)="toggleRate('paralelo')">
+                  Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
+                </button>
               }
             </div>
           }
@@ -111,6 +117,5 @@
       <p class="footnote">
         📱 App móvil-friendly &nbsp;|&nbsp; 💰 Billeteras múltiples &nbsp;|&nbsp; 💱 Exchanges
       </p>
-    }
   }
 </div>

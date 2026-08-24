@@ -61,6 +61,38 @@
   padding: 4px 12px;
   font-size: 0.8rem;
   font-weight: 600;
+  color: #fff;
+  min-width: 0;
+  line-height: 1.5;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &.active {
+    background: rgba(255, 255, 255, 0.92);
+    color: #3f51b5;
+    font-weight: 700;
+  }
+
+  &:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.reveal-btn {
+  color: rgba(255, 255, 255, 0.9);
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.balance-sub {
+  opacity: 0.85;
+  font-size: 0.78rem;
+  margin-top: 2px;
 }
 
 .balance-stats {

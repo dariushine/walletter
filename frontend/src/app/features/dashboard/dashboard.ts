@@ -8,7 +8,7 @@ import { RouterLink } from '@angular/router';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
-import { Wallet, Stats, Transaction } from '../../models/walletter.models';
+import { Wallet, Transaction } from '../../models/walletter.models';
 import { formatMoney, currencySymbol, currencyName, formatWithCode } from '../../core/utils/money';
 
 @Component({
@@ -44,8 +44,13 @@ export class Dashboard implements OnInit {
   readonly paralelo = signal<number | null>(null);
   readonly rateDate = signal<string | null>(null);
 
+  /** Tasa elegida para el cálculo (toggle BCV/Paralelo). */
+  readonly selectedRate = signal<'bcv' | 'paralelo'>('bcv');
+
+  /** Revelado propio del balance total (independiente de hideBalances global). */
+  readonly totalRevealed = signal(false);
+
   wallets = signal<Wallet[]>([]);
-  stats = signal<Stats | null>(null);
   recent = signal<Transaction[]>([]);
   loading = signal(true);
 
@@ -61,10 +66,60 @@ export class Dashboard implements OnInit {
         this.bcv.set(e.vps?.bcv ?? null);
         this.paralelo.set(e.vps?.paralelo ?? null);
         this.rateDate.set(e.date ?? null);
-        this.rate.set(e.vps?.bcv ?? e.vps?.paralelo ?? null);
+        this.rate.set(this.pickRate(e.vps?.bcv, e.vps?.paralelo));
       },
       error: () => undefined,
     });
+  }
+
+  /** Devuelve la tasa correspondiente al toggle seleccionado. */
+  private pickRate(bcv: number | null | undefined, paralelo: number | null | undefined): number | null {
+    return this.selectedRate() === 'paralelo' ? (paralelo ?? bcv ?? null) : (bcv ?? paralelo ?? null);
+  }
+
+  /** Valor numérico de la tasa activa. */
+  rateNumber(): number | null {
+    return this.selectedRate() === 'paralelo' ? (this.paralelo() ?? this.bcv()) : (this.bcv() ?? this.paralelo());
+  }
+
+  toggleRate(kind: 'bcv' | 'paralelo'): void {
+    if (this.selectedRate() === kind) return;
+    this.selectedRate.set(kind);
+    this.rate.set(this.pickRate(this.bcv(), this.paralelo()));
+  }
+
+  toggleTotalReveal(): void {
+    this.totalRevealed.update((v) => !v);
+  }
+
+  isTotalHidden(): boolean {
+    return this.hideBalances() && !this.totalRevealed();
+  }
+
+  /**
+   * Balance total en USD: suma todas las billeteras activas no excluidas,
+   * convirtiendo las VES a USD con la tasa elegida (BCV o paralelo).
+   */
+  totalUsd(): number {
+    const r = this.rateNumber();
+    let total = 0;
+    for (const w of this.wallets()) {
+      if (!w.isActive || w.excludeFromTotal) continue;
+      const cur = (w.currency || '').toUpperCase();
+      if (cur === 'VES') {
+        total += r ? w.balance / r : 0;
+      } else {
+        total += w.balance;
+      }
+    }
+    return total;
+  }
+
+  /** Texto del balance total: USD (convertido) o máscara / oculto. */
+  totalLabel(): string {
+    if (this.isTotalHidden()) return '•••';
+    const total = this.totalUsd();
+    return formatWithCode(total, 'USD', this.decimalSeparator());
   }
 
   private load(): void {
@@ -72,10 +127,6 @@ export class Dashboard implements OnInit {
     this.api.wallets().subscribe({
       next: (w) => this.wallets.set(w),
       error: () => this.loading.set(false),
-    });
-    this.api.stats().subscribe({
-      next: (s) => this.stats.set(s),
-      error: () => undefined,
     });
     this.api.transactions({ limit: 6 }).subscribe({
       next: (t) => this.recent.set(t.data),
@@ -93,12 +144,6 @@ export class Dashboard implements OnInit {
   saldo(w: Wallet): string {
     if (this.hideBalances() && !this.revealedIds().has(w.id)) return '••• ' + w.currency.toUpperCase();
     return formatWithCode(w.balance, w.currency, this.decimalSeparator());
-  }
-
-  /** Para valores agregados (stats): máscara simple si ocultar saldos. */
-  saldoNum(amount: number, currency = 'USD'): string {
-    if (this.hideBalances()) return '•••';
-    return this.format(amount, currency);
   }
 
   isHidden(w: Wallet): boolean {
