@@ -112,16 +112,16 @@
                   </span>
                 </div>
                 <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
-                <div class="pv-row">
-                  <span>Comisión</span>
-                  @if (t.fee > 0) {
+                @if (t.fee > 0) {
+                  <div class="pv-row">
+                    <span>Comisión</span>
                     <span class="chip fee-chip">{{ montoAbsFee(t) }}</span>
-                  } @else {
-                    <span class="no-fee">—</span>
-                  }
-                </div>
+                  </div>
+                }
                 <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
-                <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
+                <div class="ver-detalles-wrap">
+                  <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
+                </div>
               </div>
             </mat-expansion-panel>
           }
