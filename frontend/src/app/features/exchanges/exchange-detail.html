@@ -7,48 +7,130 @@
     <mat-spinner class="spinner" />
   } @else {
     @if (ex(); as e) {
-      <mat-card class="section">
-        <mat-card-content>
-          <div class="ex-flow">
-            <div class="side from">
-              <span class="label">Origen</span>
-              <span class="name">{{ e.fromWalletName }} ({{ e.fromCurrency }})</span>
-              <span class="amount-out">-{{ format(e.fromAmount, e.fromCurrency) }}</span>
+      <!-- ===== Hero ===== -->
+      <mat-card class="ex-hero">
+        <div class="hero-menu">
+          <button mat-icon-button [matMenuTriggerFor]="exMenu" aria-label="Opciones">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #exMenu="matMenu">
+            <button mat-menu-item class="danger-item" (click)="delete()">
+              <mat-icon>delete</mat-icon> Eliminar
+            </button>
+          </mat-menu>
+        </div>
+        <mat-card-content class="hero-content">
+          <div class="hero-badge">
+            <mat-icon>swap_horiz</mat-icon>
+          </div>
+          <span class="hero-type">Exchange</span>
+
+          <div class="hero-flow">
+            <div class="hero-side">
+              <span class="hero-wallet">{{ e.fromWalletName }}</span>
+              <span class="hero-amount out">-{{ format(e.fromAmount, e.fromCurrency) }}</span>
             </div>
-            <mat-icon class="arrow">arrow_forward</mat-icon>
-            <div class="side to">
-              <span class="label">Destino</span>
-              <span class="name">{{ e.toWalletName }} ({{ e.toCurrency }})</span>
-              <span class="amount-in">+{{ format(e.toAmount, e.toCurrency) }}</span>
+            <mat-icon class="hero-arrow">swap_horiz</mat-icon>
+            <div class="hero-side">
+              <span class="hero-wallet">{{ e.toWalletName }}</span>
+              <span class="hero-amount in">+{{ format(e.toAmount, e.toCurrency) }}</span>
             </div>
           </div>
-          <mat-divider></mat-divider>
-          <div class="details">
+
+          <div class="hero-badges">
+            <span class="badge rate"><mat-icon>percent</mat-icon> Tasa {{ e.rate.toLocaleString('es-VE', { minimumFractionDigits: 4 }) }}</span>
+            @if (e.fee > 0) {
+              <span class="badge fee"><mat-icon>receipt</mat-icon> Fee débito {{ format(e.fee, e.fromCurrency) }}</span>
+            }
+            @if (e.creditFee > 0) {
+              <span class="badge fee"><mat-icon>receipt</mat-icon> Fee crédito {{ format(e.creditFee, e.toCurrency) }}</span>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- ===== Dos paneles ===== -->
+      <div class="detail-grid">
+        <!-- Detalle -->
+        <mat-card class="panel">
+          <mat-card-header class="panel-head">
+            <mat-icon class="panel-icon">swap_horiz</mat-icon>
+            <mat-card-title class="panel-title">Detalle</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="detail-list">
             <div class="detail-row">
-              <span>Tasa</span><strong>{{ e.rate.toLocaleString('es-VE', { minimumFractionDigits: 2 }) }}</strong>
+              <span class="detail-label">Monto enviado</span>
+              <button mat-button class="detail-link" (click)="debitTx() && goToTransaction(debitTx()!.id)">
+                <span class="amount out">-{{ format(e.fromAmount, e.fromCurrency) }}</span>
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Monto recibido</span>
+              <button mat-button class="detail-link" (click)="creditTx() && goToTransaction(creditTx()!.id)">
+                <span class="amount in">+{{ format(e.toAmount, e.toCurrency) }}</span>
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Tasa</span>
+              <span class="detail-value">1 = {{ e.rate.toLocaleString('es-VE', { minimumFractionDigits: 4 }) }}</span>
             </div>
             @if (e.fee > 0) {
               <div class="detail-row">
-                <span>Comisión débito</span><strong>{{ format(e.fee, e.fromCurrency) }}</strong>
+                <span class="detail-label">Comisión débito</span>
+                <span class="detail-value">{{ format(e.fee, e.fromCurrency) }}</span>
               </div>
             }
             @if (e.creditFee > 0) {
               <div class="detail-row">
-                <span>Comisión crédito</span><strong>{{ format(e.creditFee, e.toCurrency) }}</strong>
+                <span class="detail-label">Comisión crédito</span>
+                <span class="detail-value">{{ format(e.creditFee, e.toCurrency) }}</span>
               </div>
             }
             <div class="detail-row">
-              <span>Descripción</span><strong>{{ e.description || '—' }}</strong>
+              <span class="detail-label">Fecha</span>
+              <span class="detail-value date">
+                {{ fmtFullDate(e.createdAt ? e.createdAt.slice(0, 10) : '') }}
+                <small>{{ e.createdAt ? (e.createdAt.slice(11, 16)) : '' }}</small>
+              </span>
             </div>
             <div class="detail-row">
-              <span>Fecha</span><strong>{{ e.createdAt | date: 'medium' }}</strong>
+              <span class="detail-label">Descripción</span>
+              <span class="detail-value">{{ e.description || '—' }}</span>
             </div>
-          </div>
-        </mat-card-content>
-        <mat-card-actions align="end">
-          <button mat-flat-button color="warn" (click)="delete()">Eliminar</button>
-        </mat-card-actions>
-      </mat-card>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Transacciones -->
+        <mat-card class="panel">
+          <mat-card-header class="panel-head">
+            <mat-icon class="panel-icon">receipt_long</mat-icon>
+            <mat-card-title class="panel-title">Transacciones</mat-card-title>
+            <span class="count-badge">{{ e.transactions.length }}</span>
+          </mat-card-header>
+          <mat-card-content>
+            @if (e.transactions.length === 0) {
+              <p class="empty">Sin transacciones.</p>
+            } @else {
+              <div class="txn-list">
+                @for (t of e.transactions; track t.id) {
+                  <div class="txn-row" (click)="goToTransaction(t.id)">
+                    <div class="txn-main">
+                      <span class="txn-cat">{{ t.category }}</span>
+                      <span class="txn-desc">{{ t.description || '—' }}</span>
+                    </div>
+                    <span class="txn-amount" [class.in]="t.type === 'income'" [class.out]="t.type === 'expense'">
+                      {{ t.type === 'income' ? '+' : '-' }}{{ format(t.amount, t.walletCurrency) }}
+                    </span>
+                    <mat-icon class="txn-chev">chevron_right</mat-icon>
+                  </div>
+                }
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
     }
   }
 </div>

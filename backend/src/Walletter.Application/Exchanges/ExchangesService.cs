@@ -234,8 +234,24 @@ public class ExchangesService
         var ex = await _db.Exchanges
             .Include(e => e.From)
             .Include(e => e.To)
+            .Include(e => e.Debit)
+            .Include(e => e.Credit)
             .FirstOrDefaultAsync(e => e.Id == id && !e.Deleted, ct)
             ?? throw new NotFoundException("Exchange no encontrado");
+
+        // Transacciones del exchange: el débito, el crédito y sus comisiones (hijas).
+        var ids = new[] { ex.DebitTransactionId, ex.CreditTransactionId };
+        var txns = await _db.Transactions
+            .AsNoTracking()
+            .Include(t => t.Wallet)
+            .Include(t => t.Category)
+            .Where(t => !t.Deleted && (ids.Contains(t.Id) || (t.ParentId != null && ids.Contains(t.ParentId.Value))))
+            .OrderBy(t => t.DatetimeUtc)
+            .ThenBy(t => t.Id)
+            .ToListAsync(ct);
+
+        var tz = TimeZone();
+        var transactions = txns.Select(t => Project(t, tz)).ToList();
 
         return new
         {
@@ -253,6 +269,25 @@ public class ExchangesService
             toWalletName = ex.To.Name,
             fromCurrency = ex.From.Currency,
             toCurrency = ex.To.Currency,
+            debitTransactionId = ex.DebitTransactionId,
+            creditTransactionId = ex.CreditTransactionId,
+            transactions,
+        };
+    }
+
+    private static object Project(Transaction t, string tz)
+    {
+        var (date, time) = TimeZoneHelper.UtcToWallClock(t.DatetimeUtc, tz);
+        return new
+        {
+            id = t.Id,
+            category = t.Category?.Name,
+            type = t.Type,
+            amount = Money.ToNum(t.Amount),
+            description = t.Description,
+            walletCurrency = t.Wallet?.Currency,
+            date,
+            time,
         };
     }
 

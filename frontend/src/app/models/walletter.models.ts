@@ -102,11 +102,27 @@ export interface Exchange {
   toCurrency: string;
 }
 
+/** Transacción dentro de un exchange (proyección ligera). */
+export interface ExchangeTransaction {
+  id: number;
+  category: string;
+  type: TransactionType;
+  amount: number;
+  description?: string;
+  walletCurrency?: string;
+  date: string;
+  time: string;
+}
+
+/** Detalle de exchange (GET /api/exchanges/:id) */
+export interface ExchangeDetail extends Exchange {
+  transactions: ExchangeTransaction[];
+}
+
 /** Respuesta paginada de exchanges */
 export interface ExchangeList {
   data: Exchange[];
   total: number;
-  page: number;
   limit: number;
 }
 

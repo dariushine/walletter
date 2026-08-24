@@ -11,6 +11,7 @@ import {
   TransactionType,
   Category,
   Exchange,
+  ExchangeDetail,
   ExchangeList,
   ExchangeCreated,
   RecurringPayment,
@@ -157,8 +158,8 @@ export class WalletterApiService {
     return this.http.get<ExchangeList>(`${this.base}/exchanges`, { params: this.toParams(params) });
   }
 
-  exchange(id: number): Observable<Exchange> {
-    return this.http.get<Exchange>(`${this.base}/exchanges/${id}`);
+  exchange(id: number): Observable<ExchangeDetail> {
+    return this.http.get<ExchangeDetail>(`${this.base}/exchanges/${id}`);
   }
 
   createExchange(data: {
