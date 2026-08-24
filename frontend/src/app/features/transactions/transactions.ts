@@ -227,7 +227,7 @@ export class Transactions implements OnInit {
     return `${t.date} · ${t.time}`;
   }
 
-  /** Fecha relativa corta: 'Hoy', 'Ayer' o DD/MM, + hora. */
+  /** Fecha relativa corta: 'Hoy', 'Ayer' o 'D-mesAbrev' (26-ago), + hora. */
   cuandoRelativo(t: Transaction): string {
     const hoy = todayInTimeZone(this.tz);
     const ayer = this.addDays(hoy, -1);
@@ -236,7 +236,8 @@ export class Transactions implements OnInit {
     else if (t.date === ayer) dia = 'Ayer';
     else {
       const [y, m, d] = t.date.split('-');
-      dia = `${Number(d)}/${Number(m)}`;
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      dia = `${Number(d)}-${meses[Number(m) - 1]}`;
     }
     return `${dia} · ${t.time}`;
   }
