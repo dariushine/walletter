@@ -111,7 +111,7 @@ export class Sessions implements OnInit {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button type="button" (click)="cancel()">Cancelar</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Aceptar</button>
+      <button mat-raised-button color="primary" type="button" (click)="accept()" [disabled]="form.invalid">Aceptar</button>
     </mat-dialog-actions>
   `,
 })
