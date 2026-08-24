@@ -18,7 +18,7 @@
           type="button"
           class="dlg-type expense"
           [class.active]="form.value.type === 'expense'"
-          (click)="form.patchValue({ type: 'expense' })"
+          (click)="changeType('expense')"
         >
           <mat-icon>remove</mat-icon> Gasto
         </button>
@@ -26,7 +26,7 @@
           type="button"
           class="dlg-type income"
           [class.active]="form.value.type === 'income'"
-          (click)="form.patchValue({ type: 'income' })"
+          (click)="changeType('income')"
         >
           <mat-icon>add</mat-icon> Ingreso
         </button>
@@ -47,10 +47,11 @@
         </mat-form-field>
       </div>
 
-      <mat-form-field appearance="outline" class="dlg-full">
-        <mat-label>Categoría *</mat-label>
-        <input matInput formControlName="categoryName" />
-      </mat-form-field>
+      <app-category-autocomplete
+        formControlName="categoryName"
+        [type]="form.value.type"
+        class="dlg-full"
+      />
 
       <mat-form-field appearance="outline" class="dlg-full">
         <mat-label>Billetera</mat-label>

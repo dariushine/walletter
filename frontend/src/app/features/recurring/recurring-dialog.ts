@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet, RecurringPayment } from '../../models/walletter.models';
+import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
 
 export interface RecurringDialogData {
   wallets: Wallet[];
@@ -20,7 +21,7 @@ const CURRENCIES = ['USD', 'VES'];
 
 @Component({
   selector: 'app-recurring-dialog',
-  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatButtonModule, MatIconModule],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatButtonModule, MatIconModule, CategoryAutocomplete],
   templateUrl: './recurring-dialog.html',
   styleUrls: ['./recurring-dialog.scss'],
 })
@@ -45,8 +46,19 @@ export class RecurringDialog {
     walletId: [this.data?.item?.walletId ?? null],
   });
 
+  /** Cambia el tipo: limpia la categoría y recarga sugerencias (autocomplete recarga por [type]). */
+  changeType(type: 'income' | 'expense'): void {
+    if ((this.form.value.type as string) === type) return;
+    this.form.patchValue({ type, categoryName: '' });
+  }
+
   save(): void {
     if (this.form.invalid) return;
+    const lower = (this.form.value.categoryName ?? '').toLowerCase().trim();
+    if (['fee', 'exchange_in', 'exchange_out'].includes(lower)) {
+      this.notifier.error('Esa categoría es de sistema y no puede usarse');
+      return;
+    }
     this.loading = true;
     const v = this.form.value;
     const payload = {

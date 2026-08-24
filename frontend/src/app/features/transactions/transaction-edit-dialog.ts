@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { TransactionDetail } from '../../models/walletter.models';
+import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
 
 export interface EditTransactionDialogData {
   tx: TransactionDetail;
@@ -24,6 +25,7 @@ export interface EditTransactionDialogData {
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    CategoryAutocomplete,
   ],
   template: `
     <div class="dlg">
@@ -36,15 +38,18 @@ export interface EditTransactionDialogData {
       <mat-dialog-content class="dlg-content">
         <form [formGroup]="form" class="dlg-form">
           <div class="dlg-row">
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" class="dlg-full">
               <mat-label>Categoría</mat-label>
-              <input matInput formControlName="categoryName" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Monto</mat-label>
-              <input matInput formControlName="amount" type="number" step="0.01" />
+              <app-category-autocomplete
+                formControlName="categoryName"
+                [type]="data.tx.type"
+              />
             </mat-form-field>
           </div>
+          <mat-form-field appearance="outline" class="dlg-full">
+            <mat-label>Monto</mat-label>
+            <input matInput formControlName="amount" type="number" step="0.01" />
+          </mat-form-field>
           <mat-form-field appearance="outline" class="dlg-full">
             <mat-label>Descripción</mat-label>
             <input matInput formControlName="description" />

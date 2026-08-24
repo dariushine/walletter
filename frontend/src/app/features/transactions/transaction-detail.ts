@@ -20,6 +20,7 @@ import { TransactionDetail as TransactionDetailModel } from '../../models/wallet
 import { formatMoney } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
 import { EditTransactionDialog } from './transaction-edit-dialog';
+import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
 
 @Component({
   selector: 'app-transaction-detail',
@@ -369,6 +370,7 @@ export class AddFeeDialog {
     MatRadioModule,
     MatButtonModule,
     MatIconModule,
+    CategoryAutocomplete,
   ],
   template: `
     <div class="dlg">
@@ -388,7 +390,7 @@ export class AddFeeDialog {
               type="button"
               class="dlg-type expense"
               [class.active]="form.value.type === 'expense'"
-              (click)="form.patchValue({ type: 'expense' })"
+              (click)="changeType('expense')"
             >
               <mat-icon>remove</mat-icon> Gasto
             </button>
@@ -396,21 +398,22 @@ export class AddFeeDialog {
               type="button"
               class="dlg-type income"
               [class.active]="form.value.type === 'income'"
-              (click)="form.patchValue({ type: 'income' })"
+              (click)="changeType('income')"
             >
               <mat-icon>add</mat-icon> Ingreso
             </button>
           </div>
-          <div class="dlg-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Categoría *</mat-label>
-              <input matInput formControlName="categoryName" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Monto *</mat-label>
-              <input matInput formControlName="amount" type="number" min="0" step="0.01" />
-            </mat-form-field>
+          <div class="dlg-row assistant-cat">
+            <app-category-autocomplete
+              formControlName="categoryName"
+              [type]="form.value.type"
+              class="dlg-full"
+            />
           </div>
+          <mat-form-field appearance="outline" class="dlg-full">
+            <mat-label>Monto *</mat-label>
+            <input matInput formControlName="amount" type="number" min="0" step="0.01" />
+          </mat-form-field>
           <mat-form-field appearance="outline" class="dlg-full">
             <mat-label>Descripción</mat-label>
             <input matInput formControlName="description" />
@@ -468,6 +471,12 @@ export class AddAssociateDialog {
     date: [this.today, Validators.required],
     time: ['12:00', Validators.required],
   });
+
+  /** Cambia el tipo: limpia la categoría y recarga las sugerencias (el autocomplete recarga por [type]). */
+  changeType(type: 'income' | 'expense'): void {
+    if ((this.form.value.type as string) === type) return;
+    this.form.patchValue({ type, categoryName: '' });
+  }
 
   save(): void {
     if (this.form.invalid) return;
