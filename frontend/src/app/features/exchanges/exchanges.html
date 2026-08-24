@@ -2,60 +2,152 @@
   <header class="head-row">
     <div>
       <h1 class="page-title">Exchanges</h1>
-      <p class="page-subtitle">Cambios de divisa entre billeteras</p>
+      <p class="page-subtitle">Cambios entre billeteras y monedas</p>
     </div>
-    <button mat-raised-button color="primary" (click)="openCreate()">
-      <mat-icon>add</mat-icon> Nuevo exchange
+    <button mat-flat-button color="primary" (click)="exportCSV()" aria-label="Exportar CSV">
+      <mat-icon>file_download</mat-icon>
+      Exportar
     </button>
   </header>
+
+  <!-- Filtro por periodo -->
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="period-select">
+      <mat-label>Periodo</mat-label>
+      <mat-select [(ngModel)]="selectedPeriod">
+        @for (p of periods; track p.value) {
+          <mat-option [value]="p.value">{{ p.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="applyPeriod()">Aplicar</button>
+  </div>
 
   @if (loading()) {
     <mat-spinner class="spinner" />
   } @else {
     @if (exchanges().length === 0) {
-      <mat-card><mat-card-content class="empty">Aún no hay exchanges registrados.</mat-card-content></mat-card>
-    } @else {
       <mat-card>
-        <mat-card-content class="table-wrap">
-          <table class="ex-table">
-            <thead>
-              <tr>
-                <th>Origen</th>
-                <th>Destino</th>
-                <th>Monto</th>
-                <th>Tasa</th>
-                <th>Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (e of exchanges(); track e.id) {
-                <tr [routerLink]="['/exchanges', e.id]">
-                  <td>
-                    <div class="from">{{ e.fromWalletName }} ({{ e.fromCurrency }})</div>
-                    <div class="amount-out">-{{ format(e.fromAmount, e.fromCurrency) }}</div>
-                  </td>
-                  <td>
-                    <div class="to">{{ e.toWalletName }} ({{ e.toCurrency }})</div>
-                    <div class="amount-in">+{{ format(e.toAmount, e.toCurrency) }}</div>
-                  </td>
-                  <td>
-                    <mat-icon>arrow_forward</mat-icon>
-                  </td>
-                  <td class="rate">{{ e.rate.toLocaleString('es-VE', { minimumFractionDigits: 2 }) }}</td>
-                  <td class="date">{{ e.createdAt | date: 'short' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <mat-card-content class="empty-state">
+          <mat-icon class="empty-icon">currency_exchange</mat-icon>
+          <p class="empty-text">Sin exchanges.</p>
         </mat-card-content>
+      </mat-card>
+    } @else {
+      @if (!isHandset()) {
+        <!-- Tabla: escritorio -->
+        <mat-card>
+          <mat-card-content class="table-wrap">
+            <table class="ex-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>From → To</th>
+                  <th class="right">From Amount</th>
+                  <th class="right">To Amount</th>
+                  <th>Fee débito</th>
+                  <th>Fee crédito</th>
+                  <th>Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (e of exchanges(); track e.id) {
+                  <tr [routerLink]="['/exchanges', e.id]">
+                    <td class="date">{{ fecha(e.createdAt) }} · {{ hora(e.createdAt) }}</td>
+                    <td class="route">{{ e.fromWalletName }} → {{ e.toWalletName }}</td>
+                    <td class="right amount-out">{{ monto(e, e.fromAmount, e.fromCurrency, '-') }}</td>
+                    <td class="right amount-in">{{ monto(e, e.toAmount, e.toCurrency, '+') }}</td>
+                    <td>
+                      @if (e.fee > 0) {
+                        <span class="chip fee-chip">{{ fee(e, e.fee, e.fromCurrency) }}</span>
+                      } @else {
+                        <span class="no-fee">—</span>
+                      }
+                    </td>
+                    <td>
+                      @if (e.creditFee > 0) {
+                        <span class="chip fee-chip">{{ fee(e, e.creditFee, e.toCurrency) }}</span>
+                      } @else {
+                        <span class="no-fee">—</span>
+                      }
+                    </td>
+                    <td class="desc">{{ e.description || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </mat-card-content>
+          <mat-paginator
+            [length]="total()"
+            [pageSize]="limit"
+            [pageIndex]="page - 1"
+            [pageSizeOptions]="[10, 20, 50]"
+            (page)="onPage($event)"
+          />
+        </mat-card>
+      } @else {
+        <!-- Acordeón: móvil -->
+        <mat-accordion multi="false" class="ex-accordion">
+          @for (e of exchanges(); track e.id) {
+            <mat-expansion-panel class="ex-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title class="panel-title">
+                  <span class="panel-cuando">{{ fecha(e.createdAt) }} · {{ hora(e.createdAt) }}</span>
+                  <span class="panel-route">{{ e.fromWalletName }} → {{ e.toWalletName }}</span>
+                </mat-panel-title>
+                <mat-panel-description class="panel-amounts">
+                  <span class="amount-out">{{ monto(e, e.fromAmount, e.fromCurrency, '-') }}</span>
+                  <mat-icon class="route-arrow">arrow_forward</mat-icon>
+                  <span class="amount-in">{{ monto(e, e.toAmount, e.toCurrency, '+') }}</span>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+              <div class="pv-body">
+                <div class="pv-row"><span>Origen</span><strong>{{ e.fromWalletName }} ({{ e.fromCurrency }})</strong></div>
+                <div class="pv-row"><span>Destino</span><strong>{{ e.toWalletName }} ({{ e.toCurrency }})</strong></div>
+                <div class="pv-row">
+                  <span>Monto salida</span><strong class="amount-out">{{ monto(e, e.fromAmount, e.fromCurrency, '-') }}</strong>
+                </div>
+                <div class="pv-row">
+                  <span>Monto entrada</span><strong class="amount-in">{{ monto(e, e.toAmount, e.toCurrency, '+') }}</strong>
+                </div>
+                <div class="pv-row">
+                  <span>Tasa</span><span class="chip rate-chip">{{ e.rate }}</span>
+                </div>
+                @if (e.fee > 0) {
+                  <div class="pv-row">
+                    <span>Fee débito</span><span class="chip fee-chip">{{ fee(e, e.fee, e.fromCurrency) }}</span>
+                  </div>
+                }
+                @if (e.creditFee > 0) {
+                  <div class="pv-row">
+                    <span>Fee crédito</span><span class="chip fee-chip">{{ fee(e, e.creditFee, e.toCurrency) }}</span>
+                  </div>
+                }
+                <div class="pv-row"><span>Descripción</span><strong>{{ e.description || '—' }}</strong></div>
+                <div class="ver-detalles-wrap">
+                  <a class="ver-detalles" [routerLink]="['/exchanges', e.id]">
+                    <mat-icon>visibility</mat-icon> Ver detalle
+                  </a>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
         <mat-paginator
+          class="mobile-paginator"
           [length]="total()"
           [pageSize]="limit"
           [pageIndex]="page - 1"
           [pageSizeOptions]="[10, 20, 50]"
           (page)="onPage($event)"
         />
-      </mat-card>
+      }
     }
   }
+
+  <!-- FAB para nuevo exchange -->
+  <button mat-fab extended color="primary" class="fab" (click)="openCreate()" aria-label="Nuevo exchange">
+    <mat-icon>add</mat-icon>
+    Nuevo
+  </button>
 </div>
