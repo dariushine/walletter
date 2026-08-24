@@ -240,8 +240,39 @@ public class TransactionsService
             resultingBalance = Money.ToNum(t.Wallet?.Balance ?? 0),
             // true si es débito/crédito de exchange, o una comisión cuyo padre lo es.
             isExchange = IsExchangeTransaction(t),
+            // id del exchange al que pertenece (si es transacción de exchange). Null si no.
+            exchangeId = await ResolveExchangeId(t, ct),
             associated,
         };
+    }
+
+    /// <summary>
+    /// Resuelve el id del exchange al que pertenece una transacción:
+    /// débito/crédito (DebitTransactionId/CreditTransactionId) o, si es una
+    /// comisión (fee), el del exchange de su padre. Devuelve null si no es de
+    /// exchange.
+    /// </summary>
+    private async Task<int?> ResolveExchangeId(Transaction t, CancellationToken ct)
+    {
+        var cat = t.Category?.Name?.ToLowerInvariant();
+        if (cat is "exchange_out" or "exchange_in")
+        {
+            var ex = await _db.Exchanges.AsNoTracking()
+                .FirstOrDefaultAsync(x => !x.Deleted && (x.DebitTransactionId == t.Id || x.CreditTransactionId == t.Id), ct);
+            return ex?.Id;
+        }
+        if (cat == "fee" && t.ParentId != null)
+        {
+            var parent = await _db.Transactions.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == t.ParentId, ct);
+            if (parent != null)
+            {
+                var ex = await _db.Exchanges.AsNoTracking()
+                    .FirstOrDefaultAsync(x => !x.Deleted && (x.DebitTransactionId == parent.Id || x.CreditTransactionId == parent.Id), ct);
+                return ex?.Id;
+            }
+        }
+        return null;
     }
 
     /// <summary>

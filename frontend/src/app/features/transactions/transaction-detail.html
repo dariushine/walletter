@@ -93,6 +93,14 @@
                   </button>
                 </div>
               }
+              @if (t.isExchange && t.exchangeId) {
+                <div class="detail-row parent-row">
+                  <span class="detail-label">Exchange</span>
+                  <button mat-button class="parent-link" (click)="goToExchange(t.exchangeId!)">
+                    #{{ t.exchangeId }}
+                  </button>
+                </div>
+              }
             </mat-card-content>
           } @else {
             <mat-card-content>

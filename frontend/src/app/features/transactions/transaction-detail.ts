@@ -253,6 +253,10 @@ export class TransactionDetail implements OnInit {
     this.router.navigate(['/transactions', id]);
   }
 
+  goToExchange(id: number): void {
+    this.router.navigate(['/exchanges', id]);
+  }
+
   format(amount: number, currency?: string): string {
     return formatMoney(amount, currency || 'USD');
   }

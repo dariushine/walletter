@@ -44,6 +44,8 @@ export interface TransactionDetail extends Transaction {
   resultingBalance: number;
   /** true si es débito/crédito de exchange o una comisión suya. */
   isExchange: boolean;
+  /** id del exchange al que pertenece (si es transacción de exchange); null si no. */
+  exchangeId?: number | null;
   /** Transacciones asociadas (hijas: comisiones, asociadas). */
   associated: Transaction[];
 }

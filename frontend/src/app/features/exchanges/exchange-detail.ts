@@ -105,6 +105,12 @@ export class ExchangeDetail implements OnInit {
       year: 'numeric',
     });
   }
+
+  /** Hora HH:MM desde ISO (YYYY-MM-DDTHH:MM:SS…). */
+  hora(iso: string): string {
+    if (!iso) return '—';
+    return iso.slice(11, 16) || '—';
+  }
 }
 
 /** Diálogo de confirmación para eliminar un exchange. */

@@ -92,8 +92,11 @@
               <span class="detail-label">Fecha</span>
               <span class="detail-value date">
                 {{ fmtFullDate(e.createdAt ? e.createdAt.slice(0, 10) : '') }}
-                <small>{{ e.createdAt ? (e.createdAt.slice(11, 16)) : '' }}</small>
               </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Hora</span>
+              <span class="detail-value">{{ e.createdAt ? hora(e.createdAt) : '—' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Descripción</span>
