@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ExchangeDetail } from '../../models/walletter.models';
+import { MoneyInput } from '../../core/components/money-input';
 
 export interface EditExchangeDialogData {
   ex: ExchangeDetail;
@@ -23,6 +24,7 @@ export interface EditExchangeDialogData {
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    MoneyInput,
   ],
   template: `
     <div class="dlg">
@@ -45,14 +47,16 @@ export interface EditExchangeDialogData {
             </mat-form-field>
           </div>
           <div class="dlg-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Monto enviado *</mat-label>
-              <input matInput formControlName="fromAmount" type="number" min="0" step="0.01" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Monto recibido *</mat-label>
-              <input matInput formControlName="toAmount" type="number" min="0" step="0.01" />
-            </mat-form-field>
+            <app-money-input
+              formControlName="fromAmount"
+              label="Monto enviado *"
+              [currency]="data.ex.fromCurrency"
+            />
+            <app-money-input
+              formControlName="toAmount"
+              label="Monto recibido *"
+              [currency]="data.ex.toCurrency"
+            />
           </div>
           <mat-form-field appearance="outline" class="dlg-full">
             <mat-label>Descripción</mat-label>
@@ -62,14 +66,16 @@ export interface EditExchangeDialogData {
             <summary>Detalles</summary>
             <div class="dlg-details-body">
               <div class="dlg-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Comisión débito</mat-label>
-                  <input matInput formControlName="fee" type="number" min="0" step="0.01" />
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                  <mat-label>Comisión crédito</mat-label>
-                  <input matInput formControlName="creditFee" type="number" min="0" step="0.01" />
-                </mat-form-field>
+                <app-money-input
+                  formControlName="fee"
+                  label="Comisión débito"
+                  [currency]="data.ex.fromCurrency"
+                />
+                <app-money-input
+                  formControlName="creditFee"
+                  label="Comisión crédito"
+                  [currency]="data.ex.toCurrency"
+                />
               </div>
             </div>
           </details>

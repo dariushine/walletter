@@ -10,6 +10,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet } from '../../models/walletter.models';
 import { todayInTimeZone } from '../../core/utils/dates';
+import { MoneyInput } from '../../core/components/money-input';
 
 export interface ExchangeDialogData {
   wallets: Wallet[];
@@ -18,7 +19,7 @@ export interface ExchangeDialogData {
 
 @Component({
   selector: 'app-exchange-dialog',
-  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MoneyInput],
   templateUrl: './exchange-dialog.html',
   styleUrls: ['./exchange-dialog.scss'],
 })
@@ -77,5 +78,13 @@ export class ExchangeDialog {
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  fromCurrency(): string | null {
+    return this.data.wallets.find((w) => w.id === this.form.value.fromWalletId)?.currency ?? null;
+  }
+
+  toCurrency(): string | null {
+    return this.data.wallets.find((w) => w.id === this.form.value.toWalletId)?.currency ?? null;
   }
 }

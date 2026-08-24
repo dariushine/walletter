@@ -11,6 +11,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet, RecurringPayment } from '../../models/walletter.models';
 import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
+import { MoneyInput } from '../../core/components/money-input';
 
 export interface RecurringDialogData {
   wallets: Wallet[];
@@ -21,7 +22,7 @@ const CURRENCIES = ['USD', 'VES'];
 
 @Component({
   selector: 'app-recurring-dialog',
-  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatButtonModule, MatIconModule, CategoryAutocomplete],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatButtonModule, MatIconModule, CategoryAutocomplete, MoneyInput],
   templateUrl: './recurring-dialog.html',
   styleUrls: ['./recurring-dialog.scss'],
 })
@@ -87,6 +88,12 @@ export class RecurringDialog {
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  /** Código de moneda seleccionado en el form (o null → 'USD/VES'). */
+  currencyValue(): string | null {
+    const c = this.form.value.currency;
+    return typeof c === 'string' && c ? c : null;
   }
 }
 

@@ -15,6 +15,7 @@ import { WalletterApiService } from '../core/services/walletter-api.service';
 import { NotificationService } from '../core/services/notification.service';
 import { Wallet, Category } from '../models/walletter.models';
 import { todayInTimeZone } from '../core/utils/dates';
+import { MoneyInput } from '../core/components/money-input';
 
 export interface NewOperationDialogData {
   wallets: Wallet[];
@@ -41,6 +42,7 @@ const SYSTEM_CATEGORIES = ['fee', 'exchange_in', 'exchange_out'];
     MatTabsModule,
     MatRadioModule,
     MatAutocompleteModule,
+    MoneyInput,
   ],
   templateUrl: './new-operation-dialog.html',
   styleUrls: ['./new-operation-dialog.scss'],
@@ -221,5 +223,21 @@ export class NewOperationDialog implements OnInit {
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  /** Código de moneda según la billetera seleccionada en la tab transacción. */
+  txCurrency(): string | null {
+    const id = this.txForm.value.walletId;
+    return this.data.wallets.find((w) => w.id === id)?.currency ?? null;
+  }
+
+  exFromCurrency(): string | null {
+    const id = this.exForm.value.fromWalletId;
+    return this.data.wallets.find((w) => w.id === id)?.currency ?? null;
+  }
+
+  exToCurrency(): string | null {
+    const id = this.exForm.value.toWalletId;
+    return this.data.wallets.find((w) => w.id === id)?.currency ?? null;
   }
 }

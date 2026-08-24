@@ -21,6 +21,7 @@ import { formatMoney } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
 import { EditTransactionDialog } from './transaction-edit-dialog';
 import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
+import { MoneyInput } from '../../core/components/money-input';
 
 @Component({
   selector: 'app-transaction-detail',
@@ -215,7 +216,7 @@ export class TransactionDetail implements OnInit {
     }
     const t = this.tx();
     if (!t) return;
-    const ref = this.dialog.open(AddFeeDialog, { width: '440px', data: { tz: this.tz } });
+    const ref = this.dialog.open(AddFeeDialog, { width: '440px', data: { tz: this.tz, walletCurrency: t.walletCurrency } });
     ref.afterClosed().subscribe((res?: { amount: number; date: string; time: string }) => {
       if (!res) return;
       this.api.addTransactionFee(this.id(), { amount: res.amount, date: res.date, time: res.time, tz: this.tz }).subscribe({
@@ -296,7 +297,7 @@ export class TransactionDetail implements OnInit {
 /** Diálogo para añadir una comisión (fee) a la transacción. */
 @Component({
   selector: 'app-add-fee-dialog',
-  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MoneyInput],
   template: `
     <div class="dlg">
       <div class="dlg-head">
@@ -307,10 +308,12 @@ export class TransactionDetail implements OnInit {
       </div>
       <mat-dialog-content class="dlg-content">
         <form [formGroup]="form" class="dlg-form">
-          <mat-form-field appearance="outline" class="dlg-full">
-            <mat-label>Monto de la comisión *</mat-label>
-            <input matInput formControlName="amount" type="number" min="0" step="0.01" />
-          </mat-form-field>
+          <app-money-input
+            formControlName="amount"
+            label="Monto de la comisión *"
+            [currency]="data.walletCurrency"
+            [full]="true"
+          />
           <div class="dlg-row">
             <mat-form-field appearance="outline">
               <mat-label>Fecha</mat-label>
@@ -335,7 +338,7 @@ export class TransactionDetail implements OnInit {
 export class AddFeeDialog {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<AddFeeDialog>);
-  readonly data = inject<{ tz: string }>(MAT_DIALOG_DATA);
+  readonly data = inject<{ tz: string; walletCurrency?: string }>(MAT_DIALOG_DATA);
 
   loading = signal(false);
   today = todayInTimeZone(this.data.tz);
@@ -371,6 +374,7 @@ export class AddFeeDialog {
     MatButtonModule,
     MatIconModule,
     CategoryAutocomplete,
+    MoneyInput,
   ],
   template: `
     <div class="dlg">
@@ -410,10 +414,12 @@ export class AddFeeDialog {
               class="dlg-full"
             />
           </div>
-          <mat-form-field appearance="outline" class="dlg-full">
-            <mat-label>Monto *</mat-label>
-            <input matInput formControlName="amount" type="number" min="0" step="0.01" />
-          </mat-form-field>
+          <app-money-input
+            formControlName="amount"
+            label="Monto *"
+            [currency]="data.walletCurrency"
+            [full]="true"
+          />
           <mat-form-field appearance="outline" class="dlg-full">
             <mat-label>Descripción</mat-label>
             <input matInput formControlName="description" />
@@ -431,10 +437,12 @@ export class AddFeeDialog {
                   <input matInput formControlName="time" type="time" />
                 </mat-form-field>
               </div>
-              <mat-form-field appearance="outline" class="dlg-full">
-                <mat-label>Comisión (opcional)</mat-label>
-                <input matInput formControlName="fee" type="number" min="0" step="0.01" />
-              </mat-form-field>
+              <app-money-input
+                formControlName="fee"
+                label="Comisión (opcional)"
+                [currency]="data.walletCurrency"
+                [full]="true"
+              />
             </div>
           </details>
         </form>

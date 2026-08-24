@@ -12,6 +12,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet } from '../../models/walletter.models';
 import { todayInTimeZone } from '../../core/utils/dates';
+import { MoneyInput } from '../../core/components/money-input';
 
 export interface TransactionDialogData {
   wallets: Wallet[];
@@ -32,6 +33,7 @@ export interface TransactionDialogData {
     MatButtonModule,
     MatRadioModule,
     MatDatepickerModule,
+    MoneyInput,
   ],
   templateUrl: './transaction-dialog.html',
   styleUrls: ['./transaction-dialog.scss'],
@@ -85,5 +87,12 @@ export class TransactionDialog {
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  /** Código de moneda según la billetera seleccionada (o undefined → 'USD/VES'). */
+  selectedCurrency(): string | null {
+    const id = this.form.value.walletId;
+    const w = this.data.wallets.find((ww) => ww.id === id);
+    return w?.currency ?? null;
   }
 }

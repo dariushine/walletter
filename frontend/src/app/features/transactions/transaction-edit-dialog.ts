@@ -9,6 +9,7 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { TransactionDetail } from '../../models/walletter.models';
 import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
+import { MoneyInput } from '../../core/components/money-input';
 
 export interface EditTransactionDialogData {
   tx: TransactionDetail;
@@ -26,6 +27,7 @@ export interface EditTransactionDialogData {
     MatButtonModule,
     MatIconModule,
     CategoryAutocomplete,
+    MoneyInput,
   ],
   template: `
     <div class="dlg">
@@ -41,10 +43,12 @@ export interface EditTransactionDialogData {
             formControlName="categoryName"
             [type]="data.tx.type"
           />
-          <mat-form-field appearance="outline" class="dlg-full">
-            <mat-label>Monto</mat-label>
-            <input matInput formControlName="amount" type="number" step="0.01" />
-          </mat-form-field>
+          <app-money-input
+            formControlName="amount"
+            label="Monto"
+            [currency]="data.tx.walletCurrency"
+            [full]="true"
+          />
           <mat-form-field appearance="outline" class="dlg-full">
             <mat-label>Descripción</mat-label>
             <input matInput formControlName="description" />
