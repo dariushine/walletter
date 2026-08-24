@@ -9,11 +9,35 @@
     </button>
   </header>
 
+  <!-- Toggle Gasto / Ingreso -->
+  <div class="toggle-bar">
+    <div class="segmented">
+      <button
+        type="button"
+        class="seg-btn"
+        [class.active]="filterType() === 'expense'"
+        (click)="setFilter('expense')"
+      >Gastos</button>
+      <button
+        type="button"
+        class="seg-btn"
+        [class.active]="filterType() === 'income'"
+        (click)="setFilter('income')"
+      >Ingresos</button>
+      <button
+        type="button"
+        class="seg-btn"
+        [class.active]="filterType() === 'all'"
+        (click)="setFilter('all')"
+      >Todos</button>
+    </div>
+  </div>
+
   @if (loading()) {
     <mat-spinner class="spinner" />
   } @else {
     <div class="cat-grid">
-      @for (c of categories(); track c.id) {
+      @for (c of currentFiltered(); track c.id) {
         <mat-card class="cat-card">
           <mat-card-content>
             <div class="cat-head">
@@ -25,9 +49,12 @@
                 {{ c.type === 'income' ? 'Ingreso' : 'Gasto' }}
               </span>
             </div>
-            <button mat-icon-button class="delete-btn" (click)="delete(c)" aria-label="Eliminar">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <div class="cat-actions">
+              @if (!isProtected(c)) {
+                <button mat-icon-button (click)="edit(c)" aria-label="Editar"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button (click)="delete(c)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
+              }
+            </div>
           </mat-card-content>
         </mat-card>
       } @empty {

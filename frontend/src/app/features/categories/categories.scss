@@ -4,7 +4,39 @@
   align-items: flex-start;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+/* Toggle Gasto / Ingreso / Todos */
+.toggle-bar {
+  margin: 0 0 16px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.seg-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &.active {
+    background: #3f51b5;
+    color: #fff;
+  }
+
+  &:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.05);
+  }
 }
 
 .spinner {
@@ -22,8 +54,26 @@
 
   mat-card-content {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 10px;
+  }
+}
+
+.cat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cat-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-top: 6px;
+
+  mat-icon {
+    font-size: 20px;
   }
 }
 
@@ -49,12 +99,6 @@
     background: #e8f5e9;
     color: #2e7d32;
   }
-}
-
-.delete-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
 }
 
 .empty {
