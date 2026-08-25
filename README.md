@@ -56,12 +56,12 @@ docker compose up -d --build
 
 Este primer arranque tarda unos minutos (descarga y compila todo). Cuando termine:
 
-- 🌐 **Frontend (la app):** abre tu navegador en **http://localhost:19443**
+- 🌐 **Frontend (la app):** abre tu navegador en **http://localhost:3000**
 - 🔌 **API (para técnicos):** **http://localhost:3002/swagger**
 
 ### Paso 4 — Úsalo
 
-Abre el navegador en `http://localhost:19443`, crea tus billeteras y empieza a anotar tus gastos. Al primer arranque, Walletter crea la base de datos (archivo `data/walletter.db`) y deja listas las categorías básicas.
+Abre el navegador en `http://localhost:3000`, crea tus billeteras y empieza a anotar tus gastos. Al primer arranque, Walletter crea la base de datos (archivo `data/walletter.db`) y deja listas las categorías básicas.
 
 ### Paso 5 — Apagarlo / verlo
 
@@ -148,7 +148,7 @@ No. Todo vive en el archivo/volumen de tu propia máquina. No dependes de ningú
 Sí, la base de datos es intercambiable (SQLite por defecto). Requiere cambiar el proveedor en `backend/src/Walletter.Infrastructure/DependencyInjection.cs` y el connection string.
 
 **¿Cómo conecto a mi agente de OpenClaw?**
-Instala el plugin desde [dariushine/walletter-openclaw](https://github.com/dariushine/walletter-openclaw). En su `baseUrl` usa tu URL terminada en `/api` (ej. `http://localhost:19443/api`) y un API token generado en Walletter.
+Instala el plugin desde [dariushine/walletter-openclaw](https://github.com/dariushine/walletter-openclaw). En su `baseUrl` usa tu URL terminada en `/api` (ej. `http://localhost:3000/api`) y un API token generado en Walletter.
 
 ---
 
