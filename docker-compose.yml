@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runtime
     ports:
       - "3002:3002"
     environment:
@@ -19,8 +20,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: runtime
     ports:
-      - "3000:80"
+      - "19443:80"
     depends_on:
       - backend
     restart: unless-stopped

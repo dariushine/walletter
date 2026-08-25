@@ -13,7 +13,7 @@ COPY . .
 RUN npm run build -- --configuration production
 
 # --- Stage 2: runtime (Nginx) ---
-FROM nginx:1.27-alpine
+FROM nginx:1.27-alpine AS runtime
 COPY --from=build /app/dist/walletter-app/browser /usr/share/nginx/html
 
 # Proxy /api hacia el backend (mismo origen, evita CORS y cookies cross-site).
