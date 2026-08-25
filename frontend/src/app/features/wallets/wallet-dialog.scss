@@ -1,31 +1,36 @@
 .wallet-form {
   display: flex;
   flex-direction: column;
+  gap: 4px;
   padding-top: 8px;
 }
 
 .form-row {
-  margin-bottom: 4px;
-}
-
-.form-row.two {
   display: flex;
   gap: 12px;
 
-  mat-form-field {
+  .full {
     flex: 1;
   }
-}
 
-.full {
-  width: 100%;
-}
+  &.two {
+    mat-form-field {
+      flex: 1;
+    }
+  }
 
-.color-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 8px 0;
+  &.switches {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+    mat-slide-toggle {
+      font-size: 0.9rem;
+    }
+  }
 }
 
 .color-label {
@@ -56,4 +61,8 @@
   vertical-align: middle;
   margin-right: 8px;
   color: rgba(0, 0, 0, 0.7);
+}
+
+.full {
+  width: 100%;
 }
