@@ -15,6 +15,22 @@ public class RecurringPayment
     public int CategoryId { get; set; }
     public int? WalletId { get; set; }
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// true si es una suscripción (pago fijo periódico con día de cobro).
+    /// </summary>
+    public bool IsSubscription { get; set; }
+
+    /// <summary>
+    /// Día del mes en que se cobra la suscripción (1-31).
+    /// </summary>
+    public int? BillingDay { get; set; }
+
+    /// <summary>
+    /// Modalidad de pago de la suscripción (ej. tarjeta, efectivo, transferencia, zelle).
+    /// </summary>
+    public string? PaymentMethod { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

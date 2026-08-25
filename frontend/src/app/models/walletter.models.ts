@@ -162,6 +162,9 @@ export interface RecurringPayment {
   categoryId: number;
   walletId?: number | null;
   isActive: boolean;
+  isSubscription?: boolean;
+  billingDay?: number | null;
+  paymentMethod?: string | null;
 }
 
 /** Tasa del día */

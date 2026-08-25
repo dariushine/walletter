@@ -3,6 +3,7 @@ using System;
 using Walletter.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Walletter.Infrastructure.Migrations
 {
     [DbContext(typeof(WalletterDbContext))]
-    partial class WalletterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825133000_AddSubscriptionToRecurring")]
+    partial class AddSubscriptionToRecurring
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
@@ -136,9 +139,6 @@ namespace Walletter.Infrastructure.Migrations
 
                     b.Property<int>("CreditTransactionId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("DatetimeUtc")
-                        .HasColumnType("TEXT");
 
                     b.Property<int>("DebitTransactionId")
                         .HasColumnType("INTEGER");

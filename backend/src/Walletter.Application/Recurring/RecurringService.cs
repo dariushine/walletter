@@ -55,6 +55,9 @@ public class RecurringService
             CategoryId = categoryId.Value,
             WalletId = cmd.WalletId,
             IsActive = true,
+            IsSubscription = cmd.IsSubscription,
+            BillingDay = cmd.BillingDay,
+            PaymentMethod = cmd.PaymentMethod,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -95,6 +98,9 @@ public class RecurringService
             categoryId = row.CategoryId,
             walletId = row.WalletId,
             isActive = row.IsActive,
+            isSubscription = row.IsSubscription,
+            billingDay = row.BillingDay,
+            paymentMethod = row.PaymentMethod,
         };
     }
 
@@ -109,6 +115,9 @@ public class RecurringService
         if (cmd.Currency != null) existing.Currency = cmd.Currency;
         if (cmd.Type != null) existing.Type = cmd.Type;
         if (cmd.WalletId is int w) existing.WalletId = w;
+        if (cmd.IsSubscription is bool sub) existing.IsSubscription = sub;
+        if (cmd.BillingDay is int bd) existing.BillingDay = bd;
+        if (cmd.PaymentMethod != null) existing.PaymentMethod = cmd.PaymentMethod;
         if (!string.IsNullOrEmpty(cmd.CategoryName))
         {
             var cat = await _categories.GetOrCreateCategory(cmd.CategoryName, existing.Type, ct);
@@ -180,5 +189,8 @@ public class RecurringService
         categoryId = r.CategoryId,
         walletId = r.WalletId,
         isActive = r.IsActive,
+        isSubscription = r.IsSubscription,
+        billingDay = r.BillingDay,
+        paymentMethod = r.PaymentMethod,
     };
 }

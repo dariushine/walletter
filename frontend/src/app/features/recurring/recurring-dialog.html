@@ -64,6 +64,38 @@
         </mat-select>
       </mat-form-field>
 
+      <!-- Toggle Suscripción -->
+      <div class="subs-toggle-row">
+        <div class="subs-toggle-info">
+          <mat-icon>autorenew</mat-icon>
+          <span class="subs-toggle-label">Es una suscripción</span>
+          <span class="subs-toggle-desc">Pago fijo que se cobra cada mes</span>
+        </div>
+        <mat-slide-toggle formControlName="isSubscription"></mat-slide-toggle>
+      </div>
+
+      @if (form.value.isSubscription) {
+        <div class="subs-fields">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Día de pago</mat-label>
+            <mat-select formControlName="billingDay">
+              @for (d of billingDays; track d) {
+                <mat-option [value]="d">{{ d }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Modalidad de pago</mat-label>
+            <mat-select formControlName="paymentMethod">
+              @for (m of paymentMethods; track m) {
+                <mat-option [value]="m">{{ m }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      }
+
       <details class="op-details">
         <summary>Detalles</summary>
         <div class="details-body">

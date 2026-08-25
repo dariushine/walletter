@@ -107,4 +107,38 @@ export class Recurring implements OnInit {
   format(amount: number, currency: string): string {
     return formatMoney(amount, currency);
   }
+
+  /**
+   * Estado de una suscripción: días hasta el próximo cobro o vencimiento.
+   * Basado en el día de cobro (billingDay) y la fecha de hoy en la zona del usuario.
+   */
+  subscriptionStatus(item: RecurringPayment): { label: string; days: number; overdue: boolean } | null {
+    if (!item.isSubscription || !item.billingDay) return null;
+    const tz = this.settings.timezone();
+    const hoy = todayInTimeZone(tz);
+    const [y, m] = hoy.split('-').map(Number);
+    const day = item.billingDay;
+
+    // Próximo cobro: este mes si el día aún no pasó; si no, el mes que viene.
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const cobroEsteMes = Math.min(day, daysInMonth);
+    const fechaCobro = new Date(y, m - 1, cobroEsteMes);
+    const hoyDate = new Date(y, m - 1, Number(hoy.split('-')[2]));
+
+    let next: Date;
+    if (fechaCobro >= hoyDate) {
+      next = fechaCobro;
+    } else {
+      const nextMonth = new Date(y, m, 1);
+      const nextDays = new Date(y, m + 1, 0).getDate();
+      next = new Date(y, m, Math.min(day, nextDays));
+    }
+
+    const diff = Math.round((next.getTime() - hoyDate.getTime()) / 86400000);
+    if (diff < 0) {
+      return { label: `Vencido hace ${Math.abs(diff)} día${Math.abs(diff) === 1 ? '' : 's'}`, days: Math.abs(diff), overdue: true };
+    }
+    if (diff === 0) return { label: 'Vence hoy', days: 0, overdue: false };
+    return { label: `Faltan ${diff} día${diff === 1 ? '' : 's'}`, days: diff, overdue: false };
+  }
 }
