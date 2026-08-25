@@ -153,6 +153,7 @@ public class ExchangesService
             CreditFee = creditCommission,
             Description = cmd.Description ?? "",
             Deleted = false,
+            DatetimeUtc = datetimeUtc,
             CreatedAt = DateTime.UtcNow,
         };
         _db.Exchanges.Add(ex);
@@ -197,7 +198,8 @@ public class ExchangesService
         var rows = await q
             .Include(e => e.From)
             .Include(e => e.To)
-            .OrderByDescending(e => e.Id)
+            .OrderByDescending(e => e.DatetimeUtc)
+            .ThenByDescending(e => e.Id)
             .Skip(offset)
             .Take(limit)
             .ToListAsync(ct);
@@ -215,6 +217,7 @@ public class ExchangesService
                 fee = Money.ToNum(e.Fee),
                 creditFee = Money.ToNum(e.CreditFee),
                 description = e.Description,
+                datetimeUtc = e.DatetimeUtc,
                 createdAt = e.CreatedAt,
                 debitTransactionId = e.DebitTransactionId,
                 creditTransactionId = e.CreditTransactionId,
@@ -264,6 +267,7 @@ public class ExchangesService
             fee = Money.ToNum(ex.Fee),
             creditFee = Money.ToNum(ex.CreditFee),
             description = ex.Description,
+            datetimeUtc = ex.DatetimeUtc,
             createdAt = ex.CreatedAt,
             fromWalletName = ex.From.Name,
             toWalletName = ex.To.Name,
@@ -335,6 +339,14 @@ public class ExchangesService
         var newDesc = cmd.Description ?? ex.Description;
         var newRate = Money.ToRateInt((decimal)newTo / newFrom);
 
+        // Fecha efectiva: si viene date/time en el update, recalcula y actualiza
+        // el exchange y sus transacciones débito/crédito (+ comisiones).
+        var newDatetimeUtc = ex.DatetimeUtc;
+        if (!string.IsNullOrEmpty(cmd.Date) && !string.IsNullOrEmpty(cmd.Time))
+        {
+            newDatetimeUtc = TimeZoneHelper.ToUtcInstant(cmd.Date, cmd.Time, cmd.Tz ?? TimeZone());
+        }
+
         var fromDelta = -(newFrom + newFee) - -(ex.FromAmount + ex.Fee);
         var toDelta = (newTo - newCreditFee) - (ex.ToAmount - ex.CreditFee);
 
@@ -367,6 +379,19 @@ public class ExchangesService
         ex.Fee = newFee;
         ex.CreditFee = newCreditFee;
         ex.Description = newDesc ?? "";
+
+        if (newDatetimeUtc != ex.DatetimeUtc)
+        {
+            ex.DatetimeUtc = newDatetimeUtc;
+            if (ex.Debit != null) ex.Debit.DatetimeUtc = newDatetimeUtc;
+            if (ex.Credit != null) ex.Credit.DatetimeUtc = newDatetimeUtc;
+            // Comisiones hijas
+            var parentIds = new[] { ex.DebitTransactionId, ex.CreditTransactionId };
+            var feeTxns = await _db.Transactions
+                .Where(x => x.ParentId != null && parentIds.Contains(x.ParentId.Value))
+                .ToListAsync(ct);
+            foreach (var ft in feeTxns) ft.DatetimeUtc = newDatetimeUtc;
+        }
 
         ex.From.Balance = newFromBalance;
         ex.To.Balance = newToBalance;
