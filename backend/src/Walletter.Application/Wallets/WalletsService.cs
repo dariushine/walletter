@@ -55,6 +55,8 @@ public class WalletsService
             Description = cmd.Description,
             Icon = cmd.Icon,
             Color = cmd.Color,
+            ExcludeFromTotal = cmd.ExcludeFromTotal,
+            HideInDashboard = cmd.HideInDashboard,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
         };
@@ -74,6 +76,8 @@ public class WalletsService
         if (cmd.Type != null) existing.Type = cmd.Type;
         if (cmd.Currency != null) existing.Currency = cmd.Currency;
         if (cmd.Balance is decimal balance) existing.Balance = Money.ToInt(balance);
+        if (cmd.ExcludeFromTotal.HasValue) existing.ExcludeFromTotal = cmd.ExcludeFromTotal.Value;
+        if (cmd.HideInDashboard.HasValue) existing.HideInDashboard = cmd.HideInDashboard.Value;
         await _db.SaveChangesAsync(ct);
         return Map(existing);
     }

@@ -10,6 +10,8 @@ public class CreateWalletCommand
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Color { get; set; }
+    public bool ExcludeFromTotal { get; set; }
+    public bool HideInDashboard { get; set; }
 }
 
 public class UpdateWalletCommand
@@ -22,4 +24,6 @@ public class UpdateWalletCommand
     public string? Color { get; set; }
     public string? Type { get; set; }
     public string? Currency { get; set; }
+    public bool? ExcludeFromTotal { get; set; }
+    public bool? HideInDashboard { get; set; }
 }
