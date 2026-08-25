@@ -1,157 +1,183 @@
-# Walletter
+# 🧾 Walletter — Tu sistema de finanzas personales
 
-Sistema de finanzas personales. Monorepo:
+Walletter es una aplicación web para llevar el control de tu **dinero** de forma simple:
 
-- **`backend/`** — API REST en **.NET 10 + ASP.NET Core + Entity Framework Core** (Clean Architecture).
-- **`frontend/`** — frontend **Angular 22** (standalone + Material), SPA que consume la API.
+- 💰 **Billeteras**: guarda tu dinero en distintas "carpetas" (efectivo, banco, dólares, bolívares…).
+- 🧾 **Transacciones**: anota cada ingreso y gasto.
+- 🔁 **Exchanges**: cambia de una moneda a otra (ej. VES → USD) con su comisión.
+- 📈 **Tasas**: consulta la tasa del día (BCV y paralelo).
+- ⏰ **Pagos recurrentes**: programa gastos que se repiten cada mes.
+- 📊 **Reportes**: mira cómo se mueve tu dinero por períodos y categorías.
 
-> El backend preserva la **lógica de negocio** del sistema financiero previo
-> (rework en NestJS/Prisma), pero implementado desde cero con entidades,
-> arquitectura, rutas, servicios y base de datos propios del ecosistema .NET.
+Tiene dos partes que trabajan juntas:
+
+| Parte | ¿Qué es? | Tecnología |
+|-------|----------|------------|
+| **Backend** (`backend/`) | El "cerebro": guarda tus datos y expone la API | ASP.NET Core (.NET 10) + EF Core |
+| **Frontend** (`frontend/`) | La pantalla bonita que ves en el navegador | Angular 22 + Material |
+
+> 🧑‍🦱 **¿No eres programador?** No pasa nada: la forma más fácil de usarlo es con **Docker** (paso 1 abajo). Solo necesitas instalar Docker y copiar/pegar unos comandos. El resto lo hace solo.
 
 ---
 
-## Stack
+## 🚀 Cómo correrlo desde cero
 
-| Capa | Tecnología |
-|------|-----------|
-| API | ASP.NET Core (Minimal hosting + Controllers) |
-| Lógica de negocio | Services en `Walletter.Application` |
-| Dominio | Entidades puras en `Walletter.Domain` |
-| Datos | Entity Framework Core en `Walletter.Infrastructure` (provider SQLite por defecto, DB-agnóstico) |
-| Auth | JWT (access token) + cookies httpOnly + API tokens |
-| Base de datos | SQLite (archivo), intercambiable a PostgreSQL/MySQL |
+> ⚠️ **Requisito:** necesitas **Docker** instalado.
+> - Windows/macOS: instala [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+> - Linux: instala `docker` y `docker compose` (docker compose plugin).
+>
+> Verifica con: `docker --version` y `docker compose version` (debe responder sin error).
 
-## Arquitectura (Clean Architecture)
+### Paso 1 — Clona el proyecto
 
-```
-backend/
-├── Walletter.slnx
-└── src/
-    ├── Walletter.Domain/          # Entidades + reglas puras (Money, TimeZone, tipos)
-    ├── Walletter.Application/     # Commands/DTOs + Servicios de negocio
-    ├── Walletter.Infrastructure/  # EF Core (DbContext, migraciones), token service, seed
-    └── Walletter.Api/             # Controladores REST, auth, middleware, Program.cs
+Abre una terminal y escribe:
+
+```bash
+git clone https://github.com/dariushine/walletter.git
+cd walletter
 ```
 
-**Dependencias:** `Api → Infrastructure → Application → Domain`. El dominio y la
-aplicación **no conocen la base de datos**; solo la capa de Infraestructura sabe
-de EF Core. Cambiar de SQLite a otro motor = cambiar el provider en
-`Walletter.Infrastructure/DependencyInjection.cs` y el connection string.
+### Paso 2 — Configura (opcional, pero recomendado)
 
-## Reglas de negocio
+Copia el archivo de ejemplo y ajústalo si quieres poner contraseña:
 
-- **Montos** como enteros de **centavos (×100)** para evitar errores de float.
-- **Tasas** como enteros **×10000**.
-- **Fechas**: un único instante **UTC** (`datetime_utc`); el front proyecta a la
-  zona horaria del usuario.
-- **Soft-delete** en transacciones, billeteras, categorías y exchanges.
-- **Categorías de sistema** (`fee`, `exchange_out`, `exchange_in`) protegidas.
-- **Transacciones con comisión (fee)** atómicas: padre + fee hijo + balance en un
-  solo guardado; el `fee` del padre se denormaliza desde sus hijos.
-- **Exchanges** atómicos: débito + crédito (+ comisiones) + registro + balances.
+```bash
+cp .env.example .env
+```
 
-## Requisitos
+- Si dejas `AUTH_USERNAME` y `AUTH_PASSWORD` **vacías**, la app queda **abierta** (cualquiera en tu red puede entrar). Para uso real, ponle un usuario y una contraseña.
+- Si activas la autenticación, debes poner un `JWT_SECRET` largo (más de 32 caracteres), por ejemplo una frase aleatoria.
 
-- .NET 10 SDK (https://dotnet.microsoft.com/download)
+### Paso 3 — Levántalo
 
-## Ejecutar en desarrollo
+```bash
+docker compose up -d --build
+```
+
+Este primer arranque tarda unos minutos (descarga y compila todo). Cuando termine:
+
+- 🌐 **Frontend (la app):** abre tu navegador en **http://localhost:19443**
+- 🔌 **API (para técnicos):** **http://localhost:3002/swagger**
+
+### Paso 4 — Úsalo
+
+Abre el navegador en `http://localhost:19443`, crea tus billeteras y empieza a anotar tus gastos. Al primer arranque, Walletter crea la base de datos (archivo `data/walletter.db`) y deja listas las categorías básicas.
+
+### Paso 5 — Apagarlo / verlo
+
+```bash
+docker compose logs -f     # ver lo que pasa en vivo (Ctrl+C para salir)
+docker compose down        # detener (sin borrar tus datos)
+docker compose up -d       # volver a encender
+```
+
+Tus datos se guardan en un volumen de Docker, así que **no se pierden** al apagar.
+
+---
+
+## 🧑‍💻 Para desarrolladores (sin Docker)
+
+### Requisitos
+
+- **.NET 10 SDK** → https://dotnet.microsoft.com/download
+- **Node.js 22** (para el frontend) → https://nodejs.org
+
+### Levantar el backend
 
 ```bash
 cd backend
 dotnet restore
-dotnet build
 dotnet run --project src/Walletter.Api
 # API en http://localhost:3002  (Swagger en /swagger)
 ```
 
-Al arrancar, aplica migraciones y siembra categorías de sistema + zona horaria.
-
-## Configuración (variables de entorno)
-
-| Variable | Descripción |
-|----------|-------------|
-| `PORT` | Puerto de la API (default `3002`) |
-| `CONNECTIONSTRINGS__WALLETTERDB` | Connection string (default `Data Source=data/walletter.db`) |
-| `AUTH_USERNAME` / `AUTH_PASSWORD` | Si se definen ambas, activan auth JWT; si no, API abierta |
-| `JWT_SECRET` | **Requerido** si la auth está activa (mínimo 32 chars) |
-
-Ver `.env.example`.
-
-## Docker
-
-### Producción (imágenes compiladas)
+### Levantar el frontend (en otra terminal)
 
 ```bash
-docker compose up -d --build
-# Frontend en http://localhost:3000, API en http://localhost:3002
+cd frontend
+npm install
+npm start
+# App en http://localhost:4200  (proxy /api → http://localhost:3002)
 ```
 
-### Desarrollo (hot reload con bind mounts)
+---
 
-Sin rebuiltar: usa los targets `dev` de los Dockerfiles y monta el código fuente
-como bind, con hot reload en ambos servicios.
+## 🐳 Desarrollo con hot reload (Docker + bind mounts)
+
+Si vas a programar y quieres que los cambios se reflejen al instante (recarga automática):
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up
-# Frontend (ng serve) en http://localhost:3000 → proxy /api → backend:3002
-# Backend (dotnet watch) en http://localhost:3002
 ```
 
-- **Backend**: imagen `sdk:10.0` + `dotnet watch run`; bind de `./backend`
-  (los `bin/obj` se conservan del contenedor para no mezclarlos con el host).
-- **Frontend**: imagen `node:22` + `ng serve --host 0.0.0.0 --port 4200`; bind de
-  `./frontend` (`node_modules`/`dist` se conservan del contenedor). El proxy
-  `/api` apunta al backend por nombre de red via `API_UPSTREAM`.
+- Backend con `dotnet watch`, frontend con `ng serve` (hot reload en ambos).
+- Frontend en **http://localhost:3000**, API en **http://localhost:3002**.
+- No uses este modo en producción.
 
-## Endpoints (todos bajo `/api`)
+---
 
-### Auth
-| Método | Ruta |
-|--------|------|
-| GET | `/api/auth/status` |
-| GET | `/api/auth/session` |
-| POST | `/api/auth/login` |
-| POST | `/api/auth/logout` |
-| POST | `/api/auth/refresh` |
-| GET / DELETE | `/api/auth/sessions`, `/api/auth/sessions/{jti}` |
-| GET / POST / DELETE | `/api/auth/tokens`, `/api/auth/tokens`, `/api/auth/tokens/{id}` |
+## ⚙️ Configuración (variables de entorno)
 
-### Recursos
-| Método | Ruta |
-|--------|------|
-| GET/POST | `/api/wallets` |
-| GET/PUT/DELETE | `/api/wallets/{id}` |
-| PUT | `/api/wallets/{id}/reactivate` |
-| GET | `/api/wallets/{id}/report` |
-| GET/POST | `/api/transactions` |
-| GET/PUT/DELETE | `/api/transactions/{id}` |
-| POST | `/api/transactions/{id}/fee`, `/api/transactions/{id}/associate` |
-| GET/POST | `/api/exchanges` |
-| GET/PUT/DELETE | `/api/exchanges/{id}` |
-| GET/POST | `/api/categories` |
-| PUT/DELETE | `/api/categories/{id}`, `/api/categories/{id}/reactivate` |
-| GET/POST | `/api/recurring-payments` |
-| POST | `/api/recurring-payments/{id}/execute` |
-| GET/POST/PUT/DELETE | `/api/daily-rates` |
-| GET | `/api/rates/effective` |
-| GET | `/api/settings`, PUT `/api/settings/user_timezone` |
-| GET | `/api/stats`, `/api/stats/by-category` |
-| GET | `/api/health` |
+| Variable | ¿Qué hace? | Default |
+|----------|-----------|---------|
+| `PORT` | Puerto de la API | `3002` |
+| `AUTH_USERNAME` / `AUTH_PASSWORD` | Usuario y clave de acceso. Si van vacíos, la app queda abierta | vacío |
+| `JWT_SECRET` | Clave secreta (obligatoria si hay auth, mínimo 32 caracteres) | vacío |
+| `CONNECTIONSTRINGS__WALLETTERDB` | Dónde se guardan los datos (SQLite por defecto) | `Data Source=data/walletter.db` |
 
-## Autenticación
+Todas se pueden poner en el archivo `.env`.
 
-- **Access token JWT** vía `Authorization: Bearer <jwt>` o cookie `access_token`.
-- **API token** (para el plugin/agente) vía `X-Api-Key` o `Authorization: Bearer <token>`.
-- Con auth deshabilitada, todos los endpoints son accesibles.
-- Para crear un API token necesitas login previo: `POST /api/auth/tokens`.
+---
 
-## Pruebas
+## 🧰 Funciones paso a paso (para el usuario)
 
-El backend se probó manualmente cubriendo: wallets (CRUD + soft-delete + reactivar +
-report), transacciones (CRUD, fee inline, addFee, associate, fondos insuficientes),
-exchanges (crear, actualizar con deltas, borrar), categorías (sistema protegidas),
-recurrentes (crear, ejecutar, actualizar, borrar), tasas (upsert, effective, today),
-stats, settings y el flujo completo de auth (login, refresh, API token, bad credentials).
+1. **Crear una billetera** → En la app, "Nueva billetera": ponle nombre, moneda (USD, VES, etc.) y un monto inicial.
+2. **Anotar un gasto o ingreso** → "Nueva transacción": elige la billetera, el tipo (ingreso/gasto), el monto y la categoría.
+3. **Cambiar de moneda** → "Exchange": de qué billetera a cuál, montos y comisión. Se hace en un solo paso (es atómico).
+4. **Pago recurrente** → Configura un gasto mensual (ej. internet) y ejecútalo cuando toque.
+5. **Ver tu balance y reportes** → La pantalla principal y las secciones de stats/reportes muestran el resumen.
 
-> Nota: las pruebas unitarias/xUnit aún no están. Se añaden en un sprint posterior.
+---
+
+## ❓ Preguntas frecuentes
+
+**¿Mis datos se guardan en la nube?**
+No. Todo vive en el archivo/volumen de tu propia máquina. No dependes de ningún servicio externo.
+
+**¿Puedo usar PostgreSQL o MySQL?**
+Sí, la base de datos es intercambiable (SQLite por defecto). Requiere cambiar el proveedor en `backend/src/Walletter.Infrastructure/DependencyInjection.cs` y el connection string.
+
+**¿Cómo conecto a mi agente de OpenClaw?**
+Instala el plugin desde [dariushine/walletter-openclaw](https://github.com/dariushine/walletter-openclaw). En su `baseUrl` usa tu URL terminada en `/api` (ej. `http://localhost:19443/api`) y un API token generado en Walletter.
+
+---
+
+## 🧑‍💼 Sobre el proyecto
+
+- **Backend:** API REST en ASP.NET Core (.NET 10) + EF Core, con Clean Architecture (`Domain` → `Application` → `Infrastructure` → `Api`).
+- **Reglas de negocio importantes:**
+  - Los montos se guardan como **centavos (×100)** y las tasas **×10000** para evitar errores de decimales.
+  - Fechas en **UTC**; la interfaz muestra la zona horaria del usuario.
+  - Borrado "suave" (soft delete): nada se pierde de verdad.
+  - Transacciones con comisión y exchanges se procesan **de forma atómica** (si algo falla, no queda a medias).
+
+### Estructura del monorepo
+
+```
+walletter/
+├── backend/                     # API .NET
+│   └── src/
+│       ├── Walletter.Domain/        # Entidades y reglas puras
+│       ├── Walletter.Application/   # Lógica de negocio
+│       ├── Walletter.Infrastructure/# EF Core, base de datos, tokens
+│       └── Walletter.Api/           # Controladores REST, auth, Program.cs
+├── frontend/                    # App Angular
+├── docker-compose.yml           # Orquestación (front + back)
+├── docker-compose.dev.yml       # Modo desarrollo hot reload
+├── Dockerfile                   # Build del backend
+└── .env.example                 # Plantilla de configuración
+```
+
+---
+
+¿Problemas o dudas? Abre un *issue* en este repositorio.
