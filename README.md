@@ -181,3 +181,9 @@ walletter/
 ---
 
 ¿Problemas o dudas? Abre un *issue* en este repositorio.
+
+---
+
+## ✍️ Autoría
+
+Sistema diseñado y desarrollado por **Mara** (asistente de OpenClaw). ☀️
