@@ -31,7 +31,7 @@ public class ReportsService
         var userTz = tz ?? DefaultTz();
         var useParalelo = string.Equals(rateType, "paralelo", StringComparison.OrdinalIgnoreCase);
         var today = TodayInTz(userTz);
-        var from = ResolveFrom(period, today);
+        var from = ResolveFrom(period, today, userTz);
 
         // Transacciones del rango con su categoría (para excluir exchanges y sus
         // comisiones). Se proyecta a la zona del usuario para conocer la fecha real.
@@ -40,7 +40,7 @@ public class ReportsService
             .Include(t => t.Wallet)
             .Include(t => t.Category)
             .Include(t => t.Parent).ThenInclude(p => p!.Category)
-            .Where(t => !t.Deleted && t.DatetimeUtc >= from.Start && t.DatetimeUtc <= from.End)
+            .Where(t => !t.Deleted && t.DatetimeUtc >= from.Start && t.DatetimeUtc < from.End)
             .ToListAsync(ct);
 
         // Cache de tasas por fecha (evita re-consultar la misma fecha).
@@ -226,11 +226,17 @@ public class ReportsService
     private static string TodayInTz(string tz)
         => TimeZoneHelper.UtcToWallClock(DateTime.UtcNow, tz).Date;
 
-    /// <summary>Resuelve el rango (inicio=exclusive del día de hoy hacia atrás, fin=inicio del día siguiente).</summary>
-    private static (DateTime Start, DateTime End) ResolveFrom(string? period, string todayStr)
+    /// <summary>
+    /// Resuelve el rango en instantes UTC (lo mismo que TransactionsService)
+    /// para que la comparación contra DatetimeUtc (guardado en UTC) sea correcta.
+    /// start = primer día del periodo (00:00 hora local del usuario → UTC).
+    /// end   = día siguiente a hoy (00:00 hora local del usuario → UTC), EXCLUSIVO.
+    /// </summary>
+    private static (DateTime Start, DateTime End) ResolveFrom(string? period, string todayStr, string tz)
     {
-        var end = DateTime.ParseExact(todayStr, "yyyy-MM-dd", null).Date.AddDays(1); // fin inclusive = inicio del día siguiente
-        var today = end.AddDays(-1);
+        // 'Hoy' (hora local del usuario) y el día siguiente (borde final, exclusivo).
+        var today = DateTime.ParseExact(todayStr, "yyyy-MM-dd", null).Date;
+        var end = today.AddDays(1);
         int months = period switch
         {
             "1m" => 1,
@@ -239,9 +245,16 @@ public class ReportsService
             "1y" => 12,
             _ => 0, // all
         };
-        
+
         // 'Últimos N meses': incluye el mes actual y los N-1 anteriores (hasta hoy).
         var start = months == 0 ? DateTime.MinValue : today.AddMonths(-(months - 1)).AddDays(-today.Day + 1);
-        return (start, end);
+
+        // Convierte los bordes (hora local del usuario) a instantes UTC absolutos,
+        // igual que TransactionsService.List hace con ToUtcInstant(fecha, "00:00", tz).
+        DateTime startUtc = start == DateTime.MinValue
+            ? DateTime.MinValue
+            : TimeZoneHelper.ToUtcInstant(start.ToString("yyyy-MM-dd"), "00:00", tz);
+        var endUtc = TimeZoneHelper.ToUtcInstant(end.ToString("yyyy-MM-dd"), "00:00", tz);
+        return (startUtc, endUtc);
     }
 }

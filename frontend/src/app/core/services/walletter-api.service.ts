@@ -42,6 +42,11 @@ export class WalletterApiService {
     return this.http.get<{ enabled: boolean }>(`${this.base}/auth/status`);
   }
 
+  /** GET /auth/session — [Authorize]: 200 si hay sesión válida, 401 si no. */
+  authSession(): Observable<{ authenticated: boolean; disabled: boolean }> {
+    return this.http.get<{ authenticated: boolean; disabled: boolean }>(`${this.base}/auth/session`);
+  }
+
   login(username: string, password: string, remember: boolean): Observable<any> {
     return this.http.post(`${this.base}/auth/login`, { username, password, remember }, { withCredentials: true });
   }
