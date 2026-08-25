@@ -36,9 +36,11 @@
               <div class="wallet-balance-area">
                 <div class="balance-line">
                   <span class="wallet-balance">{{ saldo(w) }}</span>
-                  <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" [attr.aria-label]="isHidden(w) ? 'Mostrar saldo' : 'Ocultar saldo'">
-                    <mat-icon>{{ isHidden(w) ? 'visibility_off' : 'visibility' }}</mat-icon>
-                  </button>
+                  @if (hideBalances()) {
+                    <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" [attr.aria-label]="isHidden(w) ? 'Mostrar saldo' : 'Ocultar saldo'">
+                      <mat-icon>{{ isHidden(w) ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                  }
                 </div>
                 <span class="wallet-subline">{{ subline(w) }}</span>
               </div>
