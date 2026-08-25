@@ -12,6 +12,7 @@ import { MatDialog, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogAct
 import { FormsModule } from '@angular/forms';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { DailyRate } from '../../models/walletter.models';
 
 interface PeriodOption {
@@ -40,6 +41,7 @@ export class Rates implements OnInit {
   private readonly api = inject(WalletterApiService);
   private readonly notifier = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
+  private readonly prefs = inject(UiPreferenceStore);
 
   rates = signal<DailyRate[]>([]);
   total = signal(0);
@@ -48,8 +50,8 @@ export class Rates implements OnInit {
   page = 1;
   limit = 20;
 
-  /** Filtro de periodo. */
-  selectedPeriod = 'all';
+  /** Filtro de periodo. Persistido en el navegador. */
+  selectedPeriod = this.prefs.period('rates');
   private appliedFrom: string | undefined;
   private appliedTo: string | undefined;
 
@@ -87,6 +89,7 @@ export class Rates implements OnInit {
   }
 
   applyPeriod(): void {
+    this.prefs.setPeriod('rates', this.selectedPeriod);
     const today = this.today();
     const range = this.resolveRange(this.selectedPeriod, today);
     this.appliedFrom = range.from;

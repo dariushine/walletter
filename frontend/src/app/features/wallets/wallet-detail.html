@@ -88,7 +88,7 @@
             </button>
             <mat-form-field appearance="outline" class="period-select">
               <mat-label>Periodo</mat-label>
-              <mat-select [(ngModel)]="selectedPeriod">
+              <mat-select [ngModel]="selectedPeriod" (ngModelChange)="onPeriodChange($event)">
                 @for (p of periods; track p.value) {
                   <mat-option [value]="p.value">{{ p.label }}</mat-option>
                 }

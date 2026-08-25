@@ -13,6 +13,7 @@ import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { NotificationService } from '../../core/services/notification.service';
+import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Exchange, Wallet } from '../../models/walletter.models';
 import { todayInTimeZone } from '../../core/utils/dates';
 import { ExchangeDialog } from './exchange-dialog';
@@ -45,6 +46,7 @@ export class Exchanges implements OnInit, AfterViewInit {
   private readonly dialog = inject(MatDialog);
   private readonly notifier = inject(NotificationService);
   private readonly settings = inject(SettingsStore);
+  private readonly prefs = inject(UiPreferenceStore);
 
   readonly timezone = this.settings.timezone;
   /** true si el ancho del contenido es menor a 1024px → modo móvil (acordeón). */
@@ -60,8 +62,8 @@ export class Exchanges implements OnInit, AfterViewInit {
   limit = 20;
   tz = 'America/Caracas';
 
-  /** Filtro de periodo seleccionado. */
-  selectedPeriod = 'all';
+  /** Filtro de periodo seleccionado. Persistido en el navegador. */
+  selectedPeriod = this.prefs.period('exchanges');
   /** Rango de fechas aplicado (from/to) deducido del periodo. */
   private appliedFrom: string | undefined;
   private appliedTo: string | undefined;
@@ -110,6 +112,7 @@ export class Exchanges implements OnInit, AfterViewInit {
 
   /** Aplica el rango del periodo elegido y recarga desde la página 1. */
   applyPeriod(): void {
+    this.prefs.setPeriod('exchanges', this.selectedPeriod);
     const range = this.resolveRange(this.selectedPeriod);
     this.appliedFrom = range.from;
     this.appliedTo = range.to;

@@ -11,11 +11,39 @@ export type DecimalSeparator = ',' | '.';
 const HIDE_KEY = 'walletter.ocultarSaldos';
 const SEP_KEY = 'walletter.separadorDecimal';
 const EVENT_KEY = 'walletter:uiPrefs:change';
+const PERIOD_PREFIX = 'walletter.periodo.';
+const RATE_PREFIX = 'walletter.tasa.';
 
 @Injectable({ providedIn: 'root' })
 export class UiPreferenceStore {
   readonly hideBalances = signal<boolean>(this.read(HIDE_KEY) === '1');
   readonly decimalSeparator = signal<DecimalSeparator>(this.read(SEP_KEY) === '.' ? '.' : ',');
+
+  /** Lee el periodo guardado para una pantalla (p.ej. 'month', '3m', 'all'). */
+  period(key: string, fallback = 'all'): string {
+    return this.read(PERIOD_PREFIX + key) ?? fallback;
+  }
+  setPeriod(key: string, value: string): void {
+    try {
+      localStorage.setItem(PERIOD_PREFIX + key, value);
+    } catch {
+      /* silencioso */
+    }
+  }
+
+  /** Lee la tasa guardada para una pantalla ('bcv' | 'paralelo'). */
+  rate(key: string, fallback: 'bcv' | 'paralelo' = 'bcv'): 'bcv' | 'paralelo' {
+    const v = this.read(RATE_PREFIX + key);
+    if (v === 'bcv' || v === 'paralelo') return v;
+    return fallback;
+  }
+  setRate(key: string, value: 'bcv' | 'paralelo'): void {
+    try {
+      localStorage.setItem(RATE_PREFIX + key, value);
+    } catch {
+      /* silencioso */
+    }
+  }
 
   setHideBalances(value: boolean): void {
     try {

@@ -52,8 +52,8 @@ export class Reports implements OnInit {
   data = signal<ReportData | null>(null);
   loading = signal(true);
 
-  rateType = signal<RateType>('bcv');
-  period = signal<PeriodId>('6m');
+  rateType = signal<RateType>(this.prefs.rate('reports', 'bcv'));
+  period = signal<PeriodId>(this.prefs.period('reports', '6m') as PeriodId);
 
   ngOnInit(): void {
     this.settings.loadTimezone();
@@ -80,12 +80,14 @@ export class Reports implements OnInit {
   setRate(rate: RateType): void {
     if (this.rateType() === rate) return;
     this.rateType.set(rate);
+    this.prefs.setRate('reports', rate);
     this.load();
   }
 
   setPeriod(p: PeriodId): void {
     if (this.period() === p) return;
     this.period.set(p);
+    this.prefs.setPeriod('reports', p);
     this.load();
   }
 

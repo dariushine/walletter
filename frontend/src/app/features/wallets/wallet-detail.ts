@@ -13,6 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
+import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { NotificationService } from '../../core/services/notification.service';
 import { WalletReport, WalletReportTransaction } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
@@ -28,6 +29,7 @@ import { WalletDialog } from './wallet-dialog';
 export class WalletDetail implements OnInit, AfterViewInit {
   private readonly api = inject(WalletterApiService);
   private readonly settings = inject(SettingsStore);
+  private readonly prefs = inject(UiPreferenceStore);
   private readonly notifier = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
@@ -54,8 +56,14 @@ export class WalletDetail implements OnInit, AfterViewInit {
     return { income, expense, net: income - expense };
   });
 
-  /** Filtro de periodo seleccionado en la lista. */
-  selectedPeriod = 'all';
+  /** Filtro de periodo seleccionado en la lista. Persistido en el navegador. */
+  selectedPeriod = this.prefs.period('wallet');
+
+  /** Guarda el periodo elegido y deja que `filteredTx` (computed) lo aplique al instante. */
+  onPeriodChange(value: string): void {
+    this.selectedPeriod = value;
+    this.prefs.setPeriod('wallet', value);
+  }
 
   readonly periods: { value: string; label: string }[] = [
     { value: 'all', label: 'Todo' },

@@ -51,8 +51,8 @@ export class Dashboard implements OnInit, AfterViewInit {
   readonly paralelo = signal<number | null>(null);
   readonly rateDate = signal<string | null>(null);
 
-  /** Tasa elegida para el cálculo (toggle BCV/Paralelo). */
-  readonly selectedRate = signal<'bcv' | 'paralelo'>('bcv');
+  /** Tasa elegida para el cálculo (toggle BCV/Paralelo). Persistida en el navegador. */
+  readonly selectedRate = signal<'bcv' | 'paralelo'>(this.prefs.rate('dashboard', 'bcv'));
 
   /** Revelado propio del balance total (independiente de hideBalances global). */
   readonly totalRevealed = signal(false);
@@ -110,6 +110,7 @@ export class Dashboard implements OnInit, AfterViewInit {
   toggleRate(kind: 'bcv' | 'paralelo'): void {
     if (this.selectedRate() === kind) return;
     this.selectedRate.set(kind);
+    this.prefs.setRate('dashboard', kind);
     this.rate.set(this.pickRate(this.bcv(), this.paralelo()));
   }
 

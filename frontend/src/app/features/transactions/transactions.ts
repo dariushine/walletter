@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
+import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Transaction, Wallet } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
@@ -46,6 +47,7 @@ export class Transactions implements OnInit, AfterViewInit {
   private readonly api = inject(WalletterApiService);
   private readonly dialog = inject(MatDialog);
   private readonly settings = inject(SettingsStore);
+  private readonly prefs = inject(UiPreferenceStore);
 
   readonly timezone = this.settings.timezone;
   /** true si el ancho del contenido es menor a 1024px → modo móvil (acordeón). */
@@ -61,8 +63,8 @@ export class Transactions implements OnInit, AfterViewInit {
   limit = 20;
   tz = 'America/Caracas';
 
-  /** Filtro de periodo seleccionado en el desplegable. */
-  selectedPeriod = 'all';
+  /** Filtro de periodo seleccionado en el desplegable. Persistido en el navegador. */
+  selectedPeriod = this.prefs.period('transactions');
   /** Rango de fechas aplicado (from/to) deducido del periodo elegido. */
   private appliedFrom: string | undefined;
   private appliedTo: string | undefined;
@@ -117,6 +119,7 @@ export class Transactions implements OnInit, AfterViewInit {
 
   /** Aplica el rango del periodo elegido y recarga desde la página 1. */
   applyPeriod(): void {
+    this.prefs.setPeriod('transactions', this.selectedPeriod);
     const range = this.resolveRange(this.selectedPeriod);
     this.appliedFrom = range.from;
     this.appliedTo = range.to;
