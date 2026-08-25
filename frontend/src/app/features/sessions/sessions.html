@@ -31,8 +31,12 @@
                     @if (s.ip) { · {{ s.ip }} }
                   </div>
                 </div>
-                <button mat-icon-button (click)="revokeSession(s.jti)" aria-label="Cerrar sesión">
-                  <mat-icon>delete</mat-icon>
+                <button mat-icon-button
+                        (click)="revokeSession(s.jti)"
+                        aria-label="Cerrar sesión"
+                        [disabled]="s.current"
+                        [matTooltip]="s.current ? 'Esta es tu sesión actual' : 'Cerrar sesión'">
+                  <mat-icon [class.disabled-icon]="s.current">delete</mat-icon>
                 </button>
               </div>
             }

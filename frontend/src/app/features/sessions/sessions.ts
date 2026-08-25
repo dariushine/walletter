@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -12,7 +13,7 @@ import { ApiToken, SessionInfo } from '../../models/walletter.models';
 
 @Component({
   selector: 'app-sessions',
-  imports: [MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatInputModule],
+  imports: [MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatInputModule, MatTooltipModule],
   templateUrl: './sessions.html',
   styleUrls: ['./sessions.scss'],
 })
