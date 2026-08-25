@@ -18,6 +18,12 @@ public class Exchange
     public int CreditFee { get; set; }  // centavos (crédito)
     public string? Description { get; set; }
     public bool Deleted { get; set; }
+
+    /// <summary>
+    /// Fecha y hora efectiva del cambio (UTC), distinta del CreatedAt.
+    /// </summary>
+    public DateTime DatetimeUtc { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public Transaction Debit { get; set; } = null!;
