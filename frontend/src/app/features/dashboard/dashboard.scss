@@ -454,11 +454,21 @@
   }
 }
 
-/* Icono a la izquierda de todo. */
-.tx-head-icon {
-  display: inline-flex;
+/* Icono a la izquierda de todo: el título es una fila [icono | texto]. */
+.panel-title {
+  display: flex;
   align-items: center;
-  margin-right: 10px;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-title-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .tx-icon-circle {
@@ -487,13 +497,6 @@
     background: #fdecea;
     color: #d32f2f;
   }
-}
-
-.panel-title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
 }
 
 .panel-cuando {
