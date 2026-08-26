@@ -444,11 +444,13 @@
   border-radius: 0 !important;
 
   ::ng-deep .mat-expansion-panel-header {
-    padding: 0;
+    padding-left: 0;
+    padding-right: 24px; /* espacio para la flecha de expandir (no se corta) */
     height: auto;
     min-height: 56px;
     display: flex;
     align-items: center;
+    gap: 10px;
   }
 }
 
