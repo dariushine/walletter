@@ -171,25 +171,40 @@
 .month-card {
   display: flex;
   flex-direction: column;
+
+  mat-card-content {
+    flex: 1;
+  }
 }
 
-.month-rows {
+/* Dos cajas separadas (Ingresos / Gastos) en grid, estilo mockup móvil. */
+.month-boxes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  height: 100%;
+}
+
+.month-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+
+  /* en desktop el hero es más alto; centramos el contenido verticalmente */
+  @media (min-width: 1025px) {
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+  }
+}
+
+.month-box-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.month-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 6px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-
-  &:last-child {
-    border-bottom: none;
-  }
 }
 
 .month-icon {
@@ -216,24 +231,19 @@
     background: #fdecea;
     color: #d32f2f;
   }
-
-  &.savings {
-    background: #e8eaf6;
-    color: #3f51b5;
-  }
 }
 
 .month-name {
-  flex: 1;
-  font-size: 0.9rem;
-  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 600;
 }
 
 .month-value {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   white-space: nowrap;
-  text-align: right;
 
   &.income {
     color: #2e7d32;

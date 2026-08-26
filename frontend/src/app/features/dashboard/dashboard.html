@@ -64,23 +64,20 @@
           <mat-card-title>Resumen de {{ monthLabel() }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <div class="month-rows">
-            <div class="month-row">
-              <span class="month-icon income"><mat-icon>trending_up</mat-icon></span>
-              <span class="month-name">Ingresos</span>
-              <span class="month-value income">{{ monthSigned(monthIncome()) }}</span>
+          <div class="month-boxes">
+            <div class="month-box">
+              <span class="month-icon income"><mat-icon>arrow_downward</mat-icon></span>
+              <div class="month-box-body">
+                <span class="month-name">Ingresos</span>
+                <span class="month-value income">{{ monthSigned(monthIncome()) }}</span>
+              </div>
             </div>
-            <div class="month-row">
-              <span class="month-icon expense"><mat-icon>trending_down</mat-icon></span>
-              <span class="month-name">Gastos</span>
-              <span class="month-value expense">{{ monthSigned(monthExpense()) }}</span>
-            </div>
-            <div class="month-row">
-              <span class="month-icon savings"><mat-icon>savings</mat-icon></span>
-              <span class="month-name">Ahorro estimado</span>
-              <span class="month-value" [class.income]="monthNet() >= 0" [class.expense]="monthNet() < 0">
-                {{ monthSigned(monthNet()) }}
-              </span>
+            <div class="month-box">
+              <span class="month-icon expense"><mat-icon>arrow_upward</mat-icon></span>
+              <div class="month-box-body">
+                <span class="month-name">Gastos</span>
+                <span class="month-value expense">{{ monthSigned(monthExpense()) }}</span>
+              </div>
             </div>
           </div>
         </mat-card-content>
