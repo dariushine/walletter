@@ -6,6 +6,9 @@
       <!-- Balance total + tasas -->
       <mat-card class="balance-card section">
         <mat-card-content>
+          <div class="hero-blob hero-blob-1"></div>
+          <div class="hero-blob hero-blob-2"></div>
+
           <div class="balance-main">
             <div class="balance-top">
               <span class="balance-label">Balance total</span>
@@ -43,48 +46,45 @@
         </mat-card-content>
       </mat-card>
 
-      <!-- Billeteras -->
-      <mat-card class="section">
-        <mat-card-header>
-          <mat-card-title>Billeteras</mat-card-title>
-          <span class="spacer"></span>
-          <a mat-button color="primary" routerLink="/wallets">Ver todas</a>
-        </mat-card-header>
-        <mat-card-content>
-          @if (visibleWallets().length === 0) {
-            <p class="empty">Aún no hay billeteras. Crea una en la sección Billeteras.</p>
-          } @else {
-            <div class="wallet-grid">
-              @for (w of visibleWallets(); track w.id) {
-                <mat-card class="wallet-card" [routerLink]="['/wallets', w.id]">
-                  <mat-card-content>
-                    <div class="wallet-head">
-                      <mat-icon class="wallet-icon" [style.color]="w.color || '#3f51b5'">
-                        {{ w.icon || 'account_balance' }}
-                      </mat-icon>
-                      <div class="wallet-name-block">
-                        <span class="wallet-name">{{ w.name }}</span>
-                        <span class="wallet-alias-chip">{{ w.alias || w.type }}</span>
-                      </div>
+      <!-- Billeteras (tarjetas sueltas, sin contenedor) -->
+      <div class="wallet-panel-head">
+        <h2 class="wallet-panel-title">Billeteras</h2>
+        <a mat-button color="primary" routerLink="/wallets">Ver todas</a>
+      </div>
+      <div class="wallet-grid-wrap">
+        @if (visibleWallets().length === 0) {
+          <p class="empty">Aún no hay billeteras. Crea una en la sección Billeteras.</p>
+        } @else {
+          <div class="wallet-grid">
+            @for (w of visibleWallets(); track w.id) {
+              <mat-card class="wallet-card" [routerLink]="['/wallets', w.id]">
+                <mat-card-content>
+                  <div class="wallet-head">
+                    <mat-icon class="wallet-icon" [style.color]="w.color || '#3f51b5'">
+                      {{ w.icon || 'account_balance' }}
+                    </mat-icon>
+                    <div class="wallet-name-block">
+                      <span class="wallet-name">{{ w.name }}</span>
+                      <span class="wallet-alias-chip">{{ w.alias || w.type }}</span>
                     </div>
-                    <div class="wallet-balance-area">
-                      <div class="balance-line">
-                        <span class="wallet-balance">{{ saldo(w) }}</span>
-                        @if (hideBalances()) {
-                          <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" [attr.aria-label]="isHidden(w) ? 'Mostrar saldo' : 'Ocultar saldo'">
-                            <mat-icon>{{ isHidden(w) ? 'visibility_off' : 'visibility' }}</mat-icon>
-                          </button>
-                        }
-                      </div>
-                      <span class="wallet-subline">{{ subline(w) }}</span>
+                  </div>
+                  <div class="wallet-balance-area">
+                    <div class="balance-line">
+                      <span class="wallet-balance">{{ saldo(w) }}</span>
+                      @if (hideBalances()) {
+                        <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" [attr.aria-label]="isHidden(w) ? 'Mostrar saldo' : 'Ocultar saldo'">
+                          <mat-icon>{{ isHidden(w) ? 'visibility_off' : 'visibility' }}</mat-icon>
+                        </button>
+                      }
                     </div>
-                  </mat-card-content>
-                </mat-card>
-              }
-            </div>
-          }
-        </mat-card-content>
-      </mat-card>
+                    <span class="wallet-subline">{{ subline(w) }}</span>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        }
+      </div>
 
       <!-- Últimas transacciones -->
       <mat-card class="section">

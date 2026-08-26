@@ -2,9 +2,41 @@
   margin: 40px auto;
 }
 
+/* ===== Hero: Balance total con gradiente y círculos decorativos ===== */
 .balance-card {
-  background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #424b9f, #5d6bf3);
   color: #fff;
+  border-radius: 4px;
+
+  mat-card-content {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Círculos difuminados de fondo (estilo mockup de Stitch) */
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.hero-blob-1 {
+  width: 240px;
+  height: 240px;
+  top: -90px;
+  right: -60px;
+}
+
+.hero-blob-2 {
+  width: 160px;
+  height: 160px;
+  bottom: -70px;
+  left: -40px;
 }
 
 .balance-main {
@@ -149,11 +181,28 @@
   color: #ffcdd2;
 }
 
+/* ===== Panel de billeteras (tarjetas sueltas, sin contenedor) ===== */
+.wallet-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 8px;
+}
+
+.wallet-panel-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.wallet-grid-wrap {
+  margin-bottom: 8px;
+}
+
 .wallet-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
-  margin-top: 8px;
 }
 
 .wallet-card {
