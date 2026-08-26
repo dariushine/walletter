@@ -171,9 +171,6 @@
 .month-card {
   display: flex;
   flex-direction: column;
-  /* Dentro del top-grid (gap 16px) no necesita margen inferior; quitarlo
-     evita que se vea más pequeña que el hero por el hueco abajo. */
-  margin-bottom: 0;
 }
 
 .month-rows {
