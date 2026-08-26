@@ -22,11 +22,12 @@
   overflow: hidden;
   background: linear-gradient(135deg, #424b9f, #5d6bf3);
   color: #fff;
-  border-radius: 16px;
+  border-radius: 4px; /* igual al resto de las mat-card */
 
   mat-card-content {
     position: relative;
     z-index: 1;
+    padding: 16px 20px; /* compacto: no más alto que la tarjeta vecina */
   }
 }
 
