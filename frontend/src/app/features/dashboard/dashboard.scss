@@ -185,24 +185,34 @@
 
 .month-box {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 6px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 10px;
   padding: 12px;
   background: #fff;
-
-  /* en desktop el hero es más alto; centramos el contenido verticalmente */
-  @media (min-width: 1025px) {
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-  }
 }
 
-.month-box-body {
-  display: flex;
-  flex-direction: column;
+.month-name {
+  font-size: 0.85rem; /* fuente normal, tamaño normal */
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.2;
+}
+
+.month-value {
+  font-weight: 700; /* monto en negrita */
+  font-size: 1.05rem;
+  white-space: nowrap;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
 }
 
 .month-icon {
@@ -228,27 +238,6 @@
   &.expense {
     background: #fdecea;
     color: #d32f2f;
-  }
-}
-
-.month-name {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.6);
-  font-weight: 600;
-}
-
-.month-value {
-  font-weight: 700;
-  font-size: 1.1rem;
-  white-space: nowrap;
-
-  &.income {
-    color: #2e7d32;
-  }
-
-  &.expense {
-    color: #c62828;
   }
 }
 
