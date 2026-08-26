@@ -3,121 +3,111 @@
   @if (loading()) {
     <mat-spinner class="spinner" />
   } @else {
-    <!-- ===== Hero: Balance total (con formas decorativas) ===== -->
-    <mat-card class="hero-card">
-      <mat-card-content>
-        <div class="hero-blob hero-blob-1"></div>
-        <div class="hero-blob hero-blob-2"></div>
+    <!-- ===== Fila superior: Hero balance + Resumen del mes ===== -->
+    <div class="top-grid">
 
-        <div class="hero-top">
-          <span class="hero-label">Balance total</span>
-          <div class="hero-icons">
-            <mat-icon>attach_money</mat-icon>
-            <mat-icon>show_chart</mat-icon>
+      <!-- Hero: Balance total -->
+      <mat-card class="hero-card">
+        <mat-card-content>
+          <div class="hero-blob hero-blob-1"></div>
+          <div class="hero-blob hero-blob-2"></div>
+
+          <div class="hero-top">
+            <span class="hero-label">Balance total</span>
+            <div class="hero-icons">
+              <mat-icon>attach_money</mat-icon>
+              <mat-icon>show_chart</mat-icon>
+            </div>
           </div>
-        </div>
 
-        <div class="hero-balance-line">
-          <span class="hero-value">{{ totalLabel() }}</span>
-          @if (hideBalances()) {
-            <button
-              mat-icon-button
-              class="reveal-btn"
-              (click)="toggleTotalReveal()"
-              [attr.aria-label]="isTotalHidden() ? 'Mostrar balance total' : 'Ocultar balance total'"
-            >
-              <mat-icon>{{ isTotalHidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
-            </button>
+          <div class="hero-balance-line">
+            <span class="hero-value">{{ totalLabel() }}</span>
+            @if (hideBalances()) {
+              <button
+                mat-icon-button
+                class="reveal-btn"
+                (click)="toggleTotalReveal()"
+                [attr.aria-label]="isTotalHidden() ? 'Mostrar balance total' : 'Ocultar balance total'"
+              >
+                <mat-icon>{{ isTotalHidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            }
+          </div>
+
+          @if (totalVesLabel()) {
+            <span class="hero-ves">{{ totalVesLabel() }}</span>
           }
-        </div>
 
-        <span class="hero-updated">{{ updatedLabel() }}</span>
+          <span class="hero-updated">{{ updatedLabel() }}</span>
 
-        <!-- Pills BCV / Paralelo (se conservan del diseño actual) -->
-        @if (bcv() !== null || paralelo() !== null) {
-          <div class="rate-pills">
-            @if (bcv() !== null) {
-              <button type="button" class="rate-pill" [class.active]="selectedRate() === 'bcv'" (click)="toggleRate('bcv')">
-                BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
-              </button>
-            }
-            @if (paralelo() !== null) {
-              <button type="button" class="rate-pill" [class.active]="selectedRate() === 'paralelo'" (click)="toggleRate('paralelo')">
-                Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
-              </button>
-            }
-          </div>
-        }
-      </mat-card-content>
-    </mat-card>
+          <!-- Pills BCV / Paralelo (se conservan del diseño actual) -->
+          @if (bcv() !== null || paralelo() !== null) {
+            <div class="rate-pills">
+              @if (bcv() !== null) {
+                <button type="button" class="rate-pill" [class.active]="selectedRate() === 'bcv'" (click)="toggleRate('bcv')">
+                  BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
+                </button>
+              }
+              @if (paralelo() !== null) {
+                <button type="button" class="rate-pill" [class.active]="selectedRate() === 'paralelo'" (click)="toggleRate('paralelo')">
+                  Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
+                </button>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
 
-    <!-- ===== Resumen del mes (datos reales del reporte 1m) ===== -->
-    <mat-card class="section">
-      <mat-card-header>
-        <mat-card-title>Resumen de {{ monthLabel() }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="month-grid">
-          <div class="month-stat">
-            <span class="month-stat-label">Ingresos</span>
-            <span class="month-stat-value income">{{ fmtUsd(monthIncome()) }}</span>
+      <!-- ===== Resumen del mes ===== -->
+      <mat-card class="section month-card">
+        <mat-card-header>
+          <mat-card-title>Resumen de {{ monthLabel() }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="month-rows">
+            <div class="month-row">
+              <span class="month-icon income"><mat-icon>trending_up</mat-icon></span>
+              <span class="month-name">Ingresos</span>
+              <span class="month-value income">{{ monthSigned(monthIncome()) }}</span>
+            </div>
+            <div class="month-row">
+              <span class="month-icon expense"><mat-icon>trending_down</mat-icon></span>
+              <span class="month-name">Gastos</span>
+              <span class="month-value expense">{{ monthSigned(monthExpense()) }}</span>
+            </div>
+            <div class="month-row">
+              <span class="month-icon savings"><mat-icon>savings</mat-icon></span>
+              <span class="month-name">Ahorro estimado</span>
+              <span class="month-value" [class.income]="monthNet() >= 0" [class.expense]="monthNet() < 0">
+                {{ monthSigned(monthNet()) }}
+              </span>
+            </div>
           </div>
-          <div class="month-stat">
-            <span class="month-stat-label">Gastos</span>
-            <span class="month-stat-value expense">{{ fmtUsd(monthExpense()) }}</span>
-          </div>
-          <div class="month-stat">
-            <span class="month-stat-label">Ahorro estimado</span>
-            <span class="month-stat-value" [class.income]="monthNet() >= 0" [class.expense]="monthNet() < 0">
-              {{ fmtUsd(monthNet()) }}
-            </span>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+        </mat-card-content>
+      </mat-card>
+    </div>
 
-    <!-- ===== Rendimiento: Ingresos vs Gastos (7 días) ===== -->
-    <mat-card class="section">
-      <mat-card-header>
-        <mat-card-title>Rendimiento</mat-card-title>
-        <span class="spacer"></span>
-        <div class="chart-legend">
-          <span class="legend-dot income"></span> Ingresos
-          <span class="legend-dot expense"></span> Gastos
-        </div>
-      </mat-card-header>
-      <mat-card-content>
-        @if (chart7d().every((x) => x.income === 0 && x.expense === 0)) {
-          <p class="empty">Sin movimientos en los últimos 7 días.</p>
-        } @else {
-          <div class="bar-chart">
-            @for (d of chart7d(); track d.day) {
-              <div class="bar-col">
-                <div class="bar-group">
-                  <div class="bar income" [style.height.%]="barHeight(d.income, chartMax())" [matTooltip]="'Ingresos: ' + fmtUsd(d.income)"></div>
-                  <div class="bar expense" [style.height.%]="barHeight(d.expense, chartMax())" [matTooltip]="'Gastos: ' + fmtUsd(d.expense)"></div>
-                </div>
-                <span class="bar-label">{{ d.label }}</span>
-              </div>
-            }
-          </div>
-        }
-      </mat-card-content>
-    </mat-card>
-
-    <!-- ===== Billeteras: solo desktop ===== -->
+    <!-- ===== Billeteras (solo desktop, carrusel con flechas) ===== -->
     @if (!isHandset()) {
       <mat-card class="section">
         <mat-card-header>
-          <mat-card-title>Billeteras</mat-card-title>
+          <mat-card-title>Tus billeteras</mat-card-title>
           <span class="spacer"></span>
-          <a mat-button color="primary" routerLink="/wallets">Ver todas</a>
+          <div class="wallet-nav">
+            <button mat-icon-button class="wallet-arrow" (click)="scrollWallets(-1)" aria-label="Anteriores">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button mat-icon-button class="wallet-arrow" (click)="scrollWallets(1)" aria-label="Siguientes">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+            <a mat-button color="primary" routerLink="/wallets">Ver todas</a>
+          </div>
         </mat-card-header>
         <mat-card-content>
           @if (visibleWallets().length === 0) {
             <p class="empty">Aún no hay billeteras. Crea una en la sección Billeteras.</p>
           } @else {
-            <div class="wallet-grid">
+            <div class="wallet-scroll">
               @for (w of visibleWallets(); track w.id) {
                 <mat-card class="wallet-card" [routerLink]="['/wallets', w.id]">
                   <mat-card-content>
@@ -125,11 +115,9 @@
                       <span class="wallet-icon-box" [style.background]="(w.color || '#3f51b5') + '1a'" [style.color]="w.color || '#3f51b5'">
                         <mat-icon>{{ w.icon || 'account_balance' }}</mat-icon>
                       </span>
-                      <div class="wallet-name-block">
-                        <span class="wallet-name">{{ w.name }}</span>
-                        <span class="wallet-currency-chip">{{ w.currency }}</span>
-                      </div>
+                      <span class="wallet-currency-chip">{{ w.currency }}</span>
                     </div>
+                    <div class="wallet-name">{{ w.name }}</div>
                     <div class="wallet-balance-area">
                       <div class="balance-line">
                         <span class="wallet-balance">{{ saldo(w) }}</span>
@@ -155,111 +143,147 @@
       </mat-card>
     }
 
-    <!-- ===== Últimas transacciones (con iconos circulares) ===== -->
-    <mat-card class="section">
-      <mat-card-header>
-        <mat-card-title>Últimas transacciones</mat-card-title>
-        <span class="spacer"></span>
-        <a mat-button color="primary" routerLink="/transactions">Ver todas</a>
-      </mat-card-header>
-      <mat-card-content>
-        @if (recent().length === 0) {
-          <p class="empty">Sin transacciones recientes.</p>
-        } @else {
-          @if (!isHandset()) {
-            <div class="table-wrap">
-              <table class="dash-tx-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Categoría</th>
-                    <th>Tipo</th>
-                    <th>Descripción</th>
-                    <th class="right">Monto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (t of recent(); track t.id) {
-                    <tr [routerLink]="['/transactions', t.id]">
-                      <td class="date">{{ txCuando(t) }}</td>
-                      <td>
-                        <span class="tx-cell">
-                          <span class="tx-icon-circle" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                            <mat-icon>{{ txIcon(t) }}</mat-icon>
+    <!-- ===== Fila inferior: Transacciones recientes + Rendimiento ===== -->
+    <div class="bottom-grid">
+      <!-- Últimas transacciones -->
+      <mat-card class="section">
+        <mat-card-header>
+          <mat-card-title>Transacciones recientes</mat-card-title>
+          <span class="spacer"></span>
+          <a mat-button color="primary" routerLink="/transactions">Ver todas</a>
+        </mat-card-header>
+        <mat-card-content>
+          @if (recent().length === 0) {
+            <p class="empty">Sin transacciones recientes.</p>
+          } @else {
+            @if (!isHandset()) {
+              <div class="table-wrap">
+                <table class="dash-tx-table">
+                  <thead>
+                    <tr>
+                      <th>Categoría</th>
+                      <th>Descripción</th>
+                      <th>Fecha</th>
+                      <th class="right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of recent(); track t.id) {
+                      <tr [routerLink]="['/transactions', t.id]">
+                        <td>
+                          <span class="tx-cell">
+                            <span class="tx-icon-circle" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                              <mat-icon>{{ txIcon(t) }}</mat-icon>
+                            </span>
+                            <span class="chip cat-chip">{{ t.category }}</span>
                           </span>
-                          <span class="chip cat-chip">{{ t.category }}</span>
+                        </td>
+                        <td class="desc">{{ t.description || '—' }}</td>
+                        <td class="date">{{ txCuando(t) }}</td>
+                        <td class="right">
+                          <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            {{ txMonto(t) }}
+                          </span>
+                          <span class="wallet-sub">{{ t.walletName }}</span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <!-- Móvil: acordeón con iconos circulares + pills INGRESO/GASTO -->
+              <mat-accordion multi="false" class="dash-tx-accordion">
+                @for (t of recent(); track t.id) {
+                  <mat-expansion-panel class="tx-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title class="panel-title">
+                        <span class="tx-icon-circle" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          <mat-icon>{{ txIcon(t) }}</mat-icon>
                         </span>
-                      </td>
-                      <td>
+                        <span class="panel-cuando">{{ txCuando(t) }}</span>
+                        <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
+                          {{ t.category }}
+                        </span>
+                      </mat-panel-title>
+                      <mat-panel-description class="panel-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        {{ txMonto(t) }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div class="panel-body">
+                      <div class="pv-row"><span>Categoría</span><strong>{{ t.category }}</strong></div>
+                      <div class="pv-row">
+                        <span>Tipo</span>
                         <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                           {{ txTipo(t) }}
                         </span>
-                      </td>
-                      <td class="desc">{{ t.description || '—' }}</td>
-                      <td class="right">
-                        <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                          {{ txMonto(t) }}
-                        </span>
-                        <span class="wallet-sub">{{ t.walletName }}</span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <!-- Móvil: acordeón con iconos circulares + pills INGRESO/GASTO -->
-            <mat-accordion multi="false" class="dash-tx-accordion">
-              @for (t of recent(); track t.id) {
-                <mat-expansion-panel class="tx-panel">
-                  <mat-expansion-panel-header>
-                    <mat-panel-title class="panel-title">
-                      <span class="tx-icon-circle" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                        <mat-icon>{{ txIcon(t) }}</mat-icon>
-                      </span>
-                      <span class="panel-cuando">{{ txCuando(t) }}</span>
-                      <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                        <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
-                        {{ t.category }}
-                      </span>
-                    </mat-panel-title>
-                    <mat-panel-description class="panel-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                      {{ txMonto(t) }}
-                    </mat-panel-description>
-                  </mat-expansion-panel-header>
-                  <div class="panel-body">
-                    <div class="pv-row"><span>Categoría</span><strong>{{ t.category }}</strong></div>
-                    <div class="pv-row">
-                      <span>Tipo</span>
-                      <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                        {{ txTipo(t) }}
-                      </span>
+                      </div>
+                      <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
+                      <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
+                      <div class="ver-detalles-wrap">
+                        <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
+                      </div>
                     </div>
-                    <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
-                    <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
-                    <div class="ver-detalles-wrap">
-                      <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
-                    </div>
-                  </div>
-                </mat-expansion-panel>
-              }
-            </mat-accordion>
-          }
-          @if (canLoadMore()) {
-            <div class="ver-mas-wrap">
-              <button mat-button color="primary" (click)="loadMore()" [disabled]="loadingMore()">
-                @if (loadingMore()) {
-                  <mat-spinner diameter="18" />
-                } @else {
-                  <mat-icon>arrow_drop_down</mat-icon>
+                  </mat-expansion-panel>
                 }
-                Ver más
-              </button>
+              </mat-accordion>
+            }
+            @if (canLoadMore()) {
+              <div class="ver-mas-wrap">
+                <button mat-button color="primary" (click)="loadMore()" [disabled]="loadingMore()">
+                  @if (loadingMore()) {
+                    <mat-spinner diameter="18" />
+                  } @else {
+                    <mat-icon>arrow_drop_down</mat-icon>
+                  }
+                  Ver más
+                </button>
+              </div>
+            }
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Rendimiento (gráfico) -->
+      <mat-card class="section">
+        <mat-card-header>
+          <mat-card-title>Rendimiento</mat-card-title>
+          <span class="spacer"></span>
+          <div class="chart-ranges">
+            @for (r of ranges; track r.id) {
+              <button
+                type="button"
+                class="range-btn"
+                [class.active]="chartRange() === r.id"
+                (click)="setChartRange(r.id)"
+              >{{ r.label }}</button>
+            }
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          @if (chartEmpty()) {
+            <p class="empty">Sin movimientos en el período seleccionado.</p>
+          } @else {
+            <div class="bar-chart">
+              @for (d of chartData(); track d.key) {
+                <div class="bar-col">
+                  <div class="bar-group">
+                    <div class="bar income" [style.height.%]="barHeight(d.income, chartMax())" [matTooltip]="'Ingresos: ' + fmtUsd(d.income)"></div>
+                    <div class="bar expense" [style.height.%]="barHeight(d.expense, chartMax())" [matTooltip]="'Gastos: ' + fmtUsd(d.expense)"></div>
+                  </div>
+                  <span class="bar-label">{{ d.label }}</span>
+                </div>
+              }
+            </div>
+            <div class="chart-legend">
+              <span class="legend-dot income"></span> Ingresos
+              <span class="legend-dot expense"></span> Gastos
             </div>
           }
-        }
-      </mat-card-content>
-    </mat-card>
+        </mat-card-content>
+      </mat-card>
+    </div>
 
     <p class="footnote">
       📱 App móvil-friendly &nbsp;|&nbsp; 💰 Billeteras múltiples &nbsp;|&nbsp; 💱 Exchanges

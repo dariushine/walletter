@@ -14,6 +14,25 @@ import { Wallet, Transaction, ReportData } from '../../models/walletter.models';
 import { formatMoney, currencySymbol, currencyName, formatWithCode } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
 
+/** Rangos del gráfico de rendimiento. */
+type ChartRange = '1d' | '7d' | '1m' | '1y' | 'ytd';
+
+const RANGES: { id: ChartRange; label: string }[] = [
+  { id: '1d', label: '1D' },
+  { id: '7d', label: '7D' },
+  { id: '1m', label: '1M' },
+  { id: '1y', label: '1Y' },
+  { id: 'ytd', label: 'YTD' },
+];
+
+/** Un punto del gráfico (día/semana/mes según rango). */
+interface ChartPoint {
+  key: string;
+  label: string;
+  income: number;
+  expense: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [
@@ -70,6 +89,13 @@ export class Dashboard implements OnInit, AfterViewInit {
   /** Datos del reporte mensual (ingresos/gastos/ahorro). */
   report = signal<ReportData | null>(null);
 
+  /** Rango activo del gráfico de rendimiento. */
+  readonly chartRange = signal<ChartRange>('7d');
+  readonly ranges = RANGES;
+
+  /** Transacciones del rango activo (para el gráfico). */
+  private chartTx = signal<Transaction[]>([]);
+
   constructor(private readonly el: ElementRef<HTMLElement>) {}
 
   ngAfterViewInit(): void {
@@ -102,20 +128,44 @@ export class Dashboard implements OnInit, AfterViewInit {
       });
   }
 
-  /** Transacciones de los últimos 7 días (para el gráfico de rendimiento). */
-  private chartTx = signal<Transaction[]>([]);
+  /** Cambia el rango del gráfico y recarga. */
+  setChartRange(r: ChartRange): void {
+    if (this.chartRange() === r) return;
+    this.chartRange.set(r);
+    this.loadChart();
+  }
 
-  /** Carga TODAS las transacciones de los últimos 7 días (no solo 5 recientes). */
-  private loadChart(): void {
+  /** Rango [from, to) según el rango activo, en la zona del usuario. */
+  private rangeSpan(): { from: string; to: string } {
     const hoy = this.today();
-    const from = this.addDays(hoy, -6);
-    const to = this.addDays(hoy, 1); // exclusivo en backend: incluye todo el día de hoy
-    this.api
-      .transactions({ from, to, limit: 100 })
-      .subscribe({
-        next: (res) => this.chartTx.set(res.data ?? []),
-        error: () => undefined,
-      });
+    switch (this.chartRange()) {
+      case '1d':
+        return { from: hoy, to: this.addDays(hoy, 1) };
+      case '1m':
+        return { from: this.addDays(hoy, -29), to: this.addDays(hoy, 1) };
+      case '1y':
+        return { from: this.addDays(hoy, -364), to: this.addDays(hoy, 1) };
+      case 'ytd':
+        return { from: `${hoy.slice(0, 4)}-01-01`, to: this.addDays(hoy, 1) };
+      default:
+        return { from: this.addDays(hoy, -6), to: this.addDays(hoy, 1) };
+    }
+  }
+
+  /** Carga TODAS las transacciones del rango activo (pagina de 100 en 100). */
+  private loadChart(accum: Transaction[] = [], page = 1): void {
+    const { from, to } = this.rangeSpan();
+    this.api.transactions({ from, to, page, limit: 100 }).subscribe({
+      next: (res) => {
+        const next = [...accum, ...(res.data ?? [])];
+        if (next.length < res.total && page < 10) {
+          this.loadChart(next, page + 1);
+        } else {
+          this.chartTx.set(next);
+        }
+      },
+      error: () => this.chartTx.set(accum),
+    });
   }
 
   private loadRate(): void {
@@ -160,6 +210,13 @@ export class Dashboard implements OnInit, AfterViewInit {
     return this.wallets().filter((w) => !w.hideInDashboard);
   }
 
+  /** Desplaza el carrusel de billeteras. dir = -1 (izquierda) | 1 (derecha). */
+  scrollWallets(dir: number): void {
+    const el = this.el.nativeElement.querySelector<HTMLElement>('.wallet-scroll');
+    if (!el) return;
+    el.scrollBy({ left: dir * 280, behavior: 'smooth' });
+  }
+
   /**
    * Balance total en USD: suma todas las billeteras activas no excluidas,
    * convirtiendo las VES a USD con la tasa elegida (BCV o paralelo).
@@ -184,6 +241,15 @@ export class Dashboard implements OnInit, AfterViewInit {
     if (this.isTotalHidden()) return '•••';
     const total = this.totalUsd();
     return formatWithCode(total, 'USD', this.decimalSeparator());
+  }
+
+  /** Equivalente en VES del balance total (≈ bajo el hero). */
+  totalVesLabel(): string {
+    if (this.isTotalHidden()) return '•••';
+    const r = this.rateNumber();
+    if (!r) return '';
+    const ves = this.totalUsd() * r;
+    return `≈ ${formatWithCode(ves, 'VES', this.decimalSeparator())}`;
   }
 
   private load(): void {
@@ -315,31 +381,91 @@ export class Dashboard implements OnInit, AfterViewInit {
     return `${meses[m]} ${y}`;
   }
 
-  // ===== Gráfico de barras: Ingresos vs Gastos (7 días) =====
+  /** Con signo y color: '+$2.450,00' / '-$1.120,50' (estilo del mockup). */
+  monthSigned(n: number): string {
+    const sign = n >= 0 ? '+' : '-';
+    const num = Math.abs(n).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${sign}$${num}`;
+  }
 
-  /** Serie del gráfico: últimos 7 días con ingresos/gastos en USD. */
-  chart7d(): { day: string; label: string; income: number; expense: number }[] {
-    const days: { day: string; label: string; income: number; expense: number }[] = [];
+  // ===== Gráfico de barras (por rango) =====
+
+  /** Serie del gráfico según el rango activo. */
+  chartData(): ChartPoint[] {
+    const r = this.chartRange();
+    if (r === '1d') return this.buildChart('day');
+    if (r === '7d') return this.buildChart('day', 7);
+    if (r === '1m') return this.buildChart('week');
+    return this.buildChart('month');
+  }
+
+  /** Construye los puntos del gráfico acumulando las transacciones del rango. */
+  private buildChart(granularity: 'day' | 'week' | 'month', days = 30): ChartPoint[] {
     const hoy = this.today();
-    for (let i = 6; i >= 0; i--) {
-      const day = this.addDays(hoy, -i);
-      const dt = new Date(day + 'T00:00:00');
-      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-      const label = `${dt.getDate()} ${meses[dt.getMonth()]}`;
-      days.push({ day, label, income: 0, expense: 0 });
-    }
-    // Acumula las transacciones reales de los últimos 7 días por día.
-    for (const t of this.chartTx()) {
-      const found = days.find((x) => x.day === t.date);
-      if (!found) continue;
-      // Convierte a USD si la billetera es VES (usa la tasa activa).
+    const tx = this.chartTx();
+    const points: ChartPoint[] = [];
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+    const usdOf = (t: Transaction): number => {
       const cur = (t.walletCurrency || '').toUpperCase();
       const r = this.rateNumber();
-      const usd = cur === 'VES' && r ? t.amount / r : t.amount;
-      if (t.type === 'income') found.income += usd;
-      else found.expense += usd;
+      return cur === 'VES' && r ? t.amount / r : t.amount;
+    };
+
+    const accum = (key: string, t: Transaction): void => {
+      let p = points.find((x) => x.key === key);
+      if (!p) return;
+      if (t.type === 'income') p.income += usdOf(t);
+      else p.expense += usdOf(t);
+    };
+
+    if (granularity === 'day') {
+      for (let i = days - 1; i >= 0; i--) {
+        const day = this.addDays(hoy, -i);
+        const dt = new Date(day + 'T00:00:00');
+        points.push({ key: day, label: `${dt.getDate()} ${meses[dt.getMonth()]}`, income: 0, expense: 0 });
+      }
+      for (const t of this.chartTx()) accum(t.date, t);
+      return points;
     }
-    return days;
+
+    if (granularity === 'week') {
+      // Semanas: agrupa por lunes de cada semana.
+      const start = this.addDays(hoy, -29);
+      for (let i = 0; i < 5; i++) {
+        const ws = this.addDays(start, i * 7);
+        const dt = new Date(ws + 'T00:00:00');
+        const we = this.addDays(ws, 6);
+        const weDt = new Date(we + 'T00:00:00');
+        points.push({
+          key: ws,
+          label: `${dt.getDate()} ${meses[dt.getMonth()]}–${weDt.getDate()} ${meses[weDt.getMonth()]}`,
+          income: 0,
+          expense: 0,
+        });
+      }
+      for (const t of this.chartTx()) {
+        const k = points.find((p) => p.key <= t.date && t.date <= this.addDays(p.key, 6));
+        if (k) {
+          if (t.type === 'income') k.income += usdOf(t);
+          else k.expense += usdOf(t);
+        }
+      }
+      return points;
+    }
+
+    // Mensual (1Y / YTD): agrupa por YYYY-MM.
+    const now = new Date();
+    const monthsCount = this.chartRange() === '1y' ? 12 : now.getMonth() + 1;
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      points.push({ key, label: meses[d.getMonth()], income: 0, expense: 0 });
+    }
+    for (const t of this.chartTx()) {
+      accum(t.date.slice(0, 7), t);
+    }
+    return points;
   }
 
   /** Altura % de una barra respecto al máximo del gráfico. */
@@ -350,8 +476,13 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   /** Máximo común de ingresos/gastos para escalar el gráfico. */
   chartMax(): number {
-    const max = Math.max(...this.chart7d().map((x) => Math.max(x.income, x.expense)));
+    const max = Math.max(...this.chartData().map((x) => Math.max(x.income, x.expense)));
     return max > 0 ? max : 1;
+  }
+
+  /** true si no hay ningún movimiento en el rango. */
+  chartEmpty(): boolean {
+    return this.chartData().every((x) => x.income === 0 && x.expense === 0);
   }
 
   // ===== Iconos por categoría (círculos de transacciones) =====
