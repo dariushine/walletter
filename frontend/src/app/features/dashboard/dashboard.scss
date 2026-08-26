@@ -478,7 +478,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: #f4f6fb; /* gris claro, casi se confunde con el fondo */
   color: rgba(0, 0, 0, 0.6);
   flex-shrink: 0;
 
@@ -488,13 +488,12 @@
     height: 18px;
   }
 
+  /* El icono conserva el color según tipo; el círculo queda neutro claro. */
   &.income {
-    background: #e8f5e9;
     color: #2e7d32;
   }
 
   &.expense {
-    background: #fdecea;
     color: #d32f2f;
   }
 }
