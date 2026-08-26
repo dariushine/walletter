@@ -3,47 +3,110 @@
   @if (loading()) {
     <mat-spinner class="spinner" />
   } @else {
-      <!-- Balance total + tasas -->
-      <mat-card class="balance-card section">
-        <mat-card-content>
-          <div class="balance-main">
-            <div class="balance-top">
-              <span class="balance-label">Balance total</span>
-              <div class="balance-icons">
-                <mat-icon>attach_money</mat-icon>
-                <mat-icon>show_chart</mat-icon>
-              </div>
-            </div>
-            <div class="balance-line">
-              <span class="balance-value">{{ totalLabel() }}</span>
-              @if (hideBalances()) {
-                <button mat-icon-button class="reveal-btn" (click)="toggleTotalReveal()" [attr.aria-label]="isTotalHidden() ? 'Mostrar balance total' : 'Ocultar balance total'">
-                  <mat-icon>{{ isTotalHidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
-                </button>
-              }
-            </div>
-            <span class="balance-updated">{{ updatedLabel() }}</span>
+    <!-- ===== Hero: Balance total (con formas decorativas) ===== -->
+    <mat-card class="hero-card">
+      <mat-card-content>
+        <div class="hero-blob hero-blob-1"></div>
+        <div class="hero-blob hero-blob-2"></div>
+
+        <div class="hero-top">
+          <span class="hero-label">Balance total</span>
+          <div class="hero-icons">
+            <mat-icon>attach_money</mat-icon>
+            <mat-icon>show_chart</mat-icon>
           </div>
+        </div>
 
-          <!-- Tasas USD/VES: toggles para elegir la tasa del cálculo -->
-          @if (bcv() !== null || paralelo() !== null) {
-            <div class="rate-pills">
-              @if (bcv() !== null) {
-                <button type="button" class="rate-pill" [class.active]="selectedRate() === 'bcv'" (click)="toggleRate('bcv')">
-                  BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
-                </button>
-              }
-              @if (paralelo() !== null) {
-                <button type="button" class="rate-pill" [class.active]="selectedRate() === 'paralelo'" (click)="toggleRate('paralelo')">
-                  Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
-                </button>
-              }
-            </div>
+        <div class="hero-balance-line">
+          <span class="hero-value">{{ totalLabel() }}</span>
+          @if (hideBalances()) {
+            <button
+              mat-icon-button
+              class="reveal-btn"
+              (click)="toggleTotalReveal()"
+              [attr.aria-label]="isTotalHidden() ? 'Mostrar balance total' : 'Ocultar balance total'"
+            >
+              <mat-icon>{{ isTotalHidden() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
           }
-        </mat-card-content>
-      </mat-card>
+        </div>
 
-      <!-- Billeteras -->
+        <span class="hero-updated">{{ updatedLabel() }}</span>
+
+        <!-- Pills BCV / Paralelo (se conservan del diseño actual) -->
+        @if (bcv() !== null || paralelo() !== null) {
+          <div class="rate-pills">
+            @if (bcv() !== null) {
+              <button type="button" class="rate-pill" [class.active]="selectedRate() === 'bcv'" (click)="toggleRate('bcv')">
+                BCV: {{ bcv()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
+              </button>
+            }
+            @if (paralelo() !== null) {
+              <button type="button" class="rate-pill" [class.active]="selectedRate() === 'paralelo'" (click)="toggleRate('paralelo')">
+                Paralelo: {{ paralelo()!.toLocaleString('es-VE', { maximumFractionDigits: 2 }) }}
+              </button>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ===== Resumen del mes (datos reales del reporte 1m) ===== -->
+    <mat-card class="section">
+      <mat-card-header>
+        <mat-card-title>Resumen de {{ monthLabel() }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="month-grid">
+          <div class="month-stat">
+            <span class="month-stat-label">Ingresos</span>
+            <span class="month-stat-value income">{{ fmtUsd(monthIncome()) }}</span>
+          </div>
+          <div class="month-stat">
+            <span class="month-stat-label">Gastos</span>
+            <span class="month-stat-value expense">{{ fmtUsd(monthExpense()) }}</span>
+          </div>
+          <div class="month-stat">
+            <span class="month-stat-label">Ahorro estimado</span>
+            <span class="month-stat-value" [class.income]="monthNet() >= 0" [class.expense]="monthNet() < 0">
+              {{ fmtUsd(monthNet()) }}
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ===== Rendimiento: Ingresos vs Gastos (7 días) ===== -->
+    <mat-card class="section">
+      <mat-card-header>
+        <mat-card-title>Rendimiento</mat-card-title>
+        <span class="spacer"></span>
+        <div class="chart-legend">
+          <span class="legend-dot income"></span> Ingresos
+          <span class="legend-dot expense"></span> Gastos
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        @if (chart7d().every((x) => x.income === 0 && x.expense === 0)) {
+          <p class="empty">Sin movimientos en los últimos 7 días.</p>
+        } @else {
+          <div class="bar-chart">
+            @for (d of chart7d(); track d.day) {
+              <div class="bar-col">
+                <div class="bar-group">
+                  <div class="bar income" [style.height.%]="barHeight(d.income, chartMax())" [matTooltip]="'Ingresos: ' + fmtUsd(d.income)"></div>
+                  <div class="bar expense" [style.height.%]="barHeight(d.expense, chartMax())" [matTooltip]="'Gastos: ' + fmtUsd(d.expense)"></div>
+                </div>
+                <span class="bar-label">{{ d.label }}</span>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ===== Billeteras: solo desktop ===== -->
+    @if (!isHandset()) {
       <mat-card class="section">
         <mat-card-header>
           <mat-card-title>Billeteras</mat-card-title>
@@ -59,19 +122,24 @@
                 <mat-card class="wallet-card" [routerLink]="['/wallets', w.id]">
                   <mat-card-content>
                     <div class="wallet-head">
-                      <mat-icon class="wallet-icon" [style.color]="w.color || '#3f51b5'">
-                        {{ w.icon || 'account_balance' }}
-                      </mat-icon>
+                      <span class="wallet-icon-box" [style.background]="(w.color || '#3f51b5') + '1a'" [style.color]="w.color || '#3f51b5'">
+                        <mat-icon>{{ w.icon || 'account_balance' }}</mat-icon>
+                      </span>
                       <div class="wallet-name-block">
                         <span class="wallet-name">{{ w.name }}</span>
-                        <span class="wallet-alias-chip">{{ w.alias || w.type }}</span>
+                        <span class="wallet-currency-chip">{{ w.currency }}</span>
                       </div>
                     </div>
                     <div class="wallet-balance-area">
                       <div class="balance-line">
                         <span class="wallet-balance">{{ saldo(w) }}</span>
                         @if (hideBalances()) {
-                          <button mat-icon-button class="reveal-btn" (click)="toggleReveal(w); $event.stopPropagation()" [attr.aria-label]="isHidden(w) ? 'Mostrar saldo' : 'Ocultar saldo'">
+                          <button
+                            mat-icon-button
+                            class="reveal-btn"
+                            (click)="toggleReveal(w); $event.stopPropagation()"
+                            [attr.aria-label]="isHidden(w) ? 'Mostrar saldo' : 'Ocultar saldo'"
+                          >
                             <mat-icon>{{ isHidden(w) ? 'visibility_off' : 'visibility' }}</mat-icon>
                           </button>
                         }
@@ -85,105 +153,116 @@
           }
         </mat-card-content>
       </mat-card>
+    }
 
-      <!-- Últimas transacciones -->
-      <mat-card class="section">
-        <mat-card-header>
-          <mat-card-title>Últimas transacciones</mat-card-title>
-          <span class="spacer"></span>
-          <a mat-button color="primary" routerLink="/transactions">Ver todas</a>
-        </mat-card-header>
-        <mat-card-content>
-          @if (recent().length === 0) {
-            <p class="empty">Sin transacciones recientes.</p>
-          } @else {
-            @if (!isHandset()) {
-              <div class="table-wrap">
-                <table class="dash-tx-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Categoría</th>
-                      <th>Tipo</th>
-                      <th>Descripción</th>
-                      <th class="right">Monto</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (t of recent(); track t.id) {
-                      <tr [routerLink]="['/transactions', t.id]">
-                        <td class="date">{{ txCuando(t) }}</td>
-                        <td><span class="chip cat-chip">{{ t.category }}</span></td>
-                        <td>
-                          <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                            {{ txTipo(t) }}
+    <!-- ===== Últimas transacciones (con iconos circulares) ===== -->
+    <mat-card class="section">
+      <mat-card-header>
+        <mat-card-title>Últimas transacciones</mat-card-title>
+        <span class="spacer"></span>
+        <a mat-button color="primary" routerLink="/transactions">Ver todas</a>
+      </mat-card-header>
+      <mat-card-content>
+        @if (recent().length === 0) {
+          <p class="empty">Sin transacciones recientes.</p>
+        } @else {
+          @if (!isHandset()) {
+            <div class="table-wrap">
+              <table class="dash-tx-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Categoría</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th class="right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (t of recent(); track t.id) {
+                    <tr [routerLink]="['/transactions', t.id]">
+                      <td class="date">{{ txCuando(t) }}</td>
+                      <td>
+                        <span class="tx-cell">
+                          <span class="tx-icon-circle" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                            <mat-icon>{{ txIcon(t) }}</mat-icon>
                           </span>
-                        </td>
-                        <td class="desc">{{ t.description || '—' }}</td>
-                        <td class="right">
-                          <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                            {{ txMonto(t) }}
-                          </span>
-                          <span class="wallet-sub">{{ t.walletName }}</span>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            } @else {
-              <!-- Acordeón: móvil -->
-              <mat-accordion multi="false" class="dash-tx-accordion">
-                @for (t of recent(); track t.id) {
-                  <mat-expansion-panel class="tx-panel">
-                    <mat-expansion-panel-header>
-                      <mat-panel-title class="panel-title">
-                        <span class="panel-cuando">{{ txCuando(t) }}</span>
-                        <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                          <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
-                          {{ t.category }}
+                          <span class="chip cat-chip">{{ t.category }}</span>
                         </span>
-                      </mat-panel-title>
-                      <mat-panel-description class="panel-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                        {{ txMonto(t) }}
-                      </mat-panel-description>
-                    </mat-expansion-panel-header>
-                    <div class="panel-body">
-                      <div class="pv-row"><span>Categoría</span><strong>{{ t.category }}</strong></div>
-                      <div class="pv-row">
-                        <span>Tipo</span>
+                      </td>
+                      <td>
                         <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
                           {{ txTipo(t) }}
                         </span>
-                      </div>
-                      <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
-                      <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
-                      <div class="ver-detalles-wrap">
-                        <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
-                      </div>
-                    </div>
-                  </mat-expansion-panel>
-                }
-              </mat-accordion>
-            }
-            @if (canLoadMore()) {
-              <div class="ver-mas-wrap">
-                <button mat-button color="primary" (click)="loadMore()" [disabled]="loadingMore()">
-                  @if (loadingMore()) {
-                    <mat-spinner diameter="18" />
-                  } @else {
-                    <mat-icon>arrow_drop_down</mat-icon>
+                      </td>
+                      <td class="desc">{{ t.description || '—' }}</td>
+                      <td class="right">
+                        <span class="amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          {{ txMonto(t) }}
+                        </span>
+                        <span class="wallet-sub">{{ t.walletName }}</span>
+                      </td>
+                    </tr>
                   }
-                  Ver más
-                </button>
-              </div>
-            }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <!-- Móvil: acordeón con iconos circulares + pills INGRESO/GASTO -->
+            <mat-accordion multi="false" class="dash-tx-accordion">
+              @for (t of recent(); track t.id) {
+                <mat-expansion-panel class="tx-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title class="panel-title">
+                      <span class="tx-icon-circle" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        <mat-icon>{{ txIcon(t) }}</mat-icon>
+                      </span>
+                      <span class="panel-cuando">{{ txCuando(t) }}</span>
+                      <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
+                        {{ t.category }}
+                      </span>
+                    </mat-panel-title>
+                    <mat-panel-description class="panel-amount" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                      {{ txMonto(t) }}
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+                  <div class="panel-body">
+                    <div class="pv-row"><span>Categoría</span><strong>{{ t.category }}</strong></div>
+                    <div class="pv-row">
+                      <span>Tipo</span>
+                      <span class="chip tipo-chip" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                        {{ txTipo(t) }}
+                      </span>
+                    </div>
+                    <div class="pv-row"><span>Billetera</span><strong>{{ t.walletName }}</strong></div>
+                    <div class="pv-row"><span>Descripción</span><strong>{{ t.description || '—' }}</strong></div>
+                    <div class="ver-detalles-wrap">
+                      <a class="ver-detalles" [routerLink]="['/transactions', t.id]">Ver detalles</a>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              }
+            </mat-accordion>
           }
-        </mat-card-content>
-      </mat-card>
+          @if (canLoadMore()) {
+            <div class="ver-mas-wrap">
+              <button mat-button color="primary" (click)="loadMore()" [disabled]="loadingMore()">
+                @if (loadingMore()) {
+                  <mat-spinner diameter="18" />
+                } @else {
+                  <mat-icon>arrow_drop_down</mat-icon>
+                }
+                Ver más
+              </button>
+            </div>
+          }
+        }
+      </mat-card-content>
+    </mat-card>
 
-      <p class="footnote">
-        📱 App móvil-friendly &nbsp;|&nbsp; 💰 Billeteras múltiples &nbsp;|&nbsp; 💱 Exchanges
-      </p>
+    <p class="footnote">
+      📱 App móvil-friendly &nbsp;|&nbsp; 💰 Billeteras múltiples &nbsp;|&nbsp; 💱 Exchanges
+    </p>
   }
 </div>

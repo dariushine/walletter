@@ -5,11 +5,12 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
-import { Wallet, Transaction } from '../../models/walletter.models';
+import { Wallet, Transaction, ReportData } from '../../models/walletter.models';
 import { formatMoney, currencySymbol, currencyName, formatWithCode } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
 
@@ -22,6 +23,7 @@ import { todayInTimeZone } from '../../core/utils/dates';
     MatProgressSpinnerModule,
     MatButtonModule,
     MatExpansionModule,
+    MatTooltipModule,
     RouterLink,
   ],
   templateUrl: './dashboard.html',
@@ -65,6 +67,9 @@ export class Dashboard implements OnInit, AfterViewInit {
   readonly loadingMore = signal(false);
   loading = signal(true);
 
+  /** Datos del reporte mensual (ingresos/gastos/ahorro). */
+  report = signal<ReportData | null>(null);
+
   constructor(private readonly el: ElementRef<HTMLElement>) {}
 
   ngAfterViewInit(): void {
@@ -83,6 +88,34 @@ export class Dashboard implements OnInit, AfterViewInit {
     this.settings.loadTimezone();
     this.loadRate();
     this.load();
+    this.loadReport();
+    this.loadChart();
+  }
+
+  /** Carga el reporte mensual en USD para el resumen de mes. */
+  private loadReport(): void {
+    this.api
+      .reports({ period: '1m', rate: this.selectedRate(), tz: this.settings.timezone() })
+      .subscribe({
+        next: (r) => this.report.set(r),
+        error: () => undefined,
+      });
+  }
+
+  /** Transacciones de los últimos 7 días (para el gráfico de rendimiento). */
+  private chartTx = signal<Transaction[]>([]);
+
+  /** Carga TODAS las transacciones de los últimos 7 días (no solo 5 recientes). */
+  private loadChart(): void {
+    const hoy = this.today();
+    const from = this.addDays(hoy, -6);
+    const to = this.addDays(hoy, 1); // exclusivo en backend: incluye todo el día de hoy
+    this.api
+      .transactions({ from, to, limit: 100 })
+      .subscribe({
+        next: (res) => this.chartTx.set(res.data ?? []),
+        error: () => undefined,
+      });
   }
 
   private loadRate(): void {
@@ -219,6 +252,12 @@ export class Dashboard implements OnInit, AfterViewInit {
     return currencyName(currency);
   }
 
+  /** Formatea un número como USD: 'USD 1.402,16' (patrón del resto de la app). */
+  fmtUsd(n: number): string {
+    const num = n.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `USD ${num}`;
+  }
+
   /** Texto de la hora de actualización de las tasas. */
   updatedLabel(): string {
     const d = this.rateDate();
@@ -248,6 +287,107 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   symbol(currency: string): string {
     return currencySymbol(currency);
+  }
+
+  // ===== Resumen mensual (reporte 1m en USD) =====
+
+  /** Ingresos del mes (desde el reporte en USD). */
+  monthIncome(): number {
+    return this.report()?.summary?.totalIncome ?? 0;
+  }
+
+  /** Gastos del mes (desde el reporte en USD). */
+  monthExpense(): number {
+    return this.report()?.summary?.totalExpenses ?? 0;
+  }
+
+  /** Ahorro estimado del mes (ingresos - gastos). */
+  monthNet(): number {
+    return this.monthIncome() - this.monthExpense();
+  }
+
+  /** Texto del mes actual: 'agosto 2026' (para el encabezado del resumen). */
+  monthLabel(): string {
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    return `${meses[m]} ${y}`;
+  }
+
+  // ===== Gráfico de barras: Ingresos vs Gastos (7 días) =====
+
+  /** Serie del gráfico: últimos 7 días con ingresos/gastos en USD. */
+  chart7d(): { day: string; label: string; income: number; expense: number }[] {
+    const days: { day: string; label: string; income: number; expense: number }[] = [];
+    const hoy = this.today();
+    for (let i = 6; i >= 0; i--) {
+      const day = this.addDays(hoy, -i);
+      const dt = new Date(day + 'T00:00:00');
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      const label = `${dt.getDate()} ${meses[dt.getMonth()]}`;
+      days.push({ day, label, income: 0, expense: 0 });
+    }
+    // Acumula las transacciones reales de los últimos 7 días por día.
+    for (const t of this.chartTx()) {
+      const found = days.find((x) => x.day === t.date);
+      if (!found) continue;
+      // Convierte a USD si la billetera es VES (usa la tasa activa).
+      const cur = (t.walletCurrency || '').toUpperCase();
+      const r = this.rateNumber();
+      const usd = cur === 'VES' && r ? t.amount / r : t.amount;
+      if (t.type === 'income') found.income += usd;
+      else found.expense += usd;
+    }
+    return days;
+  }
+
+  /** Altura % de una barra respecto al máximo del gráfico. */
+  barHeight(value: number, max: number): number {
+    if (!max || value <= 0) return 0;
+    return Math.max(4, Math.round((value / max) * 100));
+  }
+
+  /** Máximo común de ingresos/gastos para escalar el gráfico. */
+  chartMax(): number {
+    const max = Math.max(...this.chart7d().map((x) => Math.max(x.income, x.expense)));
+    return max > 0 ? max : 1;
+  }
+
+  // ===== Iconos por categoría (círculos de transacciones) =====
+
+  /** Icono temático para una categoría; por defecto según tipo. */
+  txIcon(t: Transaction): string {
+    const map: Record<string, string> = {
+      comida: 'restaurant',
+      restaurante: 'restaurant',
+      supermercado: 'shopping_cart',
+      mercado: 'shopping_cart',
+      transporte: 'directions_bus',
+      gasolina: 'local_gas_station',
+      salud: 'favorite',
+      farmacia: 'local_pharmacy',
+      educacion: 'school',
+      sueldo: 'work',
+      salario: 'work',
+      nomina: 'work',
+      freelance: 'laptop',
+      negocio: 'storefront',
+      servicios: 'receipt',
+      internet: 'wifi',
+      telefono: 'phone',
+      luz: 'bolt',
+      agua: 'water_drop',
+      renta: 'home',
+      alquiler: 'home',
+      entretenimiento: 'sports_esports',
+      ropa: 'checkroom',
+      viajes: 'flight',
+      'seguro': 'shield',
+    };
+    const key = (t.category || '').toLowerCase().trim();
+    if (map[key]) return map[key];
+    return t.type === 'income' ? 'trending_up' : 'shopping_bag';
   }
 
   /** Fecha relativa corta (Hoy/Ayer/26-ago) + hora, estilo transacciones. */

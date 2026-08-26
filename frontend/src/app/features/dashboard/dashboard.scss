@@ -2,18 +2,44 @@
   margin: 40px auto;
 }
 
-.balance-card {
+/* ===== Hero: Balance total ===== */
+.hero-card {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, #3f51b5, #5c6bc0);
   color: #fff;
+  border-radius: 16px;
+
+  mat-card-content {
+    position: relative;
+    z-index: 1;
+  }
 }
 
-.balance-main {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
+/* Formas decorativas difuminadas de fondo (estilo mockup de Stitch) */
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  filter: blur(2px);
+  pointer-events: none;
 }
 
-.balance-top {
+.hero-blob-1 {
+  width: 240px;
+  height: 240px;
+  top: -90px;
+  right: -60px;
+}
+
+.hero-blob-2 {
+  width: 160px;
+  height: 160px;
+  bottom: -70px;
+  left: -40px;
+}
+
+.hero-top {
   position: relative;
   display: flex;
   align-items: center;
@@ -21,7 +47,7 @@
   width: 100%;
 }
 
-.balance-label {
+.hero-label {
   opacity: 0.85;
   font-size: 0.9rem;
   font-weight: 700;
@@ -29,7 +55,7 @@
 
 /* Iconos decorativos (dólar + flecha): absolutos a la derecha para NO
    afectar el tamaño/posición del contenido en el otro lado del hero. */
-.balance-icons {
+.hero-icons {
   position: absolute;
   right: 0;
   top: 0;
@@ -45,19 +71,19 @@
   }
 }
 
-.balance-value {
+.hero-value {
   font-size: 1.8rem;
   font-weight: 700;
   margin-top: 6px;
 }
 
-.balance-line {
+.hero-balance-line {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.balance-card .reveal-btn {
+.hero-card .reveal-btn {
   width: 30px;
   height: 30px;
   line-height: 0;
@@ -73,22 +99,20 @@
   }
 }
 
-.balance-updated {
+.hero-updated {
   opacity: 0.75;
   font-size: 0.78rem;
   margin-top: 6px;
   margin-bottom: 4px;
 }
 
+/* ===== Pills de tasa (BCV / Paralelo), se conservan ===== */
 .rate-pills {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-/* Pills de tasa: idénticos al chip estándar (mismo padding/fuente/border-radius),
-   como toggle. Inactiva: fondo azul hero + borde blanco + texto blanco.
-   Activa: fondo blanco + texto azul hero. */
 .rate-pill {
   display: inline-block;
   padding: 3px 10px;
@@ -116,39 +140,115 @@
   }
 }
 
-.balance-stats {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
+/* ===== Resumen del mes ===== */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
 }
 
-.stat {
+.month-stat {
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 14px 16px;
 }
 
-.stat-label {
-  opacity: 0.85;
-  font-size: 0.8rem;
-}
-
-.stat-value {
+.month-stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
   font-weight: 600;
-  font-size: 1.1rem;
 }
 
-.stat-value.income {
-  color: #b9f6ca;
+.month-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-top: 4px;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
 }
 
-.stat-value.expense {
-  color: #ffcdd2;
+/* ===== Gráfico de barras: Ingresos vs Gastos ===== */
+.chart-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.6);
 }
 
-.stat-value.negative {
-  color: #ffcdd2;
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+
+  &.income {
+    background: #2e7d32;
+  }
+
+  &.expense {
+    background: #d32f2f;
+  }
 }
 
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 180px;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+}
+
+.bar {
+  width: 12px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s;
+
+  &.income {
+    background: #2e7d32;
+  }
+
+  &.expense {
+    background: #d32f2f;
+  }
+}
+
+.bar-label {
+  font-size: 0.68rem;
+  color: rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+/* ===== Billeteras (solo desktop) ===== */
 .wallet-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -176,10 +276,21 @@
   margin-bottom: 14px;
 }
 
-.wallet-icon {
-  font-size: 30px;
-  width: 30px;
-  height: 30px;
+/* Icono en cuadrito redondeado con el color de la billetera */
+.wallet-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .wallet-name-block {
@@ -194,7 +305,7 @@
   line-height: 1.2;
 }
 
-.wallet-alias-chip {
+.wallet-currency-chip {
   display: inline-block;
   width: fit-content;
   background: #f0f0f0;
@@ -246,6 +357,7 @@
   }
 }
 
+/* ===== Tabla de transacciones (desktop) ===== */
 .table-wrap {
   overflow-x: auto;
   padding: 0;
@@ -311,6 +423,41 @@
     font-size: 0.72rem;
     color: rgba(0, 0, 0, 0.5);
     font-weight: 400;
+  }
+}
+
+/* Celda de categoría: círculo de icono + chip */
+.tx-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tx-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+  }
+
+  &.income {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.expense {
+    background: #fdecea;
+    color: #d32f2f;
   }
 }
 
