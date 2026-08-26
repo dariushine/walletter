@@ -58,30 +58,25 @@
         </mat-card-content>
       </mat-card>
 
-      <!-- ===== Resumen del mes ===== -->
-      <mat-card class="month-card">
-        <mat-card-header>
-          <mat-card-title>Resumen de {{ monthLabel() }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="month-boxes">
-            <div class="month-box">
-              <span class="month-icon income"><mat-icon>arrow_downward</mat-icon></span>
-              <div class="month-box-body">
-                <span class="month-name">Ingresos</span>
-                <span class="month-value income">{{ monthSigned(monthIncome()) }}</span>
-              </div>
-            </div>
-            <div class="month-box">
-              <span class="month-icon expense"><mat-icon>arrow_upward</mat-icon></span>
-              <div class="month-box-body">
-                <span class="month-name">Gastos</span>
-                <span class="month-value expense">{{ monthSigned(monthExpense()) }}</span>
-              </div>
+      <!-- ===== Resumen del mes (dos cajas sueltas, estilo mockup móvil) ===== -->
+      <div class="month-card">
+        <div class="month-boxes">
+          <div class="month-box">
+            <span class="month-icon income"><mat-icon>arrow_downward</mat-icon></span>
+            <div class="month-box-body">
+              <span class="month-name">Ingresos</span>
+              <span class="month-value income">{{ monthSigned(monthIncome()) }}</span>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+          <div class="month-box">
+            <span class="month-icon expense"><mat-icon>arrow_upward</mat-icon></span>
+            <div class="month-box-body">
+              <span class="month-name">Gastos</span>
+              <span class="month-value expense">{{ monthSigned(monthExpense()) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== Billeteras (solo desktop, carrusel con flechas) ===== -->

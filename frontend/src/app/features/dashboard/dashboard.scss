@@ -167,17 +167,15 @@
   }
 }
 
-/* ===== Resumen del mes (Monthly Overview) ===== */
+/* ===== Resumen del mes (Monthly Overview) =====
+   Dos cajas sueltas (Ingresos / Gastos), sin tarjeta contenedora,
+   estilo mockup móvil de Stitch. */
 .month-card {
   display: flex;
   flex-direction: column;
-
-  mat-card-content {
-    flex: 1;
-  }
 }
 
-/* Dos cajas separadas (Ingresos / Gastos) en grid, estilo mockup móvil. */
+/* Dos cajas separadas (Ingresos / Gastos) en grid. */
 .month-boxes {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
