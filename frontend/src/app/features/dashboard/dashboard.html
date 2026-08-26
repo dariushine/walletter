@@ -137,10 +137,14 @@
                 @for (t of recent(); track t.id) {
                   <mat-expansion-panel class="tx-panel">
                     <mat-expansion-panel-header>
+                      <span class="tx-head-icon">
+                        <span class="tx-icon-circle" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
+                          <mat-icon>{{ txIcon(t) }}</mat-icon>
+                        </span>
+                      </span>
                       <mat-panel-title class="panel-title">
                         <span class="panel-cuando">{{ txCuando(t) }}</span>
                         <span class="chip cat-chip-inline" [class.income]="t.type === 'income'" [class.expense]="t.type === 'expense'">
-                          <mat-icon>{{ t.type === 'income' ? 'trending_up' : 'trending_down' }}</mat-icon>
                           {{ t.category }}
                         </span>
                       </mat-panel-title>

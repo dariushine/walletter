@@ -427,18 +427,70 @@
   flex: 1 1 auto;
 }
 
-/* ===== Acordeón de últimas transacciones (móvil) ===== */
+/* ===== Acordeón de últimas transacciones (móvil), estilo Stitch =====
+   Paneles planos (sin tarjeta), con icono a la izquierda. */
 .dash-tx-accordion {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   margin-top: 6px;
+}
+
+/* Quita el aspecto de tarjeta del panel de expansión: fondo, borde y sombra planos. */
+.tx-panel {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 0 !important;
+
+  ::ng-deep .mat-expansion-panel-header {
+    padding: 0;
+    height: auto;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Icono a la izquierda de todo. */
+.tx-head-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.tx-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  color: rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.income {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.expense {
+    background: #fdecea;
+    color: #d32f2f;
+  }
 }
 
 .panel-title {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   align-items: flex-start;
 }
 
@@ -479,6 +531,8 @@
 .panel-amount {
   justify-content: flex-end;
   font-weight: 700;
+  white-space: nowrap;
+  margin-left: auto;
 
   &.expense {
     color: #d32f2f;
@@ -493,7 +547,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 4px 0;
+  padding: 4px 12px 8px 44px;
 }
 
 .pv-row {
