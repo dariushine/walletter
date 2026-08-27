@@ -250,25 +250,64 @@ export class Dashboard implements OnInit, AfterViewInit {
     return currencySymbol(currency);
   }
 
-  /** Fecha relativa corta (Hoy/Ayer/26-ago) + hora, estilo transacciones. */
+  /** Fecha relativa corta (Hoy/Ayer/26-ago) + hora (solo hoy), estilo Stitch. */
   txCuando(t: Transaction): string {
     let dia = t.date || '';
     const hoy = this.today();
     const ayer = this.addDays(hoy, -1);
-    if (t.date === hoy) dia = 'Hoy';
-    else if (t.date === ayer) dia = 'Ayer';
-    else {
+    let esHoy = false;
+    if (t.date === hoy) {
+      dia = 'Hoy';
+      esHoy = true;
+    } else if (t.date === ayer) {
+      dia = 'Ayer';
+    } else {
       const [y, m, d] = (t.date || '').split('-');
       if (y && m && d) {
         const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
         dia = `${Number(d)}-${meses[Number(m) - 1]}`;
       }
     }
-    return `${dia} · ${t.time || ''}`;
+    // La hora solo se muestra para las transacciones de hoy.
+    return esHoy && t.time ? `${dia} · ${t.time}` : dia;
   }
 
   txTipo(t: Transaction): string {
     return t.type === 'income' ? 'Ingreso' : 'Gasto';
+  }
+
+  /** Icono temático para una categoría; por defecto según tipo. */
+  txIcon(t: Transaction): string {
+    const map: Record<string, string> = {
+      comida: 'restaurant',
+      restaurante: 'restaurant',
+      supermercado: 'shopping_cart',
+      mercado: 'shopping_cart',
+      transporte: 'directions_bus',
+      gasolina: 'local_gas_station',
+      salud: 'favorite',
+      farmacia: 'local_pharmacy',
+      educacion: 'school',
+      sueldo: 'work',
+      salario: 'work',
+      nomina: 'work',
+      freelance: 'laptop',
+      negocio: 'storefront',
+      servicios: 'receipt',
+      internet: 'wifi',
+      telefono: 'phone',
+      luz: 'bolt',
+      agua: 'water_drop',
+      renta: 'home',
+      alquiler: 'home',
+      entretenimiento: 'sports_esports',
+      ropa: 'checkroom',
+      viajes: 'flight',
+      'seguro': 'shield',
+    };
+    const key = (t.category || '').toLowerCase().trim();
+    if (map[key]) return map[key];
+    return t.type === 'income' ? 'trending_up' : 'shopping_bag';
   }
 
   /** Monto con signo + moneda; wallet en sublínea, estilo dashboard viejo. */

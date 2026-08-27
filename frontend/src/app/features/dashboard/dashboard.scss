@@ -2,9 +2,41 @@
   margin: 40px auto;
 }
 
+/* ===== Hero: Balance total con gradiente y círculos decorativos ===== */
 .balance-card {
-  background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #424b9f, #5d6bf3);
   color: #fff;
+  border-radius: 4px;
+
+  mat-card-content {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Círculos difuminados de fondo (estilo mockup de Stitch) */
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.hero-blob-1 {
+  width: 240px;
+  height: 240px;
+  top: -90px;
+  right: -60px;
+}
+
+.hero-blob-2 {
+  width: 160px;
+  height: 160px;
+  bottom: -70px;
+  left: -40px;
 }
 
 .balance-main {
@@ -149,11 +181,28 @@
   color: #ffcdd2;
 }
 
+/* ===== Panel de billeteras (tarjetas sueltas, sin contenedor) ===== */
+.wallet-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 8px;
+}
+
+.wallet-panel-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.wallet-grid-wrap {
+  margin-bottom: 8px;
+}
+
 .wallet-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
-  margin-top: 8px;
 }
 
 .wallet-card {
@@ -378,19 +427,75 @@
   flex: 1 1 auto;
 }
 
-/* ===== Acordeón de últimas transacciones (móvil) ===== */
+/* ===== Acordeón de últimas transacciones (móvil), estilo Stitch =====
+   Paneles planos (sin tarjeta), con icono a la izquierda. */
 .dash-tx-accordion {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   margin-top: 6px;
 }
 
+/* Quita el aspecto de tarjeta del panel de expansión: fondo, borde y sombra planos. */
+.tx-panel {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 0 !important;
+
+  ::ng-deep .mat-expansion-panel-header {
+    padding-left: 0;
+    padding-right: 24px; /* espacio para la flecha de expandir (no se corta) */
+    height: auto;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+/* Icono a la izquierda de todo: el título es una fila [icono | texto]. */
 .panel-title {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-title-text {
+  display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   align-items: flex-start;
+  min-width: 0;
+}
+
+.tx-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f4f6fb; /* gris claro, casi se confunde con el fondo */
+  color: rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  /* El icono conserva el color según tipo; el círculo queda neutro claro. */
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #d32f2f;
+  }
 }
 
 .panel-cuando {
@@ -430,6 +535,8 @@
 .panel-amount {
   justify-content: flex-end;
   font-weight: 700;
+  white-space: nowrap;
+  margin-left: auto;
 
   &.expense {
     color: #d32f2f;
@@ -444,7 +551,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 4px 0;
+  padding: 4px 12px 8px 44px;
 }
 
 .pv-row {
