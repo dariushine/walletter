@@ -105,8 +105,8 @@ public class WalletsService
         var txs = await _db.Transactions
             .Include(t => t.Category)
             .Where(t => t.WalletId == id && !t.Deleted)
-            .OrderBy(t => t.DatetimeUtc)
-            .ThenBy(t => t.Id)
+            .OrderByDescending(t => t.DatetimeUtc)
+            .ThenByDescending(t => t.Id)
             .ToListAsync(ct);
 
         return new
