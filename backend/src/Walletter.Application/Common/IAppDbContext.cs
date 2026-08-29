@@ -1,5 +1,7 @@
+using System.Data;
 using Walletter.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Walletter.Application.Common;
 
@@ -22,4 +24,6 @@ public interface IAppDbContext
     DbSet<ApiToken> ApiTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default);
+    Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken ct = default);
 }

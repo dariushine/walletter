@@ -1,3 +1,4 @@
+using System.Data;
 using Walletter.Application.Common;
 using Walletter.Domain;
 using Walletter.Domain.Entities;
@@ -23,6 +24,8 @@ public class ExchangesService
 
     public async Task<object> Create(CreateExchangeCommand cmd, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         if (cmd.FromWalletId == 0 || cmd.ToWalletId == 0 || cmd.FromAmount == 0 || cmd.ToAmount == 0)
             throw new BusinessException("Faltan campos requeridos: fromWalletId, toWalletId, fromAmount, toAmount");
         if (cmd.FromWalletId == cmd.ToWalletId)
@@ -162,6 +165,7 @@ public class ExchangesService
         toWallet.Balance = toWallet.Balance + toAmountInt - creditCommission;
 
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         return new
         {
@@ -297,6 +301,8 @@ public class ExchangesService
 
     public async Task<object> Remove(int id, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var ex = await _db.Exchanges
             .Include(e => e.From)
             .Include(e => e.To)
@@ -313,15 +319,18 @@ public class ExchangesService
         var txns = await _db.Transactions
             .Where(t => ids.Contains(t.Id) || (t.ParentId != null && ids.Contains(t.ParentId.Value)))
             .ToListAsync(ct);
-        foreach (var tx in txns) tx.Deleted = true;
+        foreach (var txItem in txns) txItem.Deleted = true;
 
         ex.Deleted = true;
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         return new { success = true };
     }
 
     public async Task<object> Update(int id, UpdateExchangeCommand cmd, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var ex = await _db.Exchanges
             .Include(e => e.Debit)
             .Include(e => e.Credit)
@@ -397,6 +406,7 @@ public class ExchangesService
         ex.To.Balance = newToBalance;
 
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         return new { success = true, message = "Exchange actualizado" };
     }
 }
