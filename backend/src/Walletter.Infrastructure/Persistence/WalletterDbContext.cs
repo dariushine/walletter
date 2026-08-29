@@ -1,6 +1,7 @@
 using Walletter.Application.Common;
 using Walletter.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Walletter.Infrastructure.Persistence;
 
@@ -23,6 +24,12 @@ public class WalletterDbContext : DbContext, IAppDbContext
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
+        => Database.BeginTransactionAsync(ct);
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(System.Data.IsolationLevel isolationLevel, CancellationToken ct = default)
+        => Database.BeginTransactionAsync(isolationLevel, ct);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

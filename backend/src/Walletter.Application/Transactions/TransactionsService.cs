@@ -1,3 +1,4 @@
+using System.Data;
 using Walletter.Application.Categories;
 using Walletter.Application.Common;
 using Walletter.Domain;
@@ -26,6 +27,8 @@ public class TransactionsService
 
     public async Task<TransactionCreatedResult> Create(CreateTransactionCommand cmd, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var tz = cmd.Tz ?? TimeZone();
         var amountInt = Money.ToInt(cmd.Amount);
         var commission = Money.ToInt(cmd.Fee);
@@ -94,6 +97,7 @@ public class TransactionsService
 
         wallet.Balance = newBalance;
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         return new TransactionCreatedResult(created.Id, feeTransactionId);
     }
@@ -293,6 +297,8 @@ public class TransactionsService
 
     public async Task<object> Update(int id, UpdateTransactionCommand cmd, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var t = await _db.Transactions
             .Include(x => x.Wallet)
             .Include(x => x.Category)
@@ -336,11 +342,14 @@ public class TransactionsService
         }
 
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         return new { success = true, id = t.Id };
     }
 
     public async Task<object> Remove(int id, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var t = await _db.Transactions
             .Include(x => x.Wallet)
             .Include(x => x.Category)
@@ -385,11 +394,14 @@ public class TransactionsService
         }
 
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         return new { success = true };
     }
 
     public async Task<object> AddFee(int id, AddFeeCommand cmd, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var t = await _db.Transactions
             .Include(x => x.Wallet)
             .Include(x => x.Category)
@@ -433,12 +445,15 @@ public class TransactionsService
         // Sincroniza el fee denormalizado del padre.
         t.Fee = await SumChildFees(id, ct);
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         return new { success = true, feeId = feeTx.Id };
     }
 
     public async Task<object> Associate(int id, AssociateTransactionCommand cmd, CancellationToken ct = default)
     {
+        using var tx = await _db.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         var t = await _db.Transactions
             .Include(x => x.Wallet)
             .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
@@ -478,6 +493,7 @@ public class TransactionsService
         _db.Transactions.Add(child);
         t.Wallet!.Balance += effect;
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         return new { success = true, associateId = child.Id };
     }

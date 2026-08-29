@@ -5,4 +5,7 @@
     <Project Path="src/Walletter.Domain/Walletter.Domain.csproj" />
     <Project Path="src/Walletter.Infrastructure/Walletter.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Walletter.UnitTests/Walletter.UnitTests.csproj" />
+  </Folder>
 </Solution>
