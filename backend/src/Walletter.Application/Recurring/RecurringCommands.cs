@@ -13,7 +13,6 @@ public class CreateRecurringCommand
     public int? WalletId { get; set; }
     public bool IsSubscription { get; set; }
     public int? BillingDay { get; set; }
-    public string? PaymentMethod { get; set; }
 }
 
 public class UpdateRecurringCommand
@@ -28,7 +27,6 @@ public class UpdateRecurringCommand
     public int? WalletId { get; set; }
     public bool? IsSubscription { get; set; }
     public int? BillingDay { get; set; }
-    public string? PaymentMethod { get; set; }
 }
 
 public class ExecuteRecurringCommand

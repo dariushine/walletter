@@ -57,7 +57,6 @@ public class RecurringService
             IsActive = true,
             IsSubscription = cmd.IsSubscription,
             BillingDay = cmd.BillingDay,
-            PaymentMethod = cmd.PaymentMethod,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -100,7 +99,6 @@ public class RecurringService
             isActive = row.IsActive,
             isSubscription = row.IsSubscription,
             billingDay = row.BillingDay,
-            paymentMethod = row.PaymentMethod,
         };
     }
 
@@ -117,7 +115,6 @@ public class RecurringService
         if (cmd.WalletId is int w) existing.WalletId = w;
         if (cmd.IsSubscription is bool sub) existing.IsSubscription = sub;
         if (cmd.BillingDay is int bd) existing.BillingDay = bd;
-        if (cmd.PaymentMethod != null) existing.PaymentMethod = cmd.PaymentMethod;
         if (!string.IsNullOrEmpty(cmd.CategoryName))
         {
             var cat = await _categories.GetOrCreateCategory(cmd.CategoryName, existing.Type, ct);
@@ -191,6 +188,5 @@ public class RecurringService
         isActive = r.IsActive,
         isSubscription = r.IsSubscription,
         billingDay = r.BillingDay,
-        paymentMethod = r.PaymentMethod,
     };
 }

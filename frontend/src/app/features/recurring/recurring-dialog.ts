@@ -20,9 +20,6 @@ export interface RecurringDialogData {
 
 const CURRENCIES = ['USD', 'VES'];
 
-/** Modalidades de pago para suscripciones. */
-const PAYMENT_METHODS = ['Tarjeta', 'Efectivo', 'Transferencia', 'Zelle', 'Pago móvil', 'Otro'];
-
 /** Días de cobro disponibles (1-31). */
 const BILLING_DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 
@@ -40,7 +37,6 @@ export class RecurringDialog {
   readonly data = inject<RecurringDialogData>(MAT_DIALOG_DATA);
 
   readonly currencies = CURRENCIES;
-  readonly paymentMethods = PAYMENT_METHODS;
   readonly billingDays = BILLING_DAYS;
   loading = false;
   isEdit = !!this.data?.item;
@@ -56,7 +52,6 @@ export class RecurringDialog {
     description: [this.data?.item?.description ?? ''],
     isSubscription: [this.data?.item?.isSubscription ?? false],
     billingDay: [this.data?.item?.billingDay ?? 1],
-    paymentMethod: [this.data?.item?.paymentMethod ?? 'Tarjeta'],
   });
 
   /** Cambia el tipo: limpia la categoría y recarga sugerencias (autocomplete recarga por [type]). */
@@ -85,7 +80,6 @@ export class RecurringDialog {
       description: v.description || undefined,
       isSubscription: !!v.isSubscription,
       billingDay: v.isSubscription ? Number(v.billingDay) || 1 : undefined,
-      paymentMethod: v.isSubscription ? (v.paymentMethod || undefined) : undefined,
     };
 
     const request = this.isEdit

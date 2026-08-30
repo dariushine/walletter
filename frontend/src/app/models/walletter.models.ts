@@ -164,7 +164,6 @@ export interface RecurringPayment {
   isActive: boolean;
   isSubscription?: boolean;
   billingDay?: number | null;
-  paymentMethod?: string | null;
 }
 
 /** Tasa del día */

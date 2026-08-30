@@ -43,9 +43,6 @@
                 <div class="rec-sub-status" [class.overdue]="st.overdue">
                   <mat-icon>{{ st.overdue ? 'warning' : 'schedule' }}</mat-icon>
                   <span>{{ st.label }}</span>
-                  @if (r.paymentMethod) {
-                    <span class="rec-sub-method">· {{ r.paymentMethod }}</span>
-                  }
                 </div>
               }
               <div class="rec-actions">

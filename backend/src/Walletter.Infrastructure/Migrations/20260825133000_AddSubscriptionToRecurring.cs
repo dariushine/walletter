@@ -23,21 +23,11 @@ namespace Walletter.Infrastructure.Migrations
                 table: "recurring_payments",
                 type: "INTEGER",
                 nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "PaymentMethod",
-                table: "recurring_payments",
-                type: "TEXT",
-                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "PaymentMethod",
-                table: "recurring_payments");
-
             migrationBuilder.DropColumn(
                 name: "BillingDay",
                 table: "recurring_payments");

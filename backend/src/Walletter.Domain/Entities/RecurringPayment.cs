@@ -26,11 +26,6 @@ public class RecurringPayment
     /// </summary>
     public int? BillingDay { get; set; }
 
-    /// <summary>
-    /// Modalidad de pago de la suscripción (ej. tarjeta, efectivo, transferencia, zelle).
-    /// </summary>
-    public string? PaymentMethod { get; set; }
-
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

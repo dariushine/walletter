@@ -84,15 +84,6 @@
               }
             </mat-select>
           </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Modalidad de pago</mat-label>
-            <mat-select formControlName="paymentMethod">
-              @for (m of paymentMethods; track m) {
-                <mat-option [value]="m">{{ m }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
         </div>
       }
 
