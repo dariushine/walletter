@@ -39,6 +39,12 @@
               @if (r.fee > 0) {
                 <div class="rec-fee">+ comisión {{ format(r.fee, r.currency) }}</div>
               }
+              @if (subscriptionStatus(r); as st) {
+                <div class="rec-sub-status" [class.overdue]="st.overdue">
+                  <mat-icon>{{ st.overdue ? 'warning' : 'schedule' }}</mat-icon>
+                  <span>{{ st.label }}</span>
+                </div>
+              }
               <div class="rec-actions">
                 <button mat-stroked-button color="primary" (click)="execute(r)">Ejecutar</button>
                 <span class="actions-right">

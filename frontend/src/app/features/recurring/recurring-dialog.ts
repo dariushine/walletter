@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet, RecurringPayment } from '../../models/walletter.models';
@@ -19,9 +20,12 @@ export interface RecurringDialogData {
 
 const CURRENCIES = ['USD', 'VES'];
 
+/** Días de cobro disponibles (1-31). */
+const BILLING_DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
+
 @Component({
   selector: 'app-recurring-dialog',
-  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, CategoryAutocomplete, MoneyInput],
+  imports: [ReactiveFormsModule, MatDialogContent, MatDialogActions, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatSlideToggleModule, CategoryAutocomplete, MoneyInput],
   templateUrl: './recurring-dialog.html',
   styleUrls: ['../../layout/new-operation-dialog.scss'],
 })
@@ -33,6 +37,7 @@ export class RecurringDialog {
   readonly data = inject<RecurringDialogData>(MAT_DIALOG_DATA);
 
   readonly currencies = CURRENCIES;
+  readonly billingDays = BILLING_DAYS;
   loading = false;
   isEdit = !!this.data?.item;
 
@@ -45,6 +50,8 @@ export class RecurringDialog {
     categoryName: [this.data?.item?.category ?? '', Validators.required],
     walletId: [this.data?.item?.walletId ?? null],
     description: [this.data?.item?.description ?? ''],
+    isSubscription: [this.data?.item?.isSubscription ?? false],
+    billingDay: [this.data?.item?.billingDay ?? 1],
   });
 
   /** Cambia el tipo: limpia la categoría y recarga sugerencias (autocomplete recarga por [type]). */
@@ -71,6 +78,8 @@ export class RecurringDialog {
       categoryName: v.categoryName!,
       walletId: v.walletId ?? undefined,
       description: v.description || undefined,
+      isSubscription: !!v.isSubscription,
+      billingDay: v.isSubscription ? Number(v.billingDay) || 1 : undefined,
     };
 
     const request = this.isEdit

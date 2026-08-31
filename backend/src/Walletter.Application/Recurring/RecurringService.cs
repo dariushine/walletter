@@ -55,6 +55,8 @@ public class RecurringService
             CategoryId = categoryId.Value,
             WalletId = cmd.WalletId,
             IsActive = true,
+            IsSubscription = cmd.IsSubscription,
+            BillingDay = cmd.BillingDay,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -95,6 +97,9 @@ public class RecurringService
             categoryId = row.CategoryId,
             walletId = row.WalletId,
             isActive = row.IsActive,
+            isSubscription = row.IsSubscription,
+            billingDay = row.BillingDay,
+            lastExecutedAt = row.LastExecutedAt,
         };
     }
 
@@ -109,6 +114,8 @@ public class RecurringService
         if (cmd.Currency != null) existing.Currency = cmd.Currency;
         if (cmd.Type != null) existing.Type = cmd.Type;
         if (cmd.WalletId is int w) existing.WalletId = w;
+        if (cmd.IsSubscription is bool sub) existing.IsSubscription = sub;
+        if (cmd.BillingDay is int bd) existing.BillingDay = bd;
         if (!string.IsNullOrEmpty(cmd.CategoryName))
         {
             var cat = await _categories.GetOrCreateCategory(cmd.CategoryName, existing.Type, ct);
@@ -159,6 +166,12 @@ public class RecurringService
             Tz = cmd.Tz ?? TimeZoneHelper.DefaultTimeZone,
         }, ct);
 
+        // La transacción ya se creó de verdad. Ahora sí registramos la última ejecución.
+        // (Si el usuario cancela en el diálogo, este método no se llama; si el Create
+        //  falla por fondos insuficientes u otro error, la excepción impide llegar aquí.)
+        row.LastExecutedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+
         return new
         {
             success = true,
@@ -180,5 +193,8 @@ public class RecurringService
         categoryId = r.CategoryId,
         walletId = r.WalletId,
         isActive = r.IsActive,
+        isSubscription = r.IsSubscription,
+        billingDay = r.BillingDay,
+        lastExecutedAt = r.LastExecutedAt,
     };
 }

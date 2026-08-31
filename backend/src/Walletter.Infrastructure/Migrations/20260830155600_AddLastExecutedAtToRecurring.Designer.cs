@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Walletter.Infrastructure.Persistence;
 
@@ -10,9 +11,11 @@ using Walletter.Infrastructure.Persistence;
 namespace Walletter.Infrastructure.Migrations
 {
     [DbContext(typeof(WalletterDbContext))]
-    partial class WalletterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260830155600_AddLastExecutedAtToRecurring")]
+    partial class AddLastExecutedAtToRecurring
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
