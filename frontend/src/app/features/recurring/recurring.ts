@@ -127,18 +127,25 @@ export class Recurring implements OnInit {
     const lastYear = lastStr ? Number(lastStr.split('-')[0]) : null;
     const ejecutadoEsteMes = lastStr != null && lastYear === y && lastMonth === m;
 
+    // Suscripción recién creada (nunca ejecutada): aún no puede estar vencida.
+    // lastExecutedAt se llena solo al ejecutar el pago; si es null, es nueva.
+    const esNueva = lastStr == null;
+
     // Día de cobro de este mes (recortado a los días reales del mes).
     const daysInMonth = new Date(y, m, 0).getDate();
     const cobroEsteMes = Math.min(day, daysInMonth);
 
     // ¿Ya pasó el día de cobro de este mes sin haberse ejecutado?
-    if (dHoy > cobroEsteMes && !ejecutadoEsteMes) {
+    // Solo aplica a suscripciones con historial: una recién creada no puede
+    // estar vencida el mismo día (su primer cobro es el próximo billingDay).
+    if (!esNueva && dHoy > cobroEsteMes && !ejecutadoEsteMes) {
       const daysOverdue = dHoy - cobroEsteMes;
       return { label: `Vencido hace ${daysOverdue} día${daysOverdue === 1 ? '' : 's'}`, days: daysOverdue, overdue: true };
     }
 
-    // Es hoy y aún no se ejecutó hoy.
-    if (dHoy === cobroEsteMes && !ejecutadoEsteMes) {
+    // Es hoy y aún no se ejecutó hoy (solo aplica a suscripciones con historial;
+    // una recién creada cuyo billingDay cae hoy cobra en el próximo ciclo).
+    if (!esNueva && dHoy === cobroEsteMes && !ejecutadoEsteMes) {
       return { label: 'Vence hoy', days: 0, overdue: false };
     }
 
