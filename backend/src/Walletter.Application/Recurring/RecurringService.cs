@@ -99,6 +99,7 @@ public class RecurringService
             isActive = row.IsActive,
             isSubscription = row.IsSubscription,
             billingDay = row.BillingDay,
+            lastExecutedAt = row.LastExecutedAt,
         };
     }
 
@@ -165,6 +166,12 @@ public class RecurringService
             Tz = cmd.Tz ?? TimeZoneHelper.DefaultTimeZone,
         }, ct);
 
+        // La transacción ya se creó de verdad. Ahora sí registramos la última ejecución.
+        // (Si el usuario cancela en el diálogo, este método no se llama; si el Create
+        //  falla por fondos insuficientes u otro error, la excepción impide llegar aquí.)
+        row.LastExecutedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+
         return new
         {
             success = true,
@@ -188,5 +195,6 @@ public class RecurringService
         isActive = r.IsActive,
         isSubscription = r.IsSubscription,
         billingDay = r.BillingDay,
+        lastExecutedAt = r.LastExecutedAt,
     };
 }

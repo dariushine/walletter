@@ -26,6 +26,12 @@ public class RecurringPayment
     /// </summary>
     public int? BillingDay { get; set; }
 
+    /// <summary>
+    /// Última vez que se ejecutó el pago (se creó una transacción real).
+    /// Null si nunca se ha ejecutado.
+    /// </summary>
+    public DateTime? LastExecutedAt { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
