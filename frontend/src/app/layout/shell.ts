@@ -85,6 +85,15 @@ export class Shell {
       // Al pasar a escritorio, restablecer a expandido.
       if (!state.matches) this.collapsed.set(false);
     });
+
+    // Si la sesión caduca mientras el usuario está dentro (auth habilitada + ya
+    // no autenticado), redirigir a /login. El guard solo corre al navegar; este
+    // listener cubre la expiración en vivo.
+    this.authStore.authenticated.subscribe((isAuth) => {
+      if (!isAuth && this.authStore.authenticationRequired) {
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
   logout(): void {

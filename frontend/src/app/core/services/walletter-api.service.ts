@@ -51,6 +51,11 @@ export class WalletterApiService {
     return this.http.post(`${this.base}/auth/login`, { username, password, remember }, { withCredentials: true });
   }
 
+  /** POST /auth/refresh — re-usa la cookie httpOnly refresh_token para renovar el access token. */
+  refresh(): Observable<{ accessToken: string; tokenType: string }> {
+    return this.http.post<{ accessToken: string; tokenType: string }>(`${this.base}/auth/refresh`, {}, { withCredentials: true });
+  }
+
   logout(): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(`${this.base}/auth/logout`, {}, { withCredentials: true });
   }
