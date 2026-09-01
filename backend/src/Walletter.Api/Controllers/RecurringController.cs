@@ -32,6 +32,10 @@ public class RecurringController : ControllerBase
     public async Task<IActionResult> Execute(int id, [FromBody] ExecuteRecurringCommand cmd, CancellationToken ct)
         => Ok(await _service.Execute(id, cmd, ct));
 
+    [HttpPost("{id:int}/billing-date")]
+    public async Task<IActionResult> SetBillingDate(int id, [FromBody] SetBillingDateCommand cmd, CancellationToken ct)
+        => Ok(await _service.SetBillingDate(id, cmd, ct));
+
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRecurringCommand cmd, CancellationToken ct)
         => Ok(await _service.Update(id, cmd, ct));

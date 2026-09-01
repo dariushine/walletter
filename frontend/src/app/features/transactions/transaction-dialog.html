@@ -76,6 +76,14 @@
             [currency]="selectedCurrency()"
             [full]="true"
           />
+
+          @if (preset?.recurringId && preset?.billingDate) {
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Fecha de facturación</mat-label>
+              <input matInput type="date" formControlName="billingDate" />
+              <mat-hint>Ciclo que cubre este pago (se marca como pagado hasta esa fecha).</mat-hint>
+            </mat-form-field>
+          }
         </div>
       </details>
     </form>

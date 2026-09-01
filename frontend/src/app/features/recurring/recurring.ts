@@ -17,6 +17,7 @@ import { todayInTimeZone, formatInTimeZone } from '../../core/utils/dates';
 import { RecurringDialog } from './recurring-dialog';
 import { TransactionDialog } from '../transactions/transaction-dialog';
 import { SettingsStore } from '../../core/services/settings-store';
+import { BillingDateDialog } from './billing-date-dialog';
 
 @Component({
   selector: 'app-recurring',
@@ -83,6 +84,8 @@ export class Recurring implements OnInit {
       date: todayInTimeZone(tz),
       time: formatInTimeZone(new Date(), tz, 'HH:mm'),
       title: `Registrar ${item.type === 'income' ? 'ingreso' : 'gasto'} recurrente`,
+      recurringId: item.isSubscription ? item.id : undefined,
+      billingDate: item.isSubscription ? (this.nextDueDate(item, tz) ?? todayInTimeZone(tz)) : undefined,
     };
     const ref = this.dialog.open(TransactionDialog, {
       width: '460px',
@@ -101,6 +104,33 @@ export class Recurring implements OnInit {
         this.load();
       },
       error: () => undefined,
+    });
+  }
+
+  /**
+   * Corregir el ciclo cubierto: abre un calendario y fija LastExecutedAt a la
+   * fecha elegida SIN crear transacción ni tocar saldos (para pagos hechos por
+   * fuera o cuando el cobro real difiere del día en que se pagó).
+   */
+  fixBillingDate(item: RecurringPayment): void {
+    this.settings.loadTimezone();
+    const tz = this.settings.timezone();
+    const current = item.lastExecutedAt
+      ? formatInTimeZone(item.lastExecutedAt, tz, 'yyyy-MM-dd')
+      : todayInTimeZone(tz);
+    const ref = this.dialog.open(BillingDateDialog, {
+      width: '400px',
+      data: { name: item.name, date: current },
+    });
+    ref.afterClosed().subscribe((date?: string) => {
+      if (!date) return;
+      this.api.setRecurringBillingDate(item.id, { date, tz }).subscribe({
+        next: () => {
+          this.notifier.success('Ciclo actualizado');
+          this.load();
+        },
+        error: () => undefined,
+      });
     });
   }
 
@@ -162,4 +192,46 @@ export class Recurring implements OnInit {
     if (diff === 0) return { label: 'Vence hoy', days: 0, overdue: false };
     return { label: `Faltan ${diff} día${diff === 1 ? '' : 's'}`, days: diff, overdue: false };
   }
+
+  /**
+   * Fecha de facturación que cubre el ciclo correspondiente según las reglas:
+   * El pago siempre cubre el CICLO IMPAGO MÁS ANTIGUO:
+   * - Nunca pagada → el primer día de cobro desde hoy (el que viene, o el de
+   *   este mes si aún no ha pasado).
+   * - Ya pagada → el primer día de cobro estrictamente después de lastExecutedAt
+   *   (saldar el vencido más antiguo si está morosa, o el próximo si está al día).
+   * Devuelve yyyy-MM-dd en la zona del usuario, o null si no aplica.
+   */
+  nextDueDate(item: RecurringPayment, tz: string): string | null {
+    if (!item.isSubscription || !item.billingDay) return null;
+    const day = item.billingDay;
+
+    // Origen del cómputo: hoy si nunca se pagó, si no, la última ejecución.
+    const anchorStr = item.lastExecutedAt ? formatInTimeZone(item.lastExecutedAt, tz, 'yyyy-MM-dd') : todayInTimeZone(tz);
+    const [ay, am, ad] = anchorStr.split('-').map(Number);
+
+    // Avanza al primer día de cobro estrictamente posterior al anchor.
+    // Si el anchor es un día de cobro, el ciclo que toca pagar es el siguiente.
+    let cy = ay, cm = am;
+    const daysInAnchorMonth = new Date(cy, cm, 0).getDate();
+    const cobroAnchorMes = Math.min(day, daysInAnchorMonth);
+
+    let nextY: number, nextM: number, nextDay: number;
+    if (ad >= cobroAnchorMes) {
+      // El cobro del mes del anchor ya pasó (o es hoy) → el ciclo pendiente es el
+      // siguiente mes.
+      const ny = cm === 12 ? cy + 1 : cy;
+      const nm = cm === 12 ? 1 : cm + 1;
+      const ndays = new Date(ny, nm, 0).getDate();
+      nextY = ny; nextM = nm; nextDay = Math.min(day, ndays);
+    } else {
+      // El cobro del mes del anchor todavía no llega → es el ciclo pendiente.
+      nextY = cy; nextM = cm; nextDay = cobroAnchorMes;
+    }
+    return `${nextY}-${pad(nextM)}-${pad(nextDay)}`;
+  }
+}
+
+function pad(n: number): string {
+  return String(n).padStart(2, '0');
 }

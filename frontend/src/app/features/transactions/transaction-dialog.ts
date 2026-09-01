@@ -12,6 +12,8 @@ import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet } from '../../models/walletter.models';
 import { todayInTimeZone } from '../../core/utils/dates';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { MoneyInput } from '../../core/components/money-input';
 import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
 
@@ -27,6 +29,8 @@ export interface TransactionDialogPreset {
   time?: string;
   /** Título del diálogo (por defecto 'Nueva transacción'). */
   title?: string;
+  recurringId?: number;
+  billingDate?: string;
 }
 
 export interface TransactionDialogData {
@@ -75,6 +79,7 @@ export class TransactionDialog {
     fee: [this.preset?.fee ?? 0],
     date: [this.preset?.date ?? this.today, Validators.required],
     time: [this.preset?.time ?? '12:00', Validators.required],
+    billingDate: [this.preset?.billingDate ?? ''],
   });
 
   save(): void {
@@ -93,6 +98,11 @@ export class TransactionDialog {
         time: v.time!,
         tz: this.data.tz,
       })
+      .pipe(
+        switchMap(() => this.preset?.recurringId && v.billingDate
+          ? this.api.setRecurringBillingDate(this.preset.recurringId, { date: v.billingDate, tz: this.data.tz })
+          : of(null))
+      )
       .subscribe({
         next: () => {
           this.loading.set(false);

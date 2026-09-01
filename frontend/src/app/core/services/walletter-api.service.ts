@@ -242,6 +242,10 @@ export class WalletterApiService {
     return this.http.delete<RecurringPayment>(`${this.base}/recurring-payments/${id}`);
   }
 
+  setRecurringBillingDate(id: number, data: { date: string; tz?: string }): Observable<RecurringPayment> {
+    return this.http.post<RecurringPayment>(`${this.base}/recurring-payments/${id}/billing-date`, data);
+  }
+
   executeRecurringPayment(
     id: number,
     data: { date?: string; time?: string; tz?: string; walletId?: number; overrideAmount?: number; overrideFee?: number; overrideCategoryName?: string; overrideWalletId?: number; description?: string }
