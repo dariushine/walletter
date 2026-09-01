@@ -180,6 +180,31 @@ public class RecurringService
         };
     }
 
+    /// <summary>
+    /// Fija la fecha de facturación (LastExecutedAt) indicando qué ciclo quedó
+    /// cubierto. NO crea transacción ni toca saldos: sirve para registrar un
+    /// pago hecho por fuera, o para corregir el ciclo que cubrió una ejecución.
+    /// </summary>
+    public async Task<object> SetBillingDate(int id, SetBillingDateCommand cmd, CancellationToken ct = default)
+    {
+        var row = await _db.RecurringPayments.FindAsync(new object?[] { id }, ct)
+            ?? throw new NotFoundException("Pago recurrente no encontrado");
+
+        var tz = cmd.Tz ?? TimeZoneHelper.DefaultTimeZone;
+        if (!DateTime.TryParseExact(cmd.Date, "yyyy-MM-dd", null,
+                System.Globalization.DateTimeStyles.None, out _)
+            || !TimeZoneHelper.IsValidTimeZone(tz))
+            throw new BusinessException("Fecha de facturación inválida");
+
+        // Mediodía evita ambigüedades de cambio horario; solo importa la fecha
+        // proyectada posteriormente en la zona del usuario.
+        row.LastExecutedAt = TimeZoneHelper.ToUtcInstant(cmd.Date, "12:00", tz);
+        await _db.SaveChangesAsync(ct);
+        var loadedCategory = await _db.Categories.FindAsync(new object?[] { row.CategoryId }, ct);
+        row.Category = loadedCategory!;
+        return Map(row);
+    }
+
     private static object Map(RecurringPayment r) => new
     {
         id = r.Id,

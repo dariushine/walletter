@@ -47,6 +47,9 @@
               }
               <div class="rec-actions">
                 <button mat-stroked-button color="primary" (click)="execute(r)">Ejecutar</button>
+                @if (r.isSubscription) {
+                  <button mat-stroked-button (click)="fixBillingDate(r)" title="Corregir fecha de facturación / ciclo cubierto">Corregir</button>
+                }
                 <span class="actions-right">
                   <button mat-icon-button (click)="edit(r)" aria-label="Editar"><mat-icon>edit</mat-icon></button>
                   <button mat-icon-button (click)="delete(r)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>

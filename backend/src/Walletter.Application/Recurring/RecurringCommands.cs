@@ -29,6 +29,17 @@ public class UpdateRecurringCommand
     public int? BillingDay { get; set; }
 }
 
+/// <summary>
+/// Fija la fecha de facturación (LastExecutedAt) de un pago recurrente sin
+/// crear ninguna transacción. Permite corregir qué ciclo quedó cubierto, p. ej.
+/// pagar el seguro el 22 aunque su cobro es el 23.
+/// </summary>
+public class SetBillingDateCommand
+{
+    public string Date { get; set; } = string.Empty; // yyyy-MM-dd
+    public string? Tz { get; set; }
+}
+
 public class ExecuteRecurringCommand
 {
     public string Date { get; set; } = string.Empty;
