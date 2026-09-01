@@ -80,7 +80,9 @@
           @if (preset?.recurringId && preset?.billingDate) {
             <mat-form-field appearance="outline" class="full">
               <mat-label>Fecha de facturación</mat-label>
-              <input matInput type="date" formControlName="billingDate" />
+              <input matInput [matDatepicker]="billingPicker" formControlName="billingDate" />
+              <mat-datepicker-toggle matIconSuffix [for]="billingPicker"></mat-datepicker-toggle>
+              <mat-datepicker #billingPicker></mat-datepicker>
               <mat-hint>Ciclo que cubre este pago (se marca como pagado hasta esa fecha).</mat-hint>
             </mat-form-field>
           }
