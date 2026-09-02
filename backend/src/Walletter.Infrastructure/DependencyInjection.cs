@@ -23,6 +23,18 @@ public static class DependencyInjection
             ?? Environment.GetEnvironmentVariable("DATABASE_URL")
             ?? "Data Source=data/walletter.db";
 
+        // SQLite: la concurrencia real de escritura requiere un solo cache
+        // compartido + busy timeout para que las transacciones concurrentes
+        // esperen el lock del archivo en vez de fallar/pisarse (lost update).
+        // Solo aplica a SQLite; PostgreSQL/MySQL usan su control de concurrencia.
+        var isSqlite = connectionString.Contains("Data Source", StringComparison.OrdinalIgnoreCase)
+            || connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase);
+        if (isSqlite && !connectionString.Contains("Cache=", StringComparison.OrdinalIgnoreCase))
+        {
+            var sep = connectionString.Contains(';') ? ";" : "";
+            connectionString += $"{sep}Cache=Shared;Default Timeout=30";
+        }
+
         services.AddDbContext<WalletterDbContext>(options =>
             options.UseSqlite(connectionString));
 
