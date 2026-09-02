@@ -31,7 +31,11 @@ public static class DependencyInjection
             || connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase);
         if (isSqlite && !connectionString.Contains("Cache=", StringComparison.OrdinalIgnoreCase))
         {
-            var sep = connectionString.Contains(';') ? ";" : "";
+            // Separador ';' correcto. BUG previo: usaba Contains(';') que con
+            // "Data Source=data/walletter.db" (sin ';') pegaba el sufijo al
+            // nombre del archivo → creaba "walletter.dbCache=Shared" (DB nueva
+            // vacía) en vez de abrir la existente. EndsWith es lo correcto.
+            var sep = connectionString.EndsWith(";") ? "" : ";";
             connectionString += $"{sep}Cache=Shared;Default Timeout=30";
         }
 
