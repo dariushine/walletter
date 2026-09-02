@@ -13,7 +13,19 @@ namespace Walletter.Infrastructure.Persistence;
 /// </summary>
 public class WalletterDbContext : DbContext, IAppDbContext
 {
+    /// <summary>
+    /// Serializa las transacciones SOLO en SQLite. SQLite no implementa
+    /// IsolationLevel.Serializable real (las lecturas no se bloquean), así que
+    /// dos transacciones pueden leer el mismo balance antes de escribir y
+    /// pisarse (lost update). Con este lock global del proceso, las operaciones
+    /// de escritura en SQLite se turnan: el siguiente lee después del commit.
+    /// PostgreSQL/MySQL NO usan este lock (su Serializable es real).
+    /// </summary>
+    private static readonly SemaphoreSlim SqliteTransactionLock = new(1, 1);
+
     public WalletterDbContext(DbContextOptions<WalletterDbContext> options) : base(options) { }
+
+    private bool IsSqlite => Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true;
 
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Category> Categories => Set<Category>();
@@ -25,11 +37,99 @@ public class WalletterDbContext : DbContext, IAppDbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
 
-    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
-        => Database.BeginTransactionAsync(ct);
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
+    {
+        if (!IsSqlite)
+            return await Database.BeginTransactionAsync(ct);
+        await SqliteTransactionLock.WaitAsync(ct);
+        try
+        {
+            return new LockedTransaction(await Database.BeginTransactionAsync(ct), SqliteTransactionLock);
+        }
+        catch
+        {
+            SqliteTransactionLock.Release();
+            throw;
+        }
+    }
 
-    public Task<IDbContextTransaction> BeginTransactionAsync(System.Data.IsolationLevel isolationLevel, CancellationToken ct = default)
-        => Database.BeginTransactionAsync(isolationLevel, ct);
+    public async Task<IDbContextTransaction> BeginTransactionAsync(System.Data.IsolationLevel isolationLevel, CancellationToken ct = default)
+    {
+        if (!IsSqlite)
+            return await Database.BeginTransactionAsync(isolationLevel, ct);
+        await SqliteTransactionLock.WaitAsync(ct);
+        try
+        {
+            return new LockedTransaction(await Database.BeginTransactionAsync(isolationLevel, ct), SqliteTransactionLock);
+        }
+        catch
+        {
+            SqliteTransactionLock.Release();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Envuelve la transacción subyacente y libera el lock global al terminar
+    /// (commit/rollback/dispose), para que en SQLite las escrituras se serialicen.
+    /// </summary>
+    private sealed class LockedTransaction : IDbContextTransaction
+    {
+        private readonly IDbContextTransaction _inner;
+        private readonly SemaphoreSlim _lock;
+        private bool _released;
+
+        public LockedTransaction(IDbContextTransaction inner, SemaphoreSlim semLock)
+        {
+            _inner = inner;
+            _lock = semLock;
+        }
+
+        public Guid TransactionId => _inner.TransactionId;
+
+        public async ValueTask DisposeAsync()
+        {
+            await _inner.DisposeAsync();
+            Release();
+        }
+
+        public void Dispose()
+        {
+            _inner.Dispose();
+            Release();
+        }
+
+        public async Task CommitAsync(CancellationToken ct = default)
+        {
+            await _inner.CommitAsync(ct);
+            Release();
+        }
+
+        public void Commit()
+        {
+            _inner.Commit();
+            Release();
+        }
+
+        public async Task RollbackAsync(CancellationToken ct = default)
+        {
+            await _inner.RollbackAsync(ct);
+            Release();
+        }
+
+        public void Rollback()
+        {
+            _inner.Rollback();
+            Release();
+        }
+
+        private void Release()
+        {
+            if (_released) return;
+            _released = true;
+            _lock.Release();
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
