@@ -23,7 +23,6 @@ public class HealthController : ControllerBase
             service = "Walletter API (ASP.NET Core + EF Core)",
             version = asm.GetName().Version?.ToString(),
             informationalVersion = infoVersion,
-            commit = infoVersion.Split('+').Length > 1 ? infoVersion.Split('+')[1] : null,
         });
     }
 }
