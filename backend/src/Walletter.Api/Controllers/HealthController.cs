@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace Walletter.Api.Controllers;
 
@@ -10,11 +11,19 @@ public class HealthController : ControllerBase
 {
     [HttpGet]
     public IActionResult Health()
-        => Ok(new
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        var infoVersion = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                          ?? asm.GetName().Version?.ToString() ?? "unknown";
+
+        return Ok(new
         {
             status = "healthy",
             timestamp = DateTime.UtcNow,
             service = "Walletter API (ASP.NET Core + EF Core)",
-            version = "2.0.0",
+            version = asm.GetName().Version?.ToString(),
+            informationalVersion = infoVersion,
+            commit = infoVersion.Split('+').Length > 1 ? infoVersion.Split('+')[1] : null,
         });
+    }
 }
