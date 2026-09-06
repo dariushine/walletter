@@ -179,9 +179,23 @@ export class Recurring implements OnInit {
       return { label: 'Vence hoy', days: 0, overdue: false };
     }
 
-    // Al día: siguiente cobro (este mes si no ha pasado, si no el que viene).
+    // Es hoy y ya se ejecutó hoy: el ciclo de este mes quedó cubierto.
+    // (Antes caía en la rama "al día" y calculaba el próximo cobro como hoy
+    // mismo → mostraba "Vence hoy" aunque estuviera pagado.)
+    const ejecutadoHoy = lastStr === hoy;
+    if (ejecutadoHoy && dHoy === cobroEsteMes) {
+      return { label: 'Pagado hoy', days: 0, overdue: false };
+    }
+
+    // Al día: siguiente cobro.
     let next: Date;
-    if (cobroEsteMes >= dHoy) {
+    if (ejecutadoEsteMes) {
+      // Ya cubrió el ciclo de este mes → el próximo cobro es el mes que viene.
+      const ny = m === 12 ? y + 1 : y;
+      const nm = m === 12 ? 1 : m + 1;
+      const ndays = new Date(ny, nm, 0).getDate();
+      next = new Date(ny, nm - 1, Math.min(day, ndays));
+    } else if (cobroEsteMes > dHoy) {
       next = new Date(y, m - 1, cobroEsteMes);
     } else {
       const nextMonth = new Date(y, m, 1);
