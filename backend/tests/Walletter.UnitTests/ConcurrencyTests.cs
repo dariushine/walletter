@@ -465,4 +465,83 @@ public class ConcurrencyTests : IDisposable
 
         Assert.Equal(9400m, await GetBalanceAsync(walletId));
     }
+
+    // ============ BUG: update de exchange no crea/elimina fee children ============
+    // Reproduce el bug reportado: al crear un exchange SIN fee y luego agregarle
+    // fee vía Update, el campo Fee del exchange se actualiza pero NO se crea la
+    // transacción hija de categoría fee (ni se registra en el historial).
+    // También: al quitar una fee existente vía Update, la hija no se elimina.
+    [Fact]
+    public async Task ExchangeUpdate_FeeChanges_SyncFeeChildrenTransactions()
+    {
+        var fromId = await CreateWalletAsync("USD FeeTest", 1000m);
+        var toId = await CreateWalletAsync("VES FeeTest", 0m);
+
+        // 1. Crear exchange sin fee
+        int exchangeId;
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var service = scope.ServiceProvider.GetRequiredService<ExchangesService>();
+            var res = await service.Create(new CreateExchangeCommand
+            {
+                FromWalletId = fromId,
+                ToWalletId = toId,
+                FromAmount = 100m,
+                ToAmount = 93000m,
+                Date = "2026-09-04",
+                Time = "21:00",
+                Description = "Cambio Facebank → Bancamiga",
+                Tz = "America/Caracas",
+            });
+            exchangeId = ExtractExchangeId(res);
+        }
+
+        // Sin fee: no debe haber transacciones hijas fee
+        Assert.Equal(0, await CountFeeChildrenAsync(exchangeId));
+        Assert.Equal(900m, await GetBalanceAsync(fromId)); // 1000 - 100
+
+        // 2. Agregar fee vía Update (bug: no crea la hija fee)
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var service = scope.ServiceProvider.GetRequiredService<ExchangesService>();
+            await service.Update(exchangeId, new UpdateExchangeCommand { Fee = 5m, Tz = "America/Caracas" });
+        }
+
+        // Debe haber exactamente 1 transacción hija fee (débito), y el balance restado
+        Assert.Equal(1, await CountFeeChildrenAsync(exchangeId));
+        Assert.Equal(895m, await GetBalanceAsync(fromId)); // 900 - 5
+
+        // 3. Quitar fee (poner a 0) vía Update (bug: no elimina la hija fee)
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var service = scope.ServiceProvider.GetRequiredService<ExchangesService>();
+            await service.Update(exchangeId, new UpdateExchangeCommand { Fee = 0m, Tz = "America/Caracas" });
+        }
+
+        Assert.Equal(0, await CountFeeChildrenAsync(exchangeId));
+        Assert.Equal(900m, await GetBalanceAsync(fromId)); // vuelve a 900
+
+        // 4. Volver a poner fee (5) — la hija borrada debe re-activarse
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var service = scope.ServiceProvider.GetRequiredService<ExchangesService>();
+            await service.Update(exchangeId, new UpdateExchangeCommand { Fee = 5m, Tz = "America/Caracas" });
+        }
+
+        Assert.Equal(1, await CountFeeChildrenAsync(exchangeId));
+        Assert.Equal(895m, await GetBalanceAsync(fromId));
+    }
+
+    private async Task<int> CountFeeChildrenAsync(int exchangeId)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<WalletterDbContext>();
+        var ex = await db.Exchanges.AsNoTracking()
+            .Include(e => e.Debit).Include(e => e.Credit)
+            .FirstAsync(e => e.Id == exchangeId);
+        var parentIds = new[] { ex.DebitTransactionId, ex.CreditTransactionId };
+        return await db.Transactions
+            .CountAsync(t => t.ParentId != null && parentIds.Contains(t.ParentId.Value)
+                && t.Category!.Name == "fee" && !t.Deleted);
+    }
 }

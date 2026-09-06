@@ -348,6 +348,9 @@ public class ExchangesService
         var newDesc = cmd.Description ?? ex.Description;
         var newRate = Money.ToRateInt((decimal)newTo / newFrom);
 
+        var feeCategory = await _db.Categories.FirstOrDefaultAsync(
+            c => c.Name == "fee" && c.Type == TransactionTypes.Expense && c.IsActive, ct);
+
         // Fecha efectiva: si viene date/time en el update, recalcula y actualiza
         // el exchange y sus transacciones débito/crédito (+ comisiones).
         var newDatetimeUtc = ex.DatetimeUtc;
@@ -373,13 +376,55 @@ public class ExchangesService
         {
             var feeTx = await _db.Transactions.FirstOrDefaultAsync(
                 x => x.ParentId == ex.DebitTransactionId && x.Category!.Name == "fee", ct);
-            if (feeTx != null) feeTx.Amount = newFee;
+            if (feeTx != null)
+            {
+                feeTx.Amount = newFee;
+                feeTx.Deleted = newFee == 0;  // reactiva si estaba soft-deleted y fee > 0
+            }
+            else if (newFee > 0 && feeCategory != null)
+            {
+                var newFeeTx = new Transaction
+                {
+                    WalletId = ex.From.Id,
+                    CategoryId = feeCategory.Id,
+                    Type = TransactionTypes.Expense,
+                    Amount = newFee,
+                    Description = $"Comisión débito: {ex.Description ?? "Exchange"} → {ex.To.Name}",
+                    DatetimeUtc = ex.DatetimeUtc,
+                    Fee = 0,
+                    ParentId = ex.DebitTransactionId,
+                    Deleted = false,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                _db.Transactions.Add(newFeeTx);
+            }
         }
         if (cmd.CreditFee is decimal)
         {
             var cfTx = await _db.Transactions.FirstOrDefaultAsync(
                 x => x.ParentId == ex.CreditTransactionId && x.Category!.Name == "fee", ct);
-            if (cfTx != null) cfTx.Amount = newCreditFee;
+            if (cfTx != null)
+            {
+                cfTx.Amount = newCreditFee;
+                cfTx.Deleted = newCreditFee == 0;  // reactiva si estaba soft-deleted y creditFee > 0
+            }
+            else if (newCreditFee > 0 && feeCategory != null)
+            {
+                var newCfTx = new Transaction
+                {
+                    WalletId = ex.To.Id,
+                    CategoryId = feeCategory.Id,
+                    Type = TransactionTypes.Expense,
+                    Amount = newCreditFee,
+                    Description = $"Comisión crédito: {ex.Description ?? "Exchange"} ← {ex.From.Name}",
+                    DatetimeUtc = ex.DatetimeUtc,
+                    Fee = 0,
+                    ParentId = ex.CreditTransactionId,
+                    Deleted = false,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                _db.Transactions.Add(newCfTx);
+            }
         }
 
         ex.FromAmount = newFrom;
