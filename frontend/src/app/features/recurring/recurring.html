@@ -26,7 +26,7 @@
             <mat-card-content>
               <div class="rec-head">
                 <mat-icon class="rec-icon" [class.income]="r.type === 'income'" [class.expense]="r.type === 'expense'">
-                  {{ r.type === 'income' ? 'south' : 'north' }}
+                  {{ r.type === 'income' ? 'north' : 'south' }}
                 </mat-icon>
                 <div class="rec-info">
                   <span class="rec-name">{{ r.name }}</span>
@@ -40,7 +40,7 @@
                 <div class="rec-fee">+ comisión {{ format(r.fee, r.currency) }}</div>
               }
               @if (subscriptionStatus(r); as st) {
-                <div class="rec-sub-status" [class.overdue]="st.overdue">
+                <div class="rec-sub-status" [class.overdue]="st.overdue" [style]="statusStyle(st)">
                   <mat-icon>{{ st.overdue ? 'warning' : 'schedule' }}</mat-icon>
                   <span>{{ st.label }}</span>
                 </div>
