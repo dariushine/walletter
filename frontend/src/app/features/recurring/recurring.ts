@@ -139,6 +139,29 @@ export class Recurring implements OnInit {
   }
 
   /**
+   * Color del badge de estado: verde puro si está recién pagado, rojo puro si
+   * vence hoy o está vencido, y una mezcla gradual entre ambos según los días
+   * que falten (a menos días, más rojo).
+   */
+  statusStyle(st: { label: string; days: number; overdue: boolean } | null): Record<string, string> {
+    if (!st) return {};
+    const t = this.urgency(st);
+    const { r, g, b } = lerpColor(46, 125, 50, 198, 40, 40, t);
+    const color = `rgb(${r}, ${g}, ${b})`;
+    return { color, backgroundColor: `rgba(${r}, ${g}, ${b}, 0.08)` };
+  }
+
+  /** 0 = verde puro (al día), 1 = rojo puro (vencido o vence hoy). */
+  private urgency(st: { label: string; days: number; overdue: boolean }): number {
+    if (st.overdue) return 1;
+    // "Pagado hoy" queda en verde puro aunque day = 0.
+    if (st.label === 'Pagado hoy') return 0;
+    const days = Math.max(0, st.days);
+    // A menos días, más rojo: 0 días → t = 1 (rojo), 15+ días → t = 0 (verde).
+    return Math.min(1, Math.max(0, 1 - days / 15));
+  }
+
+  /**
    * Estado de una suscripción: días hasta el próximo cobro o vencimiento.
    * Basado en el día de cobro (billingDay), la última ejecución real
    * (lastExecutedAt, que se llena solo cuando se crea la transacción)
@@ -248,4 +271,18 @@ export class Recurring implements OnInit {
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
+}
+
+/** Interpola un color RGB entre dos extremos según t (0..1). */
+function lerpColor(
+  r1: number, g1: number, b1: number,
+  r2: number, g2: number, b2: number,
+  t: number,
+): { r: number; g: number; b: number } {
+  const clamp = (v: number) => Math.round(Math.min(255, Math.max(0, v)));
+  return {
+    r: clamp(r1 + (r2 - r1) * t),
+    g: clamp(g1 + (g2 - g1) * t),
+    b: clamp(b1 + (b2 - b1) * t),
+  };
 }
