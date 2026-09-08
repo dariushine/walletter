@@ -5,12 +5,17 @@
   max-width: 520px;
 }
 
-/* En móvil el diálogo no debe desbordar: se adapta al ancho de la pantalla. */
+/* En móvil el diálogo no debe desbordar: se adapta al ancho del panel.
+   (Antes forzaba width: calc(100vw - 32px), pero el panel del CDK
+   (.mat-mdc-dialog-panel) limita a 80vw en el tema M2 → el contenido
+   quedaba más ancho que el panel y aparecía scroll horizontal.
+   Ahora el contenido usa el 100% del panel y el ancho lo decide el panel;
+   el modal recurrente limita su panel con .rec-dialog-panel en styles.scss.) */
 @media (max-width: 599px) {
   .op-dialog {
     min-width: 0;
-    width: calc(100vw - 32px);
-    max-width: calc(100vw - 32px);
+    width: 100%;
+    max-width: 100%;
   }
 }
 
