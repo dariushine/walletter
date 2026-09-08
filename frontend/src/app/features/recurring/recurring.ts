@@ -19,6 +19,8 @@ import { TransactionDialog } from '../transactions/transaction-dialog';
 import { SettingsStore } from '../../core/services/settings-store';
 import { BillingDateDialog } from './billing-date-dialog';
 
+const RECURRING_PANEL = 'rec-dialog-panel';
+
 @Component({
   selector: 'app-recurring',
   imports: [MatCardModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
@@ -52,14 +54,22 @@ export class Recurring implements OnInit {
   }
 
   openCreate(): void {
-    const ref = this.dialog.open(RecurringDialog, { width: '440px', data: { wallets: this.wallets() } });
+    const ref = this.dialog.open(RecurringDialog, {
+      width: '440px',
+      panelClass: RECURRING_PANEL,
+      data: { wallets: this.wallets() },
+    });
     ref.afterClosed().subscribe((created) => {
       if (created) this.load();
     });
   }
 
   edit(item: RecurringPayment): void {
-    const ref = this.dialog.open(RecurringDialog, { width: '440px', data: { wallets: this.wallets(), item } });
+    const ref = this.dialog.open(RecurringDialog, {
+      width: '440px',
+      panelClass: RECURRING_PANEL,
+      data: { wallets: this.wallets(), item },
+    });
     ref.afterClosed().subscribe((updated) => {
       if (updated) this.load();
     });

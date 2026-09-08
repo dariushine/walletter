@@ -78,6 +78,17 @@ body {
   border-radius: 4px;
 }
 
+// 5b) Panel del diálogo de pagos recurrentes en móvil (scoped por panelClass).
+// Material M2 limita el panel a 80vw; el contenido .op-dialog pide
+// calc(100vw - 32px) y en <600px queda más ancho que el panel → scroll
+// horizontal. Solo este modal usa 'rec-dialog-panel', así que la regla
+// no afecta a los demás diálogos (mismo valor que usa M3 de fábrica).
+@media (max-width: 599px) {
+  .rec-dialog-panel {
+    max-width: calc(100vw - 32px) !important;
+  }
+}
+
 // 6) Estilos compartidos de diálogo/formularios (estilo 'Nueva operación').
 // Se aplican a todos los modales para que se vean uniformes.
 .dlg {
