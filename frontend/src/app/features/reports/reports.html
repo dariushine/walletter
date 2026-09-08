@@ -107,7 +107,7 @@
             @if (d.monthly.length === 0) {
               <p class="empty">No hay datos mensuales disponibles.</p>
             } @else {
-              <div class="table-wrap">
+              <div class="table-wrap monthly-table">
                 <table class="rpt-table">
                   <thead>
                     <tr>
@@ -140,6 +140,35 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Acordeón móvil: cada mes como panel -->
+              <mat-accordion multi="false" class="rpt-mobile-accordion">
+                @for (m of d.monthly; track m.month; let i = $index) {
+                  <mat-expansion-panel class="rpt-mobile-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title class="m-panel-title">{{ monthLabel(m.month) }}</mat-panel-title>
+                      <mat-panel-description class="m-panel-net" [class.income]="m.net >= 0" [class.expense]="m.net < 0">
+                        {{ fmtUsd(m.net) }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div class="m-panel-body">
+                      <div class="pv-row"><span>Ingresos</span><strong class="income">{{ fmtUsd(m.income) }}</strong></div>
+                      <div class="pv-row"><span>Gastos</span><strong class="expense">{{ fmtUsd(m.expense) }}</strong></div>
+                      <div class="pv-row"><span>Neto</span><strong [class.income]="m.net >= 0" [class.expense]="m.net < 0">{{ fmtUsd(m.net) }}</strong></div>
+                      <div class="pv-row"><span>Transacciones</span><strong>{{ m.transactionCount }}</strong></div>
+                      @if (i > 0) {
+                        <div class="pv-row">
+                          <span>Tendencia</span>
+                          <span class="chip trend-chip" [class.pos]="m.net >= d.monthly[i - 1].net" [class.neg]="m.net < d.monthly[i - 1].net">
+                            <mat-icon>{{ m.net >= d.monthly[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
+                            {{ trendPct(d.monthly[i - 1].net, m.net) }}
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
             }
           </mat-card-content>
         </mat-card>
@@ -204,6 +233,17 @@
                     }
                   </tbody>
                 </table>
+              </div>
+              <div class="wallet-balance-list">
+                @for (w of d.walletBalances; track w.name) {
+                  <div class="wb-row">
+                    <div class="wb-info">
+                      <span class="wb-name">{{ w.name }}</span>
+                      <span class="chip count-chip wb-currency">{{ w.currency }}</span>
+                    </div>
+                    <span class="wb-balance">{{ fmtWallet(w.balance, w.currency) }}</span>
+                  </div>
+                }
               </div>
             }
           </mat-card-content>

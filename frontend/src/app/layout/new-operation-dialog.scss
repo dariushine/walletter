@@ -5,6 +5,15 @@
   max-width: 520px;
 }
 
+/* En móvil el diálogo no debe desbordar: se adapta al ancho de la pantalla. */
+@media (max-width: 599px) {
+  .op-dialog {
+    min-width: 0;
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+}
+
 .op-head {
   display: flex;
   align-items: center;
@@ -123,7 +132,7 @@
   margin-top: 8px;
 }
 
-/* Toggle de suscripción */
+/* Toggle de suscripción: en móvil la descripción se apila debajo del label. */
 .subs-toggle-row {
   display: flex;
   align-items: center;
@@ -134,6 +143,22 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 599px) {
+  .subs-toggle-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .subs-toggle-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .subs-toggle-desc {
+    display: block;
+  }
 }
 
 .subs-toggle-info {
