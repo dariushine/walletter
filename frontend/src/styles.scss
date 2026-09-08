@@ -78,6 +78,25 @@ body {
   border-radius: 4px;
 }
 
+// 5b) Diálogos: que el panel overlay nunca se desborde en móvil.
+// Angular CDK aplica width inline al .mat-mdc-dialog-panel (p.ej. 440px),
+// y en pantallas chicas eso fuerza scroll horizontal. Aquí lo limitamos
+// globalmente: el panel nunca supera el 92vw ni deja márgenes negativos.
+// (más abajo está la versión M3/moderna con calc(100vw - 32px))
+.cdk-overlay-pane:has(.mat-mdc-dialog-panel) {
+  max-width: 92vw !important;
+}
+
+.mat-mdc-dialog-panel {
+  max-width: 92vw !important;
+}
+
+@media (max-width: 599px) {
+  .mat-mdc-dialog-panel {
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
 // 6) Estilos compartidos de diálogo/formularios (estilo 'Nueva operación').
 // Se aplican a todos los modales para que se vean uniformes.
 .dlg {
