@@ -33,6 +33,10 @@
 
 .op-content {
   padding: 8px 16px 0;
+  /* Evita scroll horizontal DENTRO del diálogo: el contenido debe poder
+     encogerse al ancho del panel, nunca empujarlo. */
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .op-form {
@@ -149,6 +153,11 @@
   .subs-toggle-row {
     align-items: flex-start;
     flex-wrap: wrap;
+
+    /* El toggle no debe encogerse ni heredar ancho que empuje la fila. */
+    .mat-slide-toggle {
+      flex-shrink: 0;
+    }
   }
 
   .subs-toggle-info {
