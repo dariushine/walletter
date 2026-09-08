@@ -7,6 +7,31 @@
   margin-bottom: 20px;
 }
 
+/* En móvil el header se apila: botones debajo del título. */
+@media (max-width: 599px) {
+  .head {
+    flex-direction: column;
+    align-items: stretch;
+
+    .head-actions {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+/* En pantallas muy chicas, header-actions apila todo en columna. */
+@media (max-width: 399px) {
+  .head-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .head-actions .rate-toggle {
+    align-self: flex-start;
+  }
+}
+
 .head-actions {
   display: flex;
   align-items: center;
@@ -57,6 +82,12 @@
   width: 170px;
 }
 
+@media (max-width: 599px) {
+  .period-field {
+    width: 100%;
+  }
+}
+
 .spinner {
   margin: 40px auto;
   display: block;
@@ -68,6 +99,28 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
   margin-bottom: 24px;
+}
+
+/* En móvil: 2 tarjetas por fila y más compactas. */
+@media (max-width: 599px) {
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-value {
+    font-size: 1.15rem;
+  }
+
+  .stat-label {
+    font-size: 0.68rem;
+  }
+
+  .stat-icon mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .stat-card {
@@ -238,6 +291,115 @@
 
   .balance-cell {
     font-weight: 600;
+  }
+}
+
+/* ===== Acordeón móvil (Performance Mensual) ===== */
+.rpt-mobile-accordion {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .rpt-mobile-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .rpt-mobile-panel {
+    border-radius: 10px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .m-panel-title {
+    font-weight: 600;
+  }
+
+  .m-panel-net {
+    justify-content: flex-end;
+    font-weight: 700;
+
+    &.income {
+      color: #2e7d32;
+    }
+
+    &.expense {
+      color: #c62828;
+    }
+  }
+
+  .m-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .pv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    span:first-child {
+      color: rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  /* En móvil ocultamos la tabla de Performance Mensual (tiene acordeón). */
+  .monthly-table {
+    display: none;
+  }
+}
+
+/* Balances por billetera: lista móvil (oculta en escritorio). */
+.wallet-balance-list {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .wallet-balance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* En móvil la tabla de balances queda oculta (usa la lista). */
+  .wallet-balance-list + .table-wrap,
+  .table-wrap:has(.balance-cell) {
+    display: none;
+  }
+
+  .wb-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+  }
+
+  .wb-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .wb-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wb-currency {
+    flex-shrink: 0;
+  }
+
+  .wb-balance {
+    font-weight: 700;
+    white-space: nowrap;
   }
 }
 

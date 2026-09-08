@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
@@ -33,6 +34,8 @@ interface PeriodOption {
     MatSelectModule,
     MatPaginatorModule,
     FormsModule,
+    MatAccordion,
+    MatExpansionModule,
   ],
   templateUrl: './rates.html',
   styleUrls: ['./rates.scss'],

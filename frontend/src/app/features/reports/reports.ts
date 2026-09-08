@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
@@ -37,6 +38,8 @@ const PERIODS: { id: PeriodId; label: string }[] = [
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
+    MatAccordion,
+    MatExpansionModule,
   ],
   templateUrl: './reports.html',
   styleUrls: ['./reports.scss'],

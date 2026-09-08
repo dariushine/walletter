@@ -46,7 +46,7 @@
                 <th>Fecha</th>
                 <th>BCV</th>
                 <th>Paralelo</th>
-                <th>Origen</th>
+n                <th>Origen</th>
                 <th class="right">Acciones</th>
               </tr>
             </thead>
@@ -74,6 +74,38 @@
           (page)="onPage($event)"
         />
       </mat-card>
+
+      <!-- Vista móvil: acordeón -->
+      <mat-accordion multi="false" class="rates-accordion">
+        @for (r of pagedRates(); track r.id) {
+          <mat-expansion-panel class="rate-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="panel-title">
+                <span class="panel-date">{{ r.date }}</span>
+                <span class="panel-source">{{ r.source || '—' }}</span>
+              </mat-panel-title>
+              <mat-panel-description class="panel-amount">{{ fmt(r.paralelo) }}</mat-panel-description>
+            </mat-expansion-panel-header>
+            <div class="panel-body">
+              <div class="pv-row"><span>BCV</span><strong>{{ fmt(r.bcv) }}</strong></div>
+              <div class="pv-row"><span>Paralelo</span><strong>{{ fmt(r.paralelo) }}</strong></div>
+              <div class="pv-row"><span>Origen</span><strong>{{ r.source || '—' }}</strong></div>
+              <div class="panel-actions">
+                <button mat-stroked-button color="primary" (click)="edit(r)">Editar</button>
+                <button mat-stroked-button class="del" (click)="remove(r)">Eliminar</button>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+      <mat-paginator
+        class="mobile-paginator"
+        [length]="total()"
+        [pageSize]="limit"
+        [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="onPage($event)"
+      />
     }
   }
 </div>
