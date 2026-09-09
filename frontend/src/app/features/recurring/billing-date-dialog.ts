@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { formatInTimeZone } from '../../core/utils/dates';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,6 +12,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 export interface BillingDateDialogData {
   name: string;
   date: string;
+  tz: string;
 }
 
 @Component({
@@ -51,6 +53,18 @@ export class BillingDateDialog {
 
   close(): void { this.ref.close(); }
   save(): void {
-    if (this.date.valid && this.date.value) this.ref.close(this.date.value);
+    if (this.date.valid && this.date.value) {
+      // Normalizar a yyyy-MM-dd en la zona del usuario (el datepicker entrega
+      // un Date que se serializa como ISO UTC y el backend lo rechaza).
+      this.ref.close(normalizeBillingDate(this.date.value, this.data.tz));
+    }
   }
+}
+
+/** Convierte el valor del datepicker a yyyy-MM-dd en la zona indicada. */
+function normalizeBillingDate(value: string | Date | null, tz: string): string | null {
+  if (!value) return null;
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return null;
+  return formatInTimeZone(d, tz, 'yyyy-MM-dd');
 }

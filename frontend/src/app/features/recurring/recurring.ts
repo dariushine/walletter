@@ -130,7 +130,7 @@ export class Recurring implements OnInit {
       : todayInTimeZone(tz);
     const ref = this.dialog.open(BillingDateDialog, {
       width: '400px',
-      data: { name: item.name, date: current },
+      data: { name: item.name, date: current, tz },
     });
     ref.afterClosed().subscribe((date?: string) => {
       if (!date) return;

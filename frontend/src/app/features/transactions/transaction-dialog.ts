@@ -11,7 +11,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet } from '../../models/walletter.models';
-import { todayInTimeZone } from '../../core/utils/dates';
+import { todayInTimeZone, formatInTimeZone } from '../../core/utils/dates';
 import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { MoneyInput } from '../../core/components/money-input';
@@ -86,6 +86,13 @@ export class TransactionDialog {
     if (this.form.invalid) return;
     this.loading.set(true);
     const v = this.form.value;
+
+    // El datepicker de Material entrega un Date (se serializa a ISO con hora
+    // UTC, p. ej. 2026-09-03T04:00:00.000Z). El backend exige yyyy-MM-dd
+    // exacto en la zona del usuario; normalizar aquí evita 'Fecha de
+    // facturación inválida'.
+    const billingDate = normalizeBillingDate(v.billingDate, this.data.tz);
+
     this.api
       .createTransaction({
         walletId: v.walletId!,
@@ -99,8 +106,8 @@ export class TransactionDialog {
         tz: this.data.tz,
       })
       .pipe(
-        switchMap(() => this.preset?.recurringId && v.billingDate
-          ? this.api.setRecurringBillingDate(this.preset.recurringId, { date: v.billingDate, tz: this.data.tz })
+        switchMap(() => this.preset?.recurringId && billingDate
+          ? this.api.setRecurringBillingDate(this.preset.recurringId, { date: billingDate, tz: this.data.tz })
           : of(null))
       )
       .subscribe({
@@ -138,4 +145,12 @@ export class TransactionDialog {
   dialogTitle(): string {
     return this.preset?.title ?? 'Nueva transacción';
   }
+}
+
+/** Convierte el valor del datepicker a yyyy-MM-dd en la zona indicada. */
+function normalizeBillingDate(value: string | Date | null | undefined, tz: string): string | null {
+  if (!value) return null;
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return null;
+  return formatInTimeZone(d, tz, 'yyyy-MM-dd');
 }
