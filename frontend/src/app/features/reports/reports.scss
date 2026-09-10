@@ -262,6 +262,20 @@
 /* Fullscreen: el performance ocupa toda la fila (el de categorías se va abajo) */
 .report-grid.perf-fullscreen {
   grid-template-columns: 1fr;
+
+  /* El panel de categorías queda compacto y centrado, no estirado a lo ancho */
+  .section:not(.perf-card) {
+    max-width: 560px;
+    width: 100%;
+    justify-self: center;
+  }
+}
+
+/* En pantallas no-desktop el grid ya es 1 columna: el botón no aporta nada */
+@media (max-width: 960px) {
+  .fs-btn {
+    display: none;
+  }
 }
 
 /* Headers ordenables */
@@ -469,6 +483,8 @@
   grid-template-columns: 2fr 1fr;
   gap: 16px;
   margin-bottom: 24px;
+  /* Animación suave al expandir/contraer el performance */
+  transition: grid-template-columns 0.3s ease;
 
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
