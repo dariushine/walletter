@@ -268,6 +268,13 @@
     grid-column: 1 / -1;
   }
 
+  /* La tarjeta de categorías no lleva margin-bottom acá: el .section global
+     le agrega 24px y, como el placeholder no tiene margen, los fondos de
+     ambos paneles quedan desalineados en fullscreen. */
+  .cat-card {
+    margin-bottom: 0;
+  }
+
   .perf-placeholder {
     display: flex;
     align-items: center;
