@@ -111,7 +111,7 @@ public class ReportsService
                 GetMonth(grouped, key).Expense += amountUsd;
             }
             var mc = GetMonth(grouped, key);
-            mc.Count++;
+            mc.TransactionCount++;
 
             // Por categoría (solo gastos, como en el diseño).
             if (t.Type == TransactionTypes.Expense)
@@ -129,7 +129,7 @@ public class ReportsService
             Income = Round(kv.Value.Income),
             Expense = Round(kv.Value.Expense),
             Net = Round(kv.Value.Income - kv.Value.Expense),
-            TransactionCount = kv.Value.Count,
+            TransactionCount = kv.Value.TransactionCount,
         }).ToList();
 
         if (performance.Count > 0 && sortBy == null)
@@ -303,7 +303,142 @@ public class ReportsService
 
     private static decimal Round(decimal v) => Math.Round(v, 2);
 
-    private sealed class PerformanceRow
+    // ====== MÉTODOS PARA ENDPOINTS SEPARADOS ======
+
+    public sealed class PerformanceResponse
+    {
+        public List<PerformanceRow> Performance { get; set; } = new();
+        public int PerformanceTotal { get; set; }
+    }
+
+    public sealed class CategoryStat
+    {
+        public string Name { get; set; } = "";
+        public decimal Total { get; set; }
+        public int Count { get; set; }
+    }
+
+    public sealed class CategoryResponse
+    {
+        public List<CategoryStat> Categories { get; set; } = new();
+        public decimal Total { get; set; }
+    }
+
+    public sealed class SummaryResponse
+    {
+        public decimal TotalIncome { get; set; }
+        public decimal TotalExpenses { get; set; }
+        public int TotalTransactions { get; set; }
+        public decimal Net { get; set; }
+    }
+
+    // Método PerformanceAsync - versión simplificada que reusa la lógica existente
+    public async Task<PerformanceResponse> PerformanceAsync(
+        string? period,
+        string? rateType,
+        string? tz,
+        string? refDate = null,
+        string? from = null,
+        string? to = null,
+        string? granularity = null,
+        string? sortBy = null,
+        string? sortDir = null,
+        int? page = null,
+        int? limit = null,
+        CancellationToken ct = default)
+    {
+        // Primero obtener los datos completos del Overview
+        var overview = await Overview(period, rateType, tz, refDate, from, to, granularity, sortBy, sortDir, page, limit, ct);
+        
+        // Extraer solo los datos de performance
+        var performance = ((dynamic)overview).performance as List<PerformanceRow> ?? new List<PerformanceRow>();
+        var performanceTotal = ((dynamic)overview).performanceTotal as int? ?? 0;
+        
+        return new PerformanceResponse
+        {
+            Performance = performance,
+            PerformanceTotal = performanceTotal
+        };
+    }
+
+    // Método CategoriesAsync - versión simplificada
+    public async Task<CategoryResponse> CategoriesAsync(
+        string? period,
+        string? rateType,
+        string? tz,
+        string? refDate = null,
+        string? from = null,
+        string? to = null,
+        CancellationToken ct = default)
+    {
+        var overview = await Overview(period, rateType, tz, refDate, from, to, null, null, null, null, null, ct);
+        
+        var byCategory = ((dynamic)overview).byCategory as List<CategoryStat> ?? new List<CategoryStat>();
+        var byCategoryTotal = ((dynamic)overview).byCategoryTotal as decimal? ?? 0;
+        
+        return new CategoryResponse
+        {
+            Categories = byCategory,
+            Total = byCategoryTotal
+        };
+    }
+
+    // Método SummaryAsync - versión simplificada
+    public async Task<SummaryResponse> SummaryAsync(
+        string? period,
+        string? rateType,
+        string? tz,
+        string? refDate = null,
+        string? from = null,
+        string? to = null,
+        CancellationToken ct = default)
+    {
+        var overview = await Overview(period, rateType, tz, refDate, from, to, null, null, null, null, null, ct);
+        
+        var summary = ((dynamic)overview).summary;
+        
+        return new SummaryResponse
+        {
+            TotalIncome = summary?.totalIncome ?? 0,
+            TotalExpenses = summary?.totalExpenses ?? 0,
+            TotalTransactions = summary?.totalTransactions ?? 0,
+            Net = summary?.net ?? 0
+        };
+    }
+
+    // Método ExchangeStatsAsync - versión simplificada
+    public async Task<object> ExchangeStatsAsync(
+        string? period,
+        string? rateType,
+        string? tz,
+        string? refDate = null,
+        string? from = null,
+        string? to = null,
+        CancellationToken ct = default)
+    {
+        var overview = await Overview(period, rateType, tz, refDate, from, to, null, null, null, null, null, ct);
+        return ((dynamic)overview).exchangeStats;
+    }
+
+    // Método WalletsAsync
+    public async Task<List<object>> WalletsAsync(CancellationToken ct = default)
+    {
+        // Para wallets, podemos hacer una consulta directa ya que no depende de parámetros
+        var wallets = await _db.Wallets.AsNoTracking()
+            .Where(w => w.IsActive)
+            .OrderBy(w => w.Name)
+            .Select(w => new { name = w.Name, balance = w.Balance, currency = w.Currency })
+            .ToListAsync(ct);
+        
+        return wallets.Select(w => (object)new
+        {
+            name = w.name,
+            balance = Money.ToNum(w.balance),
+            currency = w.currency,
+        }).ToList();
+    }
+
+    public sealed class PerformanceRow
     {
         public string Key { get; set; } = "";
         public decimal Income { get; set; }
@@ -346,7 +481,7 @@ public class ReportsService
     {
         public decimal Income { get; set; }
         public decimal Expense { get; set; }
-        public int Count { get; set; }
+        public int TransactionCount { get; set; }
     }
 
     private static string TodayInTz(string tz)
