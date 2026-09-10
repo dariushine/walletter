@@ -523,8 +523,7 @@
   grid-template-columns: 2fr 1fr;
   gap: 16px;
   margin-bottom: 24px;
-  /* Animación suave al expandir/contraer el performance */
-  transition: grid-template-columns 0.35s ease;
+  /* Sin animación: cambio instantáneo */
 
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
