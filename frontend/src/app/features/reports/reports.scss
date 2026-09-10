@@ -39,6 +39,23 @@
   flex-wrap: wrap;
 }
 
+/* Fila del selector de rango: debajo del header, centrada */
+.range-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 599px) {
+  .range-bar {
+    justify-content: stretch;
+
+    .range-picker {
+      width: 100%;
+    }
+  }
+}
+
 .page-title {
   font-size: 1.6rem;
   font-weight: 700;
@@ -212,10 +229,6 @@
 }
 
 @media (max-width: 599px) {
-  .period-field {
-    width: 100%;
-  }
-
   .range-picker {
     width: 100%;
 

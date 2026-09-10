@@ -21,51 +21,6 @@
         >Paralelo</button>
       </div>
 
-      <!-- Selector de rango + navegación -->
-      <div class="range-picker">
-        <mat-form-field appearance="outline" class="period-field">
-          <mat-select [value]="period()" (selectionChange)="setPeriod($event.value)">
-            @for (p of periods; track p.id) {
-              <mat-option [value]="p.id">{{ p.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        @if (period() === 'month' || period() === 'year') {
-          <div class="nav-arrows">
-            <button type="button" class="nav-btn" (click)="goPrev()" aria-label="Anterior">
-              <mat-icon>chevron_left</mat-icon>
-            </button>
-            <span class="nav-label">{{ navLabel() }}</span>
-            <button type="button" class="nav-btn" (click)="goNext()" [disabled]="!canGoNext()" aria-label="Siguiente">
-              <mat-icon>chevron_right</mat-icon>
-            </button>
-          </div>
-        }
-
-        @if (period() === 'custom') {
-          <div class="custom-range">
-            <span class="custom-label">Desde</span>
-            <input
-              type="date"
-              class="date-input"
-              [value]="customFrom()"
-              (input)="setCustomFrom($any($event.target).value)"
-              aria-label="Desde"
-            />
-            <span class="custom-sep">→</span>
-            <span class="custom-label">Hasta</span>
-            <input
-              type="date"
-              class="date-input"
-              [value]="customTo()"
-              (input)="setCustomTo($any($event.target).value)"
-              aria-label="Hasta"
-            />
-          </div>
-        }
-      </div>
-
       <!-- Exportar -->
       <button mat-stroked-button color="primary" (click)="exportReport()" [disabled]="!data()">
         <mat-icon>file_download</mat-icon>
@@ -73,6 +28,53 @@
       </button>
     </div>
   </header>
+
+  <!-- Selector de rango: fila propia, centrada, debajo del header -->
+  <div class="range-bar">
+    <div class="range-picker">
+      <mat-form-field appearance="outline" class="period-field">
+        <mat-select [value]="period()" (selectionChange)="setPeriod($event.value)">
+          @for (p of periods; track p.id) {
+            <mat-option [value]="p.id">{{ p.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (period() === 'month' || period() === 'year') {
+        <div class="nav-arrows">
+          <button type="button" class="nav-btn" (click)="goPrev()" aria-label="Anterior">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span class="nav-label">{{ navLabel() }}</span>
+          <button type="button" class="nav-btn" (click)="goNext()" [disabled]="!canGoNext()" aria-label="Siguiente">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      }
+
+      @if (period() === 'custom') {
+        <div class="custom-range">
+          <span class="custom-label">Desde</span>
+          <input
+            type="date"
+            class="date-input"
+            [value]="customFrom()"
+            (input)="setCustomFrom($any($event.target).value)"
+            aria-label="Desde"
+          />
+          <span class="custom-sep">→</span>
+          <span class="custom-label">Hasta</span>
+          <input
+            type="date"
+            class="date-input"
+            [value]="customTo()"
+            (input)="setCustomTo($any($event.target).value)"
+            aria-label="Hasta"
+          />
+        </div>
+      }
+    </div>
+  </div>
 
   @if (loading()) {
     <mat-spinner class="spinner" />
