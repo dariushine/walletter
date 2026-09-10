@@ -19,6 +19,7 @@ export const routes: Routes = [
       { path: 'exchanges/:id', loadComponent: () => import('./features/exchanges/exchange-detail').then((m) => m.ExchangeDetail) },
       { path: 'categories', loadComponent: () => import('./features/categories/categories').then((m) => m.Categories) },
       { path: 'recurring', loadComponent: () => import('./features/recurring/recurring').then((m) => m.Recurring) },
+      { path: 'pending', loadComponent: () => import('./features/pending-payments/pending-payments').then((m) => m.PendingPayments) },
       { path: 'rates', loadComponent: () => import('./features/rates/rates').then((m) => m.Rates) },
       { path: 'reports', loadComponent: () => import('./features/reports/reports').then((m) => m.Reports) },
       { path: 'sessions', loadComponent: () => import('./features/sessions/sessions').then((m) => m.Sessions) },

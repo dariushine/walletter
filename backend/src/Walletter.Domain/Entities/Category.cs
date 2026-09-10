@@ -16,4 +16,5 @@ public class Category
 
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public ICollection<RecurringPayment> Recurring { get; set; } = new List<RecurringPayment>();
+    public ICollection<PendingPayment> Pending { get; set; } = new List<PendingPayment>();
 }

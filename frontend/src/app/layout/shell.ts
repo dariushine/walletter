@@ -51,6 +51,7 @@ export class Shell {
     { routerLink: '/exchanges', icon: 'currency_exchange', label: 'Exchanges' },
     { routerLink: '/categories', icon: 'category', label: 'Categorías' },
     { routerLink: '/recurring', icon: 'repeat', label: 'Pagos recurrentes' },
+    { routerLink: '/pending', icon: 'pending_actions', label: 'Pagos pendientes' },
     { routerLink: '/rates', icon: 'trending_up', label: 'Tasas' },
     { routerLink: '/reports', icon: 'bar_chart', label: 'Reportes' },
     { routerLink: '/settings', icon: 'settings', label: 'Ajustes' },

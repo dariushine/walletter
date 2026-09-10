@@ -19,6 +19,7 @@ public interface IAppDbContext
     DbSet<Exchange> Exchanges { get; }
     DbSet<DailyRate> DailyRates { get; }
     DbSet<RecurringPayment> RecurringPayments { get; }
+    DbSet<PendingPayment> PendingPayments { get; }
     DbSet<Setting> Settings { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<ApiToken> ApiTokens { get; }

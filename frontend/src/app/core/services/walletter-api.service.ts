@@ -15,6 +15,7 @@ import {
   ExchangeList,
   ExchangeCreated,
   RecurringPayment,
+  PendingPayment,
   DailyRate,
   EffectiveRate,
   Settings,
@@ -254,6 +255,41 @@ export class WalletterApiService {
       `${this.base}/recurring-payments/${id}/execute`,
       data
     );
+  }
+
+  // ===== Pending payments =====
+  pendingPayments(includePaid = false): Observable<PendingPayment[]> {
+    const params = includePaid ? this.toParams({ includePaid: true }) : undefined;
+    return this.http.get<PendingPayment[]>(`${this.base}/pending-payments`, { params });
+  }
+
+  pendingPayment(id: number): Observable<PendingPayment> {
+    return this.http.get<PendingPayment>(`${this.base}/pending-payments/${id}`);
+  }
+
+  createPendingPayment(data: Partial<PendingPayment>): Observable<PendingPayment> {
+    return this.http.post<PendingPayment>(`${this.base}/pending-payments`, data);
+  }
+
+  updatePendingPayment(id: number, data: Partial<PendingPayment>): Observable<PendingPayment> {
+    return this.http.put<PendingPayment>(`${this.base}/pending-payments/${id}`, data);
+  }
+
+  deletePendingPayment(id: number): Observable<PendingPayment> {
+    return this.http.delete<PendingPayment>(`${this.base}/pending-payments/${id}`);
+  }
+
+  /** Marca un pendiente como pagado, creando la transacción real. */
+  payPendingPayment(
+    id: number,
+    data: { date?: string; time?: string; tz?: string; walletId?: number; overrideAmount?: number; overrideFee?: number; overrideCategoryName?: string; overrideWalletId?: number; description?: string }
+  ): Observable<{ success: boolean; transactionId: number; feeTransactionId?: number | null }> {
+    return this.http.post<{ success: boolean; transactionId: number; feeTransactionId?: number | null }>(`${this.base}/pending-payments/${id}/pay`, data);
+  }
+
+  /** Marca un pendiente como pagado sin crear transacción (bookkeeping, para el diálogo del front). */
+  markPendingPaid(id: number, data: { transactionId?: number } = {}): Observable<PendingPayment> {
+    return this.http.post<PendingPayment>(`${this.base}/pending-payments/${id}/mark-paid`, data);
   }
 
   // ===== Rates =====
