@@ -1,6 +1,7 @@
 using System.Data;
 using Walletter.Application.Categories;
 using Walletter.Application.Common;
+using Walletter.Application.Rates;
 using Walletter.Domain;
 using Walletter.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,13 @@ public class TransactionsService
 {
     private readonly IAppDbContext _db;
     private readonly CategoriesService _categories;
+    private readonly RatesService _rates;
 
-    public TransactionsService(IAppDbContext db, CategoriesService categories)
+    public TransactionsService(IAppDbContext db, CategoriesService categories, RatesService rates)
     {
         _db = db;
         _categories = categories;
+        _rates = rates;
     }
 
     private static string TimeZone() => TimeZoneHelper.DefaultTimeZone;
@@ -125,6 +128,20 @@ public class TransactionsService
 
         var after = await _db.Wallets.AsNoTracking().FirstAsync(w => w.Id == cmd.WalletId, ct);
 
+        object? usdEquivalent = null;
+        object? rateUsed = null;
+        if (string.Equals(wallet.Currency, "VES", StringComparison.OrdinalIgnoreCase))
+        {
+            var (localDate, _) = TimeZoneHelper.UtcToWallClock(datetimeUtc, tz);
+            var eff = await _rates.Effective(localDate, ct);
+            usdEquivalent = new
+            {
+                bcv = Math.Round(Money.ToNum(amountInt) / eff.Bcv, 2),
+                paralelo = Math.Round(Money.ToNum(amountInt) / eff.Paralelo, 2),
+            };
+            rateUsed = new { date = eff.Date, bcv = eff.Bcv, paralelo = eff.Paralelo };
+        }
+
         return new
         {
             id = result.Id,
@@ -137,6 +154,8 @@ public class TransactionsService
             category = category.Name,
             fee = Money.ToNum(commission),
             datetime_utc = datetimeUtc,
+            usdEquivalent,
+            rateUsed,
         };
     }
 
@@ -174,9 +193,25 @@ public class TransactionsService
             .Take(limit)
             .ToListAsync(ct);
 
+        // Equivalente USD: solo para wallets VES. Se resuelve la tasa del día una
+        // sola vez por fecha distinta de la página (evita N búsquedas recursivas).
+        var rateCache = new Dictionary<string, EffectiveRate>();
+        foreach (var d in rows
+            .Where(r => string.Equals(r.Wallet?.Currency, "VES", StringComparison.OrdinalIgnoreCase))
+            .Select(r => TimeZoneHelper.UtcToWallClock(r.DatetimeUtc, tz).Date)
+            .Distinct())
+        {
+            rateCache[d] = await _rates.Effective(d, ct);
+        }
+
         return new
         {
-            data = rows.Select(r => Projected(r, tz)).ToList(),
+            data = rows.Select(r =>
+            {
+                var (date, _) = TimeZoneHelper.UtcToWallClock(r.DatetimeUtc, tz);
+                var isVes = string.Equals(r.Wallet?.Currency, "VES", StringComparison.OrdinalIgnoreCase);
+                return Projected(r, tz, isVes && rateCache.TryGetValue(date, out var eff) ? eff : null);
+            }).ToList(),
             total,
             page,
             limit,
@@ -184,9 +219,20 @@ public class TransactionsService
         };
     }
 
-    private static object Projected(Transaction r, string tz)
+    private static object Projected(Transaction r, string tz, EffectiveRate? usdRate = null)
     {
         var (date, time) = TimeZoneHelper.UtcToWallClock(r.DatetimeUtc, tz);
+        object? usdEquivalent = null;
+        object? rateUsed = null;
+        if (string.Equals(r.Wallet?.Currency, "VES", StringComparison.OrdinalIgnoreCase) && usdRate != null)
+        {
+            usdEquivalent = new
+            {
+                bcv = Math.Round(Money.ToNum(r.Amount) / usdRate.Bcv, 2),
+                paralelo = Math.Round(Money.ToNum(r.Amount) / usdRate.Paralelo, 2),
+            };
+            rateUsed = new { date = usdRate.Date, bcv = usdRate.Bcv, paralelo = usdRate.Paralelo };
+        }
         return new
         {
             id = r.Id,
@@ -202,6 +248,8 @@ public class TransactionsService
             parentTransactionId = r.ParentId,
             date,
             time,
+            usdEquivalent,
+            rateUsed,
         };
     }
 
@@ -218,11 +266,13 @@ public class TransactionsService
 
         var tz = TimeZone();
         var (date, time) = TimeZoneHelper.UtcToWallClock(t.DatetimeUtc, tz);
+        var isVes = string.Equals(t.Wallet?.Currency, "VES", StringComparison.OrdinalIgnoreCase);
+        var usdRate = isVes ? await _rates.Effective(date, ct) : null;
         var associated = t.Children
             .Where(c => !c.Deleted)
             .OrderByDescending(c => c.DatetimeUtc)
             .ThenByDescending(c => c.Id)
-            .Select(c => Projected(c, tz))
+            .Select(c => Projected(c, tz, usdRate))
             .ToList();
 
         return new
@@ -247,6 +297,16 @@ public class TransactionsService
             // id del exchange al que pertenece (si es transacción de exchange). Null si no.
             exchangeId = await ResolveExchangeId(t, ct),
             associated,
+            usdEquivalent = isVes && usdRate != null
+                ? new
+                {
+                    bcv = Math.Round(Money.ToNum(t.Amount) / usdRate.Bcv, 2),
+                    paralelo = Math.Round(Money.ToNum(t.Amount) / usdRate.Paralelo, 2),
+                }
+                : null,
+            rateUsed = isVes && usdRate != null
+                ? new { date = usdRate.Date, bcv = usdRate.Bcv, paralelo = usdRate.Paralelo }
+                : null,
         };
     }
 
