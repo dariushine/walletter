@@ -98,6 +98,8 @@ public class PendingPaymentsService
     public async Task<PendingPaymentDto> Remove(int id, CancellationToken ct = default)
     {
         var row = await GetActiveAsync(id, ct);
+        if (row.IsPaid)
+            throw new BusinessException("No se puede eliminar un pago pendiente ya pagado");
         row.IsCancelled = true;
         await _db.SaveChangesAsync(ct);
         return Map(row);
@@ -115,6 +117,8 @@ public class PendingPaymentsService
     public async Task<PendingPaymentDto> Update(int id, UpdatePendingPaymentCommand cmd, CancellationToken ct = default)
     {
         var existing = await GetActiveAsync(id, ct);
+        if (existing.IsPaid)
+            throw new BusinessException("No se puede editar un pago pendiente ya pagado");
         if (cmd.Name != null) existing.Name = cmd.Name;
         if (cmd.Description != null) existing.Description = cmd.Description;
         if (cmd.Amount is decimal a) existing.Amount = Money.ToInt(a);

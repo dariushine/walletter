@@ -178,6 +178,44 @@ public class PendingPaymentsTests : IDisposable
     }
 
     [Fact]
+    public async Task Update_PaidPending_Throws()
+    {
+        var walletId = await CreateWalletAsync("Efectivo", 500m);
+        var p = await CreatePendingAsync("Luz", 100m, walletId: walletId);
+
+        using var scope = _serviceProvider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PendingPaymentsService>();
+        await service.Pay(p.Id, new PayPendingPaymentCommand
+        {
+            Date = "2026-09-10",
+            Time = "10:00",
+            Tz = "America/Caracas",
+        });
+
+        // Editar un pagado debe fallar: la transacción real ya se creó
+        await Assert.ThrowsAsync<BusinessException>(() => service.Update(p.Id, new UpdatePendingPaymentCommand { Amount = 200m }));
+    }
+
+    [Fact]
+    public async Task Remove_PaidPending_Throws()
+    {
+        var walletId = await CreateWalletAsync("Efectivo", 500m);
+        var p = await CreatePendingAsync("Luz", 100m, walletId: walletId);
+
+        using var scope = _serviceProvider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PendingPaymentsService>();
+        await service.Pay(p.Id, new PayPendingPaymentCommand
+        {
+            Date = "2026-09-10",
+            Time = "10:00",
+            Tz = "America/Caracas",
+        });
+
+        // Borrar un pagado debe fallar: la transacción real ya existe
+        await Assert.ThrowsAsync<BusinessException>(() => service.Remove(p.Id));
+    }
+
+    [Fact]
     public async Task Remove_Cancels_AndDisappearsFromList()
     {
         var p = await CreatePendingAsync("Luz", 100m);
