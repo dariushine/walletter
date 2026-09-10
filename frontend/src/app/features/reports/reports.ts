@@ -1,9 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
@@ -16,15 +15,32 @@ import { ReportData } from '../../models/walletter.models';
 import { formatNumber, formatWithCode } from '../../core/utils/money';
 
 type RateType = 'bcv' | 'paralelo';
-type PeriodId = '1m' | '3m' | '6m' | '1y' | 'all';
+type PeriodId = 'month' | 'year' | 'custom' | 'all';
+type Granularity = 'day' | 'month' | 'year';
 
 const PERIODS: { id: PeriodId; label: string }[] = [
-  { id: '1m', label: 'Último mes' },
-  { id: '3m', label: 'Últimos 3 meses' },
-  { id: '6m', label: 'Últimos 6 meses' },
-  { id: '1y', label: 'Último año' },
+  { id: 'month', label: 'Mes' },
+  { id: 'year', label: 'Año' },
+  { id: 'custom', label: 'Personalizado' },
   { id: 'all', label: 'Todo' },
 ];
+
+const GRANS: { id: Granularity; label: string }[] = [
+  { id: 'day', label: 'Día' },
+  { id: 'month', label: 'Mes' },
+  { id: 'year', label: 'Año' },
+];
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+function pad2(n: number): string {
+  return n < 10 ? `0${n}` : String(n);
+}
+
+function currentParts(): { y: number; m: number } {
+  const d = new Date();
+  return { y: d.getFullYear(), m: d.getMonth() + 1 };
+}
 
 @Component({
   selector: 'app-reports',
@@ -35,7 +51,6 @@ const PERIODS: { id: PeriodId; label: string }[] = [
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule,
-    MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
     MatAccordion,
@@ -51,26 +66,66 @@ export class Reports implements OnInit {
 
   readonly decimalSeparator = this.prefs.decimalSeparator;
   readonly periods = PERIODS;
+  readonly grans = GRANS;
 
   data = signal<ReportData | null>(null);
   loading = signal(true);
 
   rateType = signal<RateType>(this.prefs.rate('reports', 'bcv'));
-  period = signal<PeriodId>(this.prefs.period('reports', '6m') as PeriodId);
+  period = signal<PeriodId>((this.prefs.period('reports', 'month') as PeriodId) || 'month');
+  gran = signal<Granularity>((this.prefs.period('reports.gran', 'month') as Granularity) || 'month');
+
+  /** Referencia navegada: 'YYYY-MM' en modo mes, 'YYYY' en modo año. */
+  refMonth = signal<string>(this.prefs.period('reports.refMonth', this.defaultRefMonth()));
+  refYear = signal<string>(this.prefs.period('reports.refYear', String(currentParts().y)));
+
+  customFrom = signal<string>(this.prefs.period('reports.from', this.defaultFrom()));
+  customTo = signal<string>(this.prefs.period('reports.to', this.defaultTo()));
 
   ngOnInit(): void {
     this.settings.loadTimezone();
     this.load();
   }
 
+  /** Filas de performance normalizadas (compat: performance ?? monthly). */
+  readonly rows = computed(() => {
+    const d = this.data();
+    if (!d) return [];
+    const src = d.performance?.length ? d.performance : (d.monthly as unknown as typeof d.performance) ?? [];
+    return src.map((r) => ({
+      key: (r as any).key ?? (r as any).month ?? '',
+      income: r.income,
+      expense: r.expense,
+      net: r.net,
+      transactionCount: r.transactionCount,
+    }));
+  });
+
   load(): void {
     this.loading.set(true);
+    const params: {
+      period: string;
+      rate: string;
+      tz: string;
+      granularity: string;
+      refDate?: string;
+      from?: string;
+      to?: string;
+    } = {
+      period: this.period(),
+      rate: this.rateType(),
+      tz: this.settings.timezone(),
+      granularity: this.gran(),
+    };
+    if (this.period() === 'month') params.refDate = this.refMonth();
+    else if (this.period() === 'year') params.refDate = this.refYear();
+    else if (this.period() === 'custom') {
+      params.from = this.customFrom() || undefined;
+      params.to = this.customTo() || undefined;
+    }
+    // 'all' no manda refDate ni from/to: el backend toma todo el historial.
     this.api
-      .reports({
-        period: this.period(),
-        rate: this.rateType(),
-        tz: this.settings.timezone(),
-      })
+      .reports(params)
       .subscribe({
         next: (r) => {
           this.data.set(r);
@@ -91,7 +146,122 @@ export class Reports implements OnInit {
     if (this.period() === p) return;
     this.period.set(p);
     this.prefs.setPeriod('reports', p);
+    // Al pasar a personalizado, precargar mes en curso si no hay rango guardado.
+    if (p === 'custom') {
+      if (!this.customFrom()) {
+        this.customFrom.set(this.defaultFrom());
+        this.prefs.setPeriod('reports.from', this.customFrom());
+      }
+      if (!this.customTo()) {
+        this.customTo.set(this.defaultTo());
+        this.prefs.setPeriod('reports.to', this.customTo());
+      }
+    }
     this.load();
+  }
+
+  setGran(g: Granularity): void {
+    if (this.gran() === g) return;
+    this.gran.set(g);
+    this.prefs.setPeriod('reports.gran', g);
+    this.load();
+  }
+
+  setCustomFrom(v: string): void {
+    this.customFrom.set(v);
+    this.prefs.setPeriod('reports.from', v);
+    this.load();
+  }
+
+  setCustomTo(v: string): void {
+    this.customTo.set(v);
+    this.prefs.setPeriod('reports.to', v);
+    this.load();
+  }
+
+  canGoPrev(): boolean {
+    return true;
+  }
+
+  canGoNext(): boolean {
+    const { y, m } = currentParts();
+    if (this.period() === 'month') {
+      const [ry, rm] = this.refMonth().split('-').map(Number);
+      return ry < y || (ry === y && rm < m);
+    }
+    if (this.period() === 'year') return Number(this.refYear()) < y;
+    return false;
+  }
+
+  goPrev(): void {
+    if (this.period() === 'month') {
+      const [y, m] = this.refMonth().split('-').map(Number);
+      const d = new Date(y, m - 2, 1);
+      this.refMonth.set(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}`);
+      this.prefs.setPeriod('reports.refMonth', this.refMonth());
+      this.load();
+    } else if (this.period() === 'year') {
+      const ny = Number(this.refYear()) - 1;
+      this.refYear.set(String(ny));
+      this.prefs.setPeriod('reports.refYear', this.refYear());
+      this.load();
+    }
+  }
+
+  goNext(): void {
+    if (!this.canGoNext()) return;
+    if (this.period() === 'month') {
+      const [y, m] = this.refMonth().split('-').map(Number);
+      const d = new Date(y, m, 1);
+      this.refMonth.set(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}`);
+      this.prefs.setPeriod('reports.refMonth', this.refMonth());
+      this.load();
+    } else if (this.period() === 'year') {
+      const ny = Number(this.refYear()) + 1;
+      this.refYear.set(String(ny));
+      this.prefs.setPeriod('reports.refYear', this.refYear());
+      this.load();
+    }
+  }
+
+  /** Label del navegador: "septiembre 2026" (mes) o "2026" (año). */
+  navLabel(): string {
+    if (this.period() === 'month') {
+      const [y, m] = this.refMonth().split('-').map(Number);
+      const nombres = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      return `${nombres[(m || 1) - 1]} ${y}`;
+    }
+    if (this.period() === 'year') return this.refYear();
+    return '';
+  }
+
+  /** Título del panel de performance según granularidad. */
+  perfTitle(): string {
+    return this.gran() === 'day' ? 'Performance Diario' : this.gran() === 'year' ? 'Performance Anual' : 'Performance Mensual';
+  }
+
+  /** Label de fila según granularidad. */
+  rowLabel(key: string): string {
+    if (!key) return '';
+    if (this.gran() === 'day') {
+      // YYYY-MM-DD → "12 sep 2026"
+      const [y, m, d] = key.split('-').map(Number);
+      if (!y || !m || !d) return key;
+      return `${d} ${MESES[m - 1]} ${y}`;
+    }
+    if (this.gran() === 'year') return key;
+    return this.monthLabel(key);
+  }
+
+  /** Nombre legible del mes YYYY-MM → 'ago 2026'. */
+  monthLabel(month: string): string {
+    const [y, m] = (month || '').split('-');
+    if (!y || !m) return month;
+    return `${MESES[Number(m) - 1]} ${y}`;
+  }
+
+  pct(n: number): string {
+    return `${(n ?? 0).toLocaleString('es-VE', { maximumFractionDigits: 1 })}%`;
   }
 
   /** "USD 1.402,16" (código como prefijo, como en el dashboard de referencia). */
@@ -107,19 +277,7 @@ export class Reports implements OnInit {
     return `${cur} ${num}`;
   }
 
-  /** Nombre legible del mes YYYY-MM → 'ago 2026'. */
-  monthLabel(month: string): string {
-    const [y, m] = (month || '').split('-');
-    if (!y || !m) return month;
-    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    return `${meses[Number(m) - 1]} ${y}`;
-  }
-
-  pct(n: number): string {
-    return `${(n ?? 0).toLocaleString('es-VE', { maximumFractionDigits: 1 })}%`;
-  }
-
-  /** Variación porcentual entre dos netos mensuales. */
+  /** Variación porcentual entre dos netos. */
   trendPct(prevNet: number, net: number): string {
     const base = Math.max(Math.abs(prevNet || 0), 1);
     return this.pct(((net - prevNet) / base) * 100);
@@ -136,10 +294,14 @@ export class Reports implements OnInit {
     const report = {
       generado: new Date().toISOString(),
       rango: this.period(),
+      refDate: this.period() === 'month' ? this.refMonth() : this.period() === 'year' ? this.refYear() : undefined,
+      desde: this.period() === 'custom' ? this.customFrom() : d.meta?.from,
+      hasta: this.period() === 'custom' ? this.customTo() : d.meta?.to,
       tasa: this.rateType(),
+      granularidad: this.gran(),
       resumen: d.summary,
       categorias: d.byCategory,
-      mensual: d.monthly,
+      performance: this.rows(),
       billeteras: d.walletBalances,
       exchanges: d.exchangeStats,
     };
@@ -152,7 +314,21 @@ export class Reports implements OnInit {
     window.URL.revokeObjectURL(url);
   }
 
-  trackByIndex(i: number): number {
-    return i;
+  /** 'YYYY-MM' del mes en curso. */
+  private defaultRefMonth(): string {
+    const { y, m } = currentParts();
+    return `${y}-${pad2(m)}`;
+  }
+
+  /** Primer día del mes en curso (YYYY-MM-DD). */
+  private defaultFrom(): string {
+    const { y, m } = currentParts();
+    return `${y}-${pad2(m)}-01`;
+  }
+
+  /** Hoy (YYYY-MM-DD). */
+  private defaultTo(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   }
 }

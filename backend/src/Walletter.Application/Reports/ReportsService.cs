@@ -12,6 +12,12 @@ namespace Walletter.Application.Reports;
 /// tasa global. Los exchanges se excluyen del resumen de ingresos/gastos y solo
 /// se reportan en su propia sección. Los balances de billetera se muestran en su
 /// moneda nativa.
+///
+/// Rango: el front puede pedir un periodo relativo ("month" = mes en curso,
+/// "year" = año en curso), uno navegado ("month" + ref "2026-08", "year" + ref
+/// "2024") o uno absoluto ("custom" + from/to YYYY-MM-DD).
+/// Granularidad: cómo se agrupa el performance (day/month/year), independiente
+/// del rango elegido.
 /// </summary>
 public class ReportsService
 {
@@ -26,24 +32,39 @@ public class ReportsService
 
     private static string DefaultTz() => TimeZoneHelper.DefaultTimeZone;
 
-    public async Task<object> Overview(string? period, string? rateType, string? tz, CancellationToken ct = default)
+    public async Task<object> Overview(
+        string? period,
+        string? rateType,
+        string? tz,
+        string? refDate = null,   // "YYYY-MM" para month, "YYYY" para year
+        string? from = null,      // YYYY-MM-DD (custom)
+        string? to = null,        // YYYY-MM-DD (custom, inclusivo)
+        string? granularity = null, // day | month | year
+        CancellationToken ct = default)
     {
         var userTz = tz ?? DefaultTz();
         var useParalelo = string.Equals(rateType, "paralelo", StringComparison.OrdinalIgnoreCase);
+        var gran = NormalizeGranularity(granularity);
         var today = TodayInTz(userTz);
-        var from = ResolveFrom(period, today, userTz);
 
-        // Transacciones del rango con su categoría (para excluir exchanges y sus
-        // comisiones). Se proyecta a la zona del usuario para conocer la fecha real.
+        // Rango del reporte (bordes "de pared" del usuario).
+        var range = ResolveRange(period, refDate, from, to, today, userTz);
+
+        // --- Escritura del performance con la CLASIFICACIÓN ORIGINAL del servicio ---
+        // (exchange_out/exchange_in y sus fees excluidos del resumen; el resto
+        //  igual que antes: ingresos/gastos/neto/conteo agrupados por clave).
+        var grouped = new SortedDictionary<string, Monthly>();
+        decimal totalIncome = 0, totalExpense = 0;
+        var byCat = new Dictionary<string, (string Name, decimal Total, int Count)>();
+
         var txns = await _db.Transactions
             .AsNoTracking()
             .Include(t => t.Wallet)
             .Include(t => t.Category)
             .Include(t => t.Parent).ThenInclude(p => p!.Category)
-            .Where(t => !t.Deleted && t.DatetimeUtc >= from.Start && t.DatetimeUtc < from.End)
+            .Where(t => !t.Deleted && t.DatetimeUtc >= range.Start && t.DatetimeUtc < range.End)
             .ToListAsync(ct);
 
-        // Cache de tasas por fecha (evita re-consultar la misma fecha).
         var rateCache = new Dictionary<string, decimal?>();
         async Task<decimal?> RateFor(string date)
         {
@@ -53,12 +74,6 @@ public class ReportsService
             rateCache[date] = r;
             return r;
         }
-
-        // Clasifica cada transacción: valores "efectivos" (tipo, monto USD, fecha).
-        // Excluye débitos/créditos de exchange y sus comisiones del resumen.
-        var monthly = new SortedDictionary<string, Monthly>();
-        decimal totalIncome = 0, totalExpense = 0;
-        var byCat = new Dictionary<string, (string Name, decimal Total, int Count)>();
 
         foreach (var t in txns)
         {
@@ -73,19 +88,25 @@ public class ReportsService
             var wall = TimeZoneHelper.UtcToWallClock(t.DatetimeUtc, userTz);
             var date = wall.Date;
             var amountUsd = await ToUsd(t, date, useParalelo, RateFor, ct);
-            var monthKey = date[..7];
+            // Clave de agrupación del performance según granularidad.
+            var key = gran switch
+            {
+                "day" => date,                              // YYYY-MM-DD
+                "year" => date[..4],                        // YYYY
+                _ => date[..7],                             // YYYY-MM (month)
+            };
 
             if (t.Type == TransactionTypes.Income)
             {
                 totalIncome += amountUsd;
-                GetMonth(monthly, monthKey).Income += amountUsd;
+                GetMonth(grouped, key).Income += amountUsd;
             }
             else
             {
                 totalExpense += amountUsd;
-                GetMonth(monthly, monthKey).Expense += amountUsd;
+                GetMonth(grouped, key).Expense += amountUsd;
             }
-            var mc = GetMonth(monthly, monthKey);
+            var mc = GetMonth(grouped, key);
             mc.Count++;
 
             // Por categoría (solo gastos, como en el diseño).
@@ -98,10 +119,9 @@ public class ReportsService
             }
         }
 
-        // Monthly ordenado y neto calculado.
-        var monthlyList = monthly.Select(kv => new
+        var performance = grouped.Select(kv => new
         {
-            month = kv.Key,
+            key = kv.Key,
             income = Round(kv.Value.Income),
             expense = Round(kv.Value.Expense),
             net = Round(kv.Value.Income - kv.Value.Expense),
@@ -128,7 +148,7 @@ public class ReportsService
         }).ToList();
 
         // Estadísticas de exchanges (en USD, convertidos por su fecha).
-        var exchStats = await ExchangeStats(from.Start, from.End, useParalelo, userTz, RateFor, ct);
+        var exchStats = await ExchangeStats(range.Start, range.End, useParalelo, userTz, RateFor, ct);
 
         var net = totalIncome - totalExpense;
         return new
@@ -141,12 +161,22 @@ public class ReportsService
                 net = Round(net),
                 walletCount = walletBalances.Count,
             },
-            monthly = monthlyList,
+            performance,
+            // Compatibilidad: 'monthly' queda como alias de performance para no
+            // romper consumidores viejos. El front nuevo usa 'performance'.
+            monthly = performance,
             byCategory,
             byCategoryTotal = Round(byCategoryTotal),
             walletBalances,
             exchangeStats = exchStats,
-            meta = new { period = period, rateType = useParalelo ? "paralelo" : "bcv", from = from.Start.ToString("yyyy-MM-dd"), to = from.End.ToString("yyyy-MM-dd") },
+            meta = new
+            {
+                period = period,
+                rateType = useParalelo ? "paralelo" : "bcv",
+                from = range.FromWall == DateTime.MinValue ? null : range.FromWall.ToString("yyyy-MM-dd"),
+                to = range.ToWall == DateTime.MinValue ? null : range.ToWall.ToString("yyyy-MM-dd"),
+                granularity = gran,
+            },
         };
     }
 
@@ -226,35 +256,127 @@ public class ReportsService
     private static string TodayInTz(string tz)
         => TimeZoneHelper.UtcToWallClock(DateTime.UtcNow, tz).Date;
 
-    /// <summary>
-    /// Resuelve el rango en instantes UTC (lo mismo que TransactionsService)
-    /// para que la comparación contra DatetimeUtc (guardado en UTC) sea correcta.
-    /// start = primer día del periodo (00:00 hora local del usuario → UTC).
-    /// end   = día siguiente a hoy (00:00 hora local del usuario → UTC), EXCLUSIVO.
-    /// </summary>
-    private static (DateTime Start, DateTime End) ResolveFrom(string? period, string todayStr, string tz)
-    {
-        // 'Hoy' (hora local del usuario) y el día siguiente (borde final, exclusivo).
-        var today = DateTime.ParseExact(todayStr, "yyyy-MM-dd", null).Date;
-        var end = today.AddDays(1);
-        int months = period switch
+    /// <summary>Normaliza la granularidad pedida (day|month|year), default: month.</summary>
+    private static string NormalizeGranularity(string? granularity)
+        => granularity?.ToLowerInvariant() switch
         {
-            "1m" => 1,
-            "3m" => 3,
-            "6m" => 6,
-            "1y" => 12,
-            _ => 0, // all
+            "day" => "day",
+            "year" => "year",
+            _ => "month",
         };
 
-        // 'Últimos N meses': incluye el mes actual y los N-1 anteriores (hasta hoy).
-        var start = months == 0 ? DateTime.MinValue : today.AddMonths(-(months - 1)).AddDays(-today.Day + 1);
+    /// <summary>
+    /// Resuelve el rango del reporte en instantes UTC (lo mismo que
+    /// TransactionsService) para que la comparación contra DatetimeUtc (guardado
+    /// en UTC) sea correcta.
+    ///
+    /// period:
+    ///   "month" -> mes de refDate ("YYYY-MM", default: mes en curso). Si es el
+    ///              mes en curso, corta en hoy (1ro → hoy); si es pasado, mes completo.
+    ///   "year"  -> año de refDate ("YYYY", default: año en curso). Si es el año
+    ///              en curso, corta en hoy (1ro ene → hoy); si es pasado, año completo.
+    ///   "custom"-> from..to (YYYY-MM-DD, inclusivo).
+    ///   viejos ("1m","3m","6m","1y","all") -> rolling hasta hoy (compatibilidad).
+    ///
+    /// Start/End son instantes UTC; FromWall/ToWall son las fechas "de pared"
+    /// (para el meta, en la zona del usuario).
+    /// </summary>
+    private static (DateTime Start, DateTime End, DateTime FromWall, DateTime ToWall) ResolveRange(
+        string? period, string? refDate, string? from, string? to, string todayStr, string tz)
+    {
+        var today = DateTime.ParseExact(todayStr, "yyyy-MM-dd", null).Date;
 
-        // Convierte los bordes (hora local del usuario) a instantes UTC absolutos,
-        // igual que TransactionsService.List hace con ToUtcInstant(fecha, "00:00", tz).
-        DateTime startUtc = start == DateTime.MinValue
-            ? DateTime.MinValue
-            : TimeZoneHelper.ToUtcInstant(start.ToString("yyyy-MM-dd"), "00:00", tz);
-        var endUtc = TimeZoneHelper.ToUtcInstant(end.ToString("yyyy-MM-dd"), "00:00", tz);
-        return (startUtc, endUtc);
+        switch (period?.ToLowerInvariant())
+        {
+            case "month":
+            {
+                var (y, m) = ParseMonthRef(refDate, today);
+                var startWall = new DateTime(y, m, 1);
+                // Periodo en curso: hasta hoy (exclusivo: hoy+1). Pasado: mes completo.
+                var isCurrent = y == today.Year && m == today.Month;
+                var endWall = isCurrent ? today.AddDays(1) : startWall.AddMonths(1);
+                return (ToUtc(startWall, tz), ToUtc(endWall, tz), startWall, endWall.AddDays(-1));
+            }
+            case "year":
+            {
+                var y = ParseYearRef(refDate, today);
+                var startWall = new DateTime(y, 1, 1);
+                // Periodo en curso: hasta hoy (exclusivo: hoy+1). Pasado: año completo.
+                var isCurrent = y == today.Year;
+                var endWall = isCurrent ? today.AddDays(1) : startWall.AddYears(1);
+                return (ToUtc(startWall, tz), ToUtc(endWall, tz), startWall, endWall.AddDays(-1));
+            }
+            case "custom":
+            {
+                var startWall = ParseDate(from, DateTime.MinValue);
+                var endWall = ParseDate(to, today);
+                if (endWall < startWall) (startWall, endWall) = (endWall, startWall);
+                var endExclusive = endWall.AddDays(1);
+                // Sin 'from' no hay borde inferior real: usar MinValue sin convertir (evita DST en año 1).
+                if (startWall == DateTime.MinValue)
+                    return (DateTime.MinValue, ToUtc(endExclusive, tz), startWall, endWall);
+                return (ToUtc(startWall, tz), ToUtc(endExclusive, tz), startWall, endWall);
+            }
+            default:
+            {
+                // Rolling (compatibilidad): incluye el mes actual y los N-1 anteriores.
+                // end = día siguiente a hoy (exclusivo).
+                var endWall = today.AddDays(1);
+                int months = period?.ToLowerInvariant() switch
+                {
+                    "1m" => 1,
+                    "3m" => 3,
+                    "6m" => 6,
+                    "1y" => 12,
+                    _ => 0, // all / null
+                };
+                DateTime startWall;
+                if (months == 0)
+                {
+                    startWall = DateTime.MinValue;
+                    return (DateTime.MinValue, ToUtc(endWall, tz), startWall, today);
+                }
+                startWall = today.AddMonths(-(months - 1)).AddDays(-today.Day + 1);
+                return (ToUtc(startWall, tz), ToUtc(endWall, tz), startWall, today);
+            }
+        }
+    }
+
+    /// <summary>Convierte una fecha "de pared" (00:00 en la zona del usuario) a instante UTC.</summary>
+    private static DateTime ToUtc(DateTime wallDate, string tz)
+        => TimeZoneHelper.ToUtcInstant(wallDate.ToString("yyyy-MM-dd"), "00:00", tz);
+
+    /// <summary>Parsea "YYYY-MM" (default: mes en curso).</summary>
+    private static (int Year, int Month) ParseMonthRef(string? refDate, DateTime today)
+    {
+        if (!string.IsNullOrWhiteSpace(refDate))
+        {
+            var parts = refDate.Split('-');
+            if (parts.Length == 2
+                && int.TryParse(parts[0], out var y)
+                && int.TryParse(parts[1], out var m)
+                && m >= 1 && m <= 12)
+                return (y, m);
+        }
+        return (today.Year, today.Month);
+    }
+
+    /// <summary>Parsea "YYYY" (default: año en curso).</summary>
+    private static int ParseYearRef(string? refDate, DateTime today)
+    {
+        if (!string.IsNullOrWhiteSpace(refDate)
+            && int.TryParse(refDate, out var y)
+            && y >= 1 && y <= 9999)
+            return y;
+        return today.Year;
+    }
+
+    /// <summary>Parsea YYYY-MM-DD con fallback a un valor por defecto.</summary>
+    private static DateTime ParseDate(string? date, DateTime fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(date)
+            && DateTime.TryParseExact(date, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var d))
+            return d.Date;
+        return fallback.Date;
     }
 }
