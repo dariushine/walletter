@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -13,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
-import { ReportData, PerformanceResponse } from '../../models/walletter.models';
+import { ReportData, PerformanceResponse, CategoriesResponse, SummaryResponse, ExchangeStatsResponse, WalletsResponse } from '../../models/walletter.models';
 import { formatNumber, formatWithCode } from '../../core/utils/money';
 
 type RateType = 'bcv' | 'paralelo';
@@ -129,19 +130,98 @@ export class Reports implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    const params: {
-      period: string;
-      rate: string;
-      tz: string;
-      granularity: string;
-      refDate?: string;
-      from?: string;
-      to?: string;
-      sortBy?: string;
-      sortDir?: string;
-      page?: number;
-      limit?: number;
-    } = {
+    
+    // Parámetros comunes
+    const commonParams = {
+      period: this.period(),
+      rate: this.rateType(),
+      tz: this.settings.timezone(),
+      refDate: this.period() === 'month' ? this.refMonth() : 
+               this.period() === 'year' ? this.refYear() : undefined,
+      from: this.period() === 'custom' ? this.customFrom() || undefined : undefined,
+      to: this.period() === 'custom' ? this.customTo() || undefined : undefined,
+    };
+    
+    // Parámetros específicos para performance
+    const performanceParams = {
+      ...commonParams,
+      granularity: this.gran(),
+      sortBy: this.sortBy(),
+      sortDir: this.sortDir(),
+      page: this.page(),
+      limit: this.limit(),
+    };
+    
+    // Cargar todo en paralelo usando endpoints específicos
+    const performance$ = this.api.performance(performanceParams);
+    const categories$ = this.api.reportCategories(commonParams);
+    const summary$ = this.api.summary(commonParams);
+    const exchanges$ = this.api.exchangeStats(commonParams);
+    const wallets$ = this.api.reportWallets();
+    
+    // Combinar todas las respuestas
+    forkJoin({
+      performance: performance$,
+      categories: categories$,
+      summary: summary$,
+      exchanges: exchanges$,
+      wallets: wallets$,
+    }).subscribe({
+      next: ({ performance, categories, summary, exchanges, wallets }) => {
+        // Convertir performance a formato monthly para compatibilidad
+        const monthly = performance.performance.map(p => ({
+          month: p.key,
+          income: p.income,
+          expense: p.expense,
+          net: p.net,
+          transactionCount: p.transactionCount
+        }));
+        
+        // Convertir categories a formato byCategory
+        const byCategory = categories.categories.map(c => ({
+          category: c.name,
+          count: c.count,
+          total: c.total
+        }));
+        
+        this.data.set({
+          summary: {
+            totalIncome: summary.totalIncome,
+            totalExpenses: summary.totalExpenses,
+            totalTransactions: summary.totalTransactions,
+            net: summary.net,
+            walletCount: wallets.length,
+          },
+          performance: performance.performance,
+          performanceTotal: performance.performanceTotal,
+          monthly,
+          byCategory,
+          byCategoryTotal: categories.total,
+          walletBalances: wallets,
+          exchangeStats: exchanges,
+          meta: {
+            period: this.period(),
+            rateType: this.rateType(),
+            from: this.period() === 'custom' ? this.customFrom() || undefined : undefined,
+            to: this.period() === 'custom' ? this.customTo() || undefined : undefined,
+            granularity: this.gran(),
+            sortBy: this.sortBy(),
+            sortDir: this.sortDir(),
+            prevNet: undefined, // Se calcularía si fuera necesario
+          },
+        });
+        this.loading.set(false);
+      },
+      error: () => {
+        // Si fallan los endpoints separados, usar el endpoint monolítico como fallback
+        this.loadMonolithic();
+      },
+    });
+  }
+  
+  /** Método de fallback: usa el endpoint monolítico */
+  private loadMonolithic(): void {
+    const params = {
       period: this.period(),
       rate: this.rateType(),
       tz: this.settings.timezone(),
@@ -150,14 +230,12 @@ export class Reports implements OnInit {
       sortDir: this.sortDir(),
       page: this.page(),
       limit: this.limit(),
+      refDate: this.period() === 'month' ? this.refMonth() : 
+               this.period() === 'year' ? this.refYear() : undefined,
+      from: this.period() === 'custom' ? this.customFrom() || undefined : undefined,
+      to: this.period() === 'custom' ? this.customTo() || undefined : undefined,
     };
-    if (this.period() === 'month') params.refDate = this.refMonth();
-    else if (this.period() === 'year') params.refDate = this.refYear();
-    else if (this.period() === 'custom') {
-      params.from = this.customFrom() || undefined;
-      params.to = this.customTo() || undefined;
-    }
-    // 'all' no manda refDate ni from/to: el backend toma todo el historial.
+    
     this.api
       .reports(params)
       .subscribe({
@@ -208,8 +286,8 @@ export class Reports implements OnInit {
           }
         },
         error: () => {
-          // Si falla el endpoint específico, cargar todo
-          this.load();
+          // Si falla el endpoint específico, usar el endpoint monolítico
+          this.loadMonolithic();
         },
       });
   }
