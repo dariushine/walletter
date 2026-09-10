@@ -79,12 +79,135 @@
 }
 
 .period-field {
-  width: 170px;
+  width: 150px;
+}
+
+/* Contenedor dropdown + navegación/custom */
+.range-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Navegador de flechas (Mes/Año) */
+.nav-arrows {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.7);
+  transition: background 0.15s;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.nav-label {
+  padding: 0 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 96px;
+  text-align: center;
+}
+
+/* Rango personalizado: desde/hasta */
+.custom-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 4px 8px;
+  background: #fff;
+}
+
+.date-input {
+  border: none;
+  outline: none;
+  font: inherit;
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.8);
+  background: transparent;
+  width: 128px;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+}
+
+.custom-sep {
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 0.85rem;
+}
+
+/* Toggle de granularidad dentro del panel de performance */
+.gran-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-left: auto;
+
+  .rate-btn {
+    padding: 5px 12px;
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 599px) {
   .period-field {
     width: 100%;
+  }
+
+  .range-picker {
+    width: 100%;
+
+    .period-field {
+      width: 100%;
+    }
+  }
+
+  .nav-arrows {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .custom-range {
+    width: 100%;
+    justify-content: center;
+
+    .date-input {
+      flex: 1;
+      width: auto;
+    }
   }
 }
 

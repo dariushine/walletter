@@ -337,7 +337,7 @@ export class WalletterApiService {
   }
 
   // ===== Reports =====
-  reports(params: { period?: string; rate?: string; tz?: string } = {}): Observable<ReportData> {
+  reports(params: { period?: string; rate?: string; tz?: string; refDate?: string; from?: string; to?: string; granularity?: string } = {}): Observable<ReportData> {
     return this.http.get<ReportData>(`${this.base}/reports`, { params: this.toParams(params) });
   }
 

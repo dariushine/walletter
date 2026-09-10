@@ -247,6 +247,15 @@ export interface ReportData {
     net: number;
     walletCount: number;
   };
+  /** Performance agrupado según meta.granularity (day: YYYY-MM-DD, month: YYYY-MM, year: YYYY). */
+  performance: {
+    key: string;
+    income: number;
+    expense: number;
+    net: number;
+    transactionCount: number;
+  }[];
+  /** Alias legado de performance (misma data). */
   monthly: {
     month: string;
     income: number;
@@ -276,6 +285,7 @@ export interface ReportData {
     rateType?: string;
     from?: string;
     to?: string;
+    granularity?: 'day' | 'month' | 'year';
   };
 }
 

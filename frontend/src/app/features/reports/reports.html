@@ -21,14 +21,48 @@
         >Paralelo</button>
       </div>
 
-      <!-- Selector de rango -->
-      <mat-form-field appearance="outline" class="period-field">
-        <mat-select [value]="period()" (selectionChange)="setPeriod($event.value)">
-          @for (p of periods; track p.id) {
-            <mat-option [value]="p.id">{{ p.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <!-- Selector de rango + navegación -->
+      <div class="range-picker">
+        <mat-form-field appearance="outline" class="period-field">
+          <mat-select [value]="period()" (selectionChange)="setPeriod($event.value)">
+            @for (p of periods; track p.id) {
+              <mat-option [value]="p.id">{{ p.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (period() === 'month' || period() === 'year') {
+          <div class="nav-arrows">
+            <button type="button" class="nav-btn" (click)="goPrev()" aria-label="Anterior">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <span class="nav-label">{{ navLabel() }}</span>
+            <button type="button" class="nav-btn" (click)="goNext()" [disabled]="!canGoNext()" aria-label="Siguiente">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        }
+
+        @if (period() === 'custom') {
+          <div class="custom-range">
+            <input
+              type="date"
+              class="date-input"
+              [value]="customFrom()"
+              (input)="setCustomFrom($any($event.target).value)"
+              aria-label="Desde"
+            />
+            <span class="custom-sep">→</span>
+            <input
+              type="date"
+              class="date-input"
+              [value]="customTo()"
+              (input)="setCustomTo($any($event.target).value)"
+              aria-label="Hasta"
+            />
+          </div>
+        }
+      </div>
 
       <!-- Exportar -->
       <button mat-stroked-button color="primary" (click)="exportReport()" [disabled]="!data()">
@@ -97,21 +131,32 @@
         </mat-card>
       </div>
 
-      <!-- Performance Mensual + Gastos por Categoría -->
+      <!-- Performance + Gastos por Categoría -->
       <div class="report-grid">
         <mat-card class="section">
           <mat-card-header>
-            <mat-card-title>Performance Mensual</mat-card-title>
+            <mat-card-title>{{ perfTitle() }}</mat-card-title>
+            <!-- Toggle de granularidad: SOLO para el panel de performance -->
+            <div class="gran-toggle">
+              @for (g of grans; track g.id) {
+                <button
+                  type="button"
+                  class="rate-btn"
+                  [class.active]="gran() === g.id"
+                  (click)="setGran(g.id)"
+                >{{ g.label }}</button>
+              }
+            </div>
           </mat-card-header>
           <mat-card-content>
-            @if (d.monthly.length === 0) {
-              <p class="empty">No hay datos mensuales disponibles.</p>
+            @if (rows().length === 0) {
+              <p class="empty">No hay datos para este período.</p>
             } @else {
               <div class="table-wrap monthly-table">
                 <table class="rpt-table">
                   <thead>
                     <tr>
-                      <th>Mes</th>
+                      <th>{{ gran() === 'day' ? 'Día' : gran() === 'year' ? 'Año' : 'Mes' }}</th>
                       <th class="right">Ingresos</th>
                       <th class="right">Gastos</th>
                       <th class="right">Neto</th>
@@ -120,18 +165,18 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (m of d.monthly; track m.month; let i = $index) {
+                    @for (r of rows(); track r.key; let i = $index) {
                       <tr>
-                        <td>{{ monthLabel(m.month) }}</td>
-                        <td class="right income">{{ fmtUsd(m.income) }}</td>
-                        <td class="right expense">{{ fmtUsd(m.expense) }}</td>
-                        <td class="right" [class.income]="m.net >= 0" [class.expense]="m.net < 0">{{ fmtUsd(m.net) }}</td>
-                        <td class="right"><span class="chip count-chip">{{ m.transactionCount }}</span></td>
+                        <td>{{ rowLabel(r.key) }}</td>
+                        <td class="right income">{{ fmtUsd(r.income) }}</td>
+                        <td class="right expense">{{ fmtUsd(r.expense) }}</td>
+                        <td class="right" [class.income]="r.net >= 0" [class.expense]="r.net < 0">{{ fmtUsd(r.net) }}</td>
+                        <td class="right"><span class="chip count-chip">{{ r.transactionCount }}</span></td>
                         <td class="center">
                           @if (i > 0) {
-                            <span class="chip trend-chip" [class.pos]="m.net >= d.monthly[i - 1].net" [class.neg]="m.net < d.monthly[i - 1].net">
-                              <mat-icon>{{ m.net >= d.monthly[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
-                              {{ trendPct(d.monthly[i - 1].net, m.net) }}
+                            <span class="chip trend-chip" [class.pos]="r.net >= rows()[i - 1].net" [class.neg]="r.net < rows()[i - 1].net">
+                              <mat-icon>{{ r.net >= rows()[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
+                              {{ trendPct(rows()[i - 1].net, r.net) }}
                             </span>
                           }
                         </td>
@@ -141,27 +186,27 @@
                 </table>
               </div>
 
-              <!-- Acordeón móvil: cada mes como panel -->
+              <!-- Acordeón móvil: cada fila como panel -->
               <mat-accordion multi="false" class="rpt-mobile-accordion">
-                @for (m of d.monthly; track m.month; let i = $index) {
+                @for (r of rows(); track r.key; let i = $index) {
                   <mat-expansion-panel class="rpt-mobile-panel">
                     <mat-expansion-panel-header>
-                      <mat-panel-title class="m-panel-title">{{ monthLabel(m.month) }}</mat-panel-title>
-                      <mat-panel-description class="m-panel-net" [class.income]="m.net >= 0" [class.expense]="m.net < 0">
-                        {{ fmtUsd(m.net) }}
+                      <mat-panel-title class="m-panel-title">{{ rowLabel(r.key) }}</mat-panel-title>
+                      <mat-panel-description class="m-panel-net" [class.income]="r.net >= 0" [class.expense]="r.net < 0">
+                        {{ fmtUsd(r.net) }}
                       </mat-panel-description>
                     </mat-expansion-panel-header>
                     <div class="m-panel-body">
-                      <div class="pv-row"><span>Ingresos</span><strong class="income">{{ fmtUsd(m.income) }}</strong></div>
-                      <div class="pv-row"><span>Gastos</span><strong class="expense">{{ fmtUsd(m.expense) }}</strong></div>
-                      <div class="pv-row"><span>Neto</span><strong [class.income]="m.net >= 0" [class.expense]="m.net < 0">{{ fmtUsd(m.net) }}</strong></div>
-                      <div class="pv-row"><span>Transacciones</span><strong>{{ m.transactionCount }}</strong></div>
+                      <div class="pv-row"><span>Ingresos</span><strong class="income">{{ fmtUsd(r.income) }}</strong></div>
+                      <div class="pv-row"><span>Gastos</span><strong class="expense">{{ fmtUsd(r.expense) }}</strong></div>
+                      <div class="pv-row"><span>Neto</span><strong [class.income]="r.net >= 0" [class.expense]="r.net < 0">{{ fmtUsd(r.net) }}</strong></div>
+                      <div class="pv-row"><span>Transacciones</span><strong>{{ r.transactionCount }}</strong></div>
                       @if (i > 0) {
                         <div class="pv-row">
                           <span>Tendencia</span>
-                          <span class="chip trend-chip" [class.pos]="m.net >= d.monthly[i - 1].net" [class.neg]="m.net < d.monthly[i - 1].net">
-                            <mat-icon>{{ m.net >= d.monthly[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
-                            {{ trendPct(d.monthly[i - 1].net, m.net) }}
+                          <span class="chip trend-chip" [class.pos]="r.net >= rows()[i - 1].net" [class.neg]="r.net < rows()[i - 1].net">
+                            <mat-icon>{{ r.net >= rows()[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
+                            {{ trendPct(rows()[i - 1].net, r.net) }}
                           </span>
                         </div>
                       }
