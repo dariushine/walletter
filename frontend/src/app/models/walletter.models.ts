@@ -167,6 +167,25 @@ export interface RecurringPayment {
   lastExecutedAt?: string | null;
 }
 
+/** Pago pendiente (GET /api/pending-payments) */
+export interface PendingPayment {
+  id: number;
+  name: string;
+  description?: string | null;
+  amount: number;
+  fee: number;
+  currency: string;
+  type: TransactionType;
+  category?: string;
+  categoryId: number;
+  walletId?: number | null;
+  dueDate?: string | null; // yyyy-MM-dd en la zona del usuario
+  isPaid: boolean;
+  paidAt?: string | null;
+  transactionId?: number | null;
+  isCancelled: boolean;
+}
+
 /** Tasa del día */
 export interface DailyRate {
   id: number;

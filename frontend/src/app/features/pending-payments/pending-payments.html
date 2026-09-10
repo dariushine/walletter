@@ -1,0 +1,81 @@
+<div class="container">
+  <header class="head-row">
+    <div>
+      <h1 class="page-title">Pagos pendientes</h1>
+      <p class="page-subtitle">Deudas y obligaciones puntuales que aún no has pagado</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon> Nuevo pendiente
+    </button>
+  </header>
+
+  <div class="toggle-row">
+    <mat-slide-toggle [checked]="includePaid()" (change)="toggleIncludePaid()">
+      Mostrar pagados
+    </mat-slide-toggle>
+  </div>
+
+  @if (loading()) {
+    <mat-spinner class="spinner" />
+  } @else {
+    @if (items().length === 0) {
+      <mat-card>
+        <mat-card-content class="empty-state">
+          <mat-icon class="empty-icon">{{ includePaid() ? 'task_alt' : 'pending_actions' }}</mat-icon>
+          <p class="empty-text">{{ includePaid() ? 'Sin pagos registrados.' : 'Sin pagos pendientes.' }}</p>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <div class="pending-grid">
+        @for (p of items(); track p.id) {
+          <mat-card class="pending-card" [class.paid]="p.isPaid">
+            <mat-card-content>
+              <div class="pending-head">
+                <mat-icon class="pending-icon" [class.income]="p.type === 'income'" [class.expense]="p.type === 'expense'">
+                  {{ p.isPaid ? 'check_circle' : (p.type === 'income' ? 'north' : 'south') }}
+                </mat-icon>
+                <div class="pending-info">
+                  <span class="pending-name">{{ p.name }}</span>
+                  <span class="pending-meta">{{ p.category }} · {{ p.walletId ? 'billetera ' + p.walletId : 'sin billetera' }}</span>
+                </div>
+                <span class="pending-amount" [class.income]="p.type === 'income'">
+                  {{ format(p.amount, p.currency) }}
+                </span>
+              </div>
+              @if (p.fee > 0) {
+                <div class="pending-fee">+ comisión {{ format(p.fee, p.currency) }}</div>
+              }
+              @if (!p.isPaid) {
+                @if (dueStatus(p); as st) {
+                  <div class="pending-due" [class.overdue]="st.overdue" [class.urgent]="st.urgent && !st.overdue">
+                    <mat-icon>{{ st.overdue ? 'warning' : (st.urgent ? 'schedule' : 'event') }}</mat-icon>
+                    <span>{{ st.label }}</span>
+                    @if (dueLabel(p); as due) {
+                      <span class="due-date">· {{ due }}</span>
+                    }
+                  </div>
+                }
+              } @else {
+                <div class="pending-paid-at">
+                  <mat-icon>task_alt</mat-icon>
+                  <span>Pagado</span>
+                </div>
+              }
+              <div class="pending-actions">
+                @if (!p.isPaid) {
+                  <button mat-stroked-button color="primary" (click)="pay(p)">Pagar</button>
+                }
+                <span class="actions-right">
+                  @if (!p.isPaid) {
+                    <button mat-icon-button (click)="edit(p)" aria-label="Editar"><mat-icon>edit</mat-icon></button>
+                    <button mat-icon-button (click)="delete(p)" aria-label="Eliminar"><mat-icon>delete</mat-icon></button>
+                  }
+                </span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>

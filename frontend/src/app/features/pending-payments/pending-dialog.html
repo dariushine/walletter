@@ -1,0 +1,102 @@
+<div class="op-dialog">
+  <div class="op-head">
+    <h2 class="op-title">{{ isEdit ? 'Editar pago pendiente' : 'Nuevo pago pendiente' }}</h2>
+    <button mat-icon-button class="op-close" (click)="cancel()" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  <mat-dialog-content class="op-content">
+    <form [formGroup]="form" class="op-form">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre *</mat-label>
+        <input matInput formControlName="name" />
+      </mat-form-field>
+
+      <!-- Toggle Gasto / Ingreso -->
+      <div class="type-toggle">
+        <button
+          type="button"
+          class="type-btn expense"
+          [class.active]="form.value.type === 'expense'"
+          (click)="changeType('expense')"
+        >
+          <mat-icon>remove</mat-icon> Gasto
+        </button>
+        <button
+          type="button"
+          class="type-btn income"
+          [class.active]="form.value.type === 'income'"
+          (click)="changeType('income')"
+        >
+          <mat-icon>add</mat-icon> Ingreso
+        </button>
+      </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Moneda *</mat-label>
+        <mat-select formControlName="currency">
+          @for (c of currencies; track c) {
+            <mat-option [value]="c">{{ c }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <app-money-input
+        formControlName="amount"
+        label="Monto *"
+        [currency]="currencyValue()"
+        [full]="true"
+      />
+
+      <app-category-autocomplete
+        formControlName="categoryName"
+        [type]="form.value.type"
+        class="full"
+      />
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Billetera</mat-label>
+        <mat-select formControlName="walletId">
+          <mat-option [value]="null">Sin asignar</mat-option>
+          @for (w of data.wallets; track w.id) {
+            <mat-option [value]="w.id">{{ w.name }} ({{ w.currency }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Vence (opcional)</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="dueDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <details class="op-details">
+        <summary>Detalles</summary>
+        <div class="details-body">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Descripción (opcional)</mat-label>
+            <input matInput formControlName="description" />
+          </mat-form-field>
+          <app-money-input
+            formControlName="fee"
+            label="Comisión (opcional)"
+            [currency]="currencyValue()"
+            [full]="true"
+          />
+        </div>
+      </details>
+    </form>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="op-actions">
+    <button mat-button (click)="cancel()">Cancelar</button>
+    <button
+      mat-flat-button
+      [color]="form.value.type === 'expense' ? 'warn' : 'primary'"
+      (click)="save()"
+      [disabled]="form.invalid || loading"
+    >
+      {{ loading ? 'Guardando…' : (isEdit ? 'Guardar' : 'Crear') }}
+    </button>
+  </mat-dialog-actions>
+</div>

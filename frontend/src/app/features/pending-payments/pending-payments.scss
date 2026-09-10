@@ -1,0 +1,189 @@
+.head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.spinner {
+  margin: 40px auto;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.pending-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.pending-card {
+  transition: opacity 0.2s ease;
+
+  &.paid {
+    opacity: 0.65;
+
+    .pending-name {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.pending-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pending-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 22px;
+
+  &.income {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.expense {
+    background: #fdecea;
+    color: #c62828;
+  }
+}
+
+.pending-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pending-name {
+  font-weight: 600;
+}
+
+.pending-meta {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.pending-amount {
+  font-weight: 700;
+  font-size: 1.1rem;
+
+  &.income {
+    color: #2e7d32;
+  }
+
+  &.expense {
+    color: #c62828;
+  }
+}
+
+.pending-fee {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 12px;
+  padding-top: 6px;
+}
+
+.pending-due {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(46, 125, 50, 0.08);
+  color: #2e7d32;
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.overdue {
+    background: rgba(198, 40, 40, 0.1);
+    color: #c62828;
+  }
+
+  &.urgent {
+    background: rgba(255, 152, 0, 0.12);
+    color: #e65100;
+  }
+
+  .due-date {
+    opacity: 0.75;
+  }
+}
+
+.pending-paid-at {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: #2e7d32;
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.pending-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:has(> button:only-child) {
+    justify-content: flex-end;
+  }
+}
+
+.actions-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  gap: 8px;
+  color: rgba(0, 0, 0, 0.45);
+  width: 100%;
+}
+
+.empty-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 1rem;
+}

@@ -13,7 +13,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { Wallet } from '../../models/walletter.models';
 import { todayInTimeZone, formatInTimeZone } from '../../core/utils/dates';
 import { of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 import { MoneyInput } from '../../core/components/money-input';
 import { CategoryAutocomplete } from '../../core/components/category-autocomplete';
 
@@ -31,6 +31,8 @@ export interface TransactionDialogPreset {
   title?: string;
   recurringId?: number;
   billingDate?: string;
+  /** Si viene, al crear la transacción se marca el pago pendiente como pagado. */
+  pendingId?: number;
 }
 
 export interface TransactionDialogData {
@@ -106,9 +108,16 @@ export class TransactionDialog {
         tz: this.data.tz,
       })
       .pipe(
-        switchMap(() => this.preset?.recurringId && billingDate
-          ? this.api.setRecurringBillingDate(this.preset.recurringId, { date: billingDate, tz: this.data.tz })
-          : of(null))
+        switchMap((created) =>
+          this.preset?.recurringId && billingDate
+            ? this.api.setRecurringBillingDate(this.preset.recurringId, { date: billingDate, tz: this.data.tz }).pipe(map(() => created))
+            : of(created)
+        ),
+        switchMap((created) =>
+          this.preset?.pendingId
+            ? this.api.markPendingPaid(this.preset.pendingId, { transactionId: created.id }).pipe(map(() => created))
+            : of(created)
+        )
       )
       .subscribe({
         next: () => {

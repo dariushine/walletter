@@ -33,6 +33,7 @@ public class WalletterDbContext : DbContext, IAppDbContext
     public DbSet<Exchange> Exchanges => Set<Exchange>();
     public DbSet<DailyRate> DailyRates => Set<DailyRate>();
     public DbSet<RecurringPayment> RecurringPayments => Set<RecurringPayment>();
+    public DbSet<PendingPayment> PendingPayments => Set<PendingPayment>();
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
@@ -156,6 +157,7 @@ public class WalletterDbContext : DbContext, IAppDbContext
             e.Property(c => c.Type).IsRequired().HasMaxLength(20);
             e.HasMany(c => c.Transactions).WithOne(t => t.Category).HasForeignKey(t => t.CategoryId).OnDelete(DeleteBehavior.Restrict);
             e.HasMany(c => c.Recurring).WithOne(r => r.Category).HasForeignKey(r => r.CategoryId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(c => c.Pending).WithOne(p => p.Category).HasForeignKey(p => p.CategoryId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Transaction>(e =>
@@ -221,6 +223,19 @@ public class WalletterDbContext : DbContext, IAppDbContext
             e.Property(r => r.Currency).IsRequired().HasMaxLength(10);
             e.Property(r => r.Type).IsRequired().HasMaxLength(20);
             e.HasOne(r => r.Category).WithMany(c => c.Recurring).HasForeignKey(r => r.CategoryId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PendingPayment>(e =>
+        {
+            e.ToTable("pending_payments");
+            e.HasKey(p => p.Id);
+            e.Property(p => p.Name).IsRequired().HasMaxLength(200);
+            e.Property(p => p.Amount).IsRequired();
+            e.Property(p => p.Fee).IsRequired();
+            e.Property(p => p.Currency).IsRequired().HasMaxLength(10);
+            e.Property(p => p.Type).IsRequired().HasMaxLength(20);
+            e.Property(p => p.DueDate).HasMaxLength(10);
+            e.HasOne(p => p.Category).WithMany(c => c.Pending).HasForeignKey(p => p.CategoryId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Setting>(e =>
