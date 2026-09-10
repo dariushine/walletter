@@ -57,7 +57,7 @@ public class ReportsService
         // --- Escritura del performance con la CLASIFICACIÓN ORIGINAL del servicio ---
         // (exchange_out/exchange_in y sus fees excluidos del resumen; el resto
         //  igual que antes: ingresos/gastos/neto/conteo agrupados por clave).
-        var grouped = new SortedDictionary<string, Monthly>();
+        var grouped = new SortedDictionary<string, PerformanceRow>();
         decimal totalIncome = 0, totalExpense = 0;
         var byCat = new Dictionary<string, (string Name, decimal Total, int Count)>();
 
@@ -103,15 +103,15 @@ public class ReportsService
             if (t.Type == TransactionTypes.Income)
             {
                 totalIncome += amountUsd;
-                GetMonth(grouped, key).Income += amountUsd;
+                GetPerformanceRow(grouped, key).Income += amountUsd;
             }
             else
             {
                 totalExpense += amountUsd;
-                GetMonth(grouped, key).Expense += amountUsd;
+                GetPerformanceRow(grouped, key).Expense += amountUsd;
             }
-            var mc = GetMonth(grouped, key);
-            mc.Count++;
+            var mc = GetPerformanceRow(grouped, key);
+            mc.TransactionCount++;
 
             // Por categoría (solo gastos, como en el diseño).
             if (t.Type == TransactionTypes.Expense)
@@ -295,15 +295,15 @@ public class ReportsService
         return Money.ToNum(amountUnits) / r.Value;
     }
 
-    private static Monthly GetMonth(SortedDictionary<string, Monthly> map, string key)
+    private static PerformanceRow GetPerformanceRow(SortedDictionary<string, PerformanceRow> map, string key)
     {
-        if (!map.TryGetValue(key, out var m)) { m = new Monthly(); map[key] = m; }
+        if (!map.TryGetValue(key, out var m)) { m = new PerformanceRow(); map[key] = m; }
         return m;
     }
 
     private static decimal Round(decimal v) => Math.Round(v, 2);
 
-    private sealed class PerformanceRow
+    public sealed class PerformanceRow
     {
         public string Key { get; set; } = "";
         public decimal Income { get; set; }
@@ -342,11 +342,11 @@ public class ReportsService
         };
     }
 
-    private sealed class Monthly
+    public sealed class Monthly
     {
         public decimal Income { get; set; }
         public decimal Expense { get; set; }
-        public int Count { get; set; }
+        public int TransactionCount { get; set; }
     }
 
     private static string TodayInTz(string tz)
@@ -476,9 +476,9 @@ public class ReportsService
         return fallback.Date;
     }
 
-    public class PerformanceResponse
+    public sealed class PerformanceResponse
     {
-        public List<Monthly> Performance { get; set; } = new();
+        public List<PerformanceRow> Performance { get; set; } = new();
         public int PerformanceTotal { get; set; }
         public Meta? Meta { get; set; }
     }
@@ -520,7 +520,7 @@ public class ReportsService
             return r;
         }
 
-        var grouped = new SortedDictionary<string, Monthly>();
+        var grouped = new SortedDictionary<string, PerformanceRow>();
         decimal totalIncome = 0, totalExpense = 0;
         // Solo transacciones no exchange, no fee
         foreach (var t in txns.Where(t => t.Category?.SystemName != "exchange_out" && t.Category?.SystemName != "exchange_in" && t.Category?.SystemName != "fee" && t.ParentId == null))
@@ -535,7 +535,7 @@ public class ReportsService
             var usd = await ConvertToUsd(t.Amount, t.Wallet.Currency, local.ToString("yyyy-MM-dd"), RateFor);
             if (!usd.HasValue) continue;
             if (!grouped.TryGetValue(key, out var m))
-                m = grouped[key] = new Monthly { Key = key, Income = 0, Expense = 0, Net = 0, TransactionCount = 0 };
+                m = grouped[key] = new PerformanceRow { Key = key, Income = 0, Expense = 0, Net = 0, TransactionCount = 0 };
             m.TransactionCount++;
             if (t.Type == TransactionType.Income)
             {
@@ -594,5 +594,10 @@ public class ReportsService
             PerformanceTotal = total,
             Meta = new Meta { PrevNet = prevNet }
         };
+    }
+
+    public sealed class Meta
+    {
+        public decimal? PrevNet { get; set; }
     }
 }
