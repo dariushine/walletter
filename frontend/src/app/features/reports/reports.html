@@ -21,17 +21,20 @@
         >Paralelo</button>
       </div>
 
-      <!-- Dropdown de periodo -->
-      <mat-form-field appearance="outline" class="period-field">
-        <mat-select [value]="period()" (selectionChange)="setPeriod($event.value)">
-          @for (p of periods; track p.id) {
-            <mat-option [value]="p.id">{{ p.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <!-- Selector de periodo (estilo BCV/Paralelo) -->
+      <div class="rate-toggle period-toggle">
+        @for (p of periods; track p.id) {
+          <button
+            type="button"
+            class="rate-btn"
+            [class.active]="period() === p.id"
+            (click)="setPeriod(p.id)"
+          >{{ p.label }}</button>
+        }
+      </div>
 
       <!-- Exportar -->
-      <button mat-stroked-button color="primary" (click)="exportReport()" [disabled]="!data()">
+      <button mat-stroked-button color="primary" class="export-btn" (click)="exportReport()" [disabled]="!data()">
         <mat-icon>file_download</mat-icon>
         Exportar
       </button>

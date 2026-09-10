@@ -3,7 +3,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
@@ -52,7 +51,6 @@ function currentParts(): { y: number; m: number } {
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule,
-    MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
     MatAccordion,
