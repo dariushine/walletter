@@ -40,6 +40,10 @@ public class ReportsService
         string? from = null,      // YYYY-MM-DD (custom)
         string? to = null,        // YYYY-MM-DD (custom, inclusivo)
         string? granularity = null, // day | month | year
+        string? sortBy = null,    // key | income | expense | net | transactionCount
+        string? sortDir = null,   // asc | desc
+        int? page = null,
+        int? limit = null,
         CancellationToken ct = default)
     {
         var userTz = tz ?? DefaultTz();
@@ -119,13 +123,62 @@ public class ReportsService
             }
         }
 
-        var performance = grouped.Select(kv => new
+        var performance = grouped.Select(kv => new PerformanceRow
         {
-            key = kv.Key,
-            income = Round(kv.Value.Income),
-            expense = Round(kv.Value.Expense),
-            net = Round(kv.Value.Income - kv.Value.Expense),
-            transactionCount = kv.Value.Count,
+            Key = kv.Key,
+            Income = Round(kv.Value.Income),
+            Expense = Round(kv.Value.Expense),
+            Net = Round(kv.Value.Income - kv.Value.Expense),
+            TransactionCount = kv.Value.Count,
+        }).ToList();
+
+        if (performance.Count > 0 && sortBy == null)
+        {
+            // Orden por defecto: fecha-hora descendente (periodo más reciente primero),
+            // aplica a cualquier granularidad (day/month/year).
+            performance = performance
+                .OrderByDescending(p => p.Key)
+                .ToList();
+        }
+        else if (sortBy != null)
+        {
+            performance = ApplySort(performance, sortBy, sortDir);
+        }
+
+        // Tendencia: neto del periodo ANTERIOR en orden descendente (referencia usada
+        // por el front para el chip de tendencia). Se calcula sobre la serie completa
+        // (antes de paginar) para que sea correcta aunque la página no empiece en 1.
+        decimal? prevNet = null;
+        {
+            var desc = performance
+                .OrderByDescending(r => r.Key)
+                .ToList();
+            var firstKey = performance.Count > 0 ? performance[0].Key : null;
+            for (var i = 0; i < desc.Count; i++)
+            {
+                if (firstKey != null && desc[i].Key == firstKey)
+                {
+                    if (i + 1 < desc.Count) prevNet = desc[i + 1].Net;
+                    break;
+                }
+            }
+        }
+
+        // Paginación server-side: totalSIempre sobre la serie completa.
+        var perfTotal = performance.Count;
+        if (page != null && limit != null && limit > 0)
+        {
+            var start = (page.Value - 1) * limit.Value;
+            performance = performance.Skip(start).Take(limit.Value).ToList();
+        }
+
+        var performanceDto = performance.Select(r => new
+        {
+            key = r.Key,
+            income = r.Income,
+            expense = r.Expense,
+            net = r.Net,
+            transactionCount = r.TransactionCount,
         }).ToList();
 
         var byCategory = byCat.Values
@@ -161,10 +214,11 @@ public class ReportsService
                 net = Round(net),
                 walletCount = walletBalances.Count,
             },
-            performance,
+            performance = performanceDto,
+            performanceTotal = perfTotal,
             // Compatibilidad: 'monthly' queda como alias de performance para no
             // romper consumidores viejos. El front nuevo usa 'performance'.
-            monthly = performance,
+            monthly = performanceDto,
             byCategory,
             byCategoryTotal = Round(byCategoryTotal),
             walletBalances,
@@ -176,6 +230,9 @@ public class ReportsService
                 from = range.FromWall == DateTime.MinValue ? null : range.FromWall.ToString("yyyy-MM-dd"),
                 to = range.ToWall == DateTime.MinValue ? null : range.ToWall.ToString("yyyy-MM-dd"),
                 granularity = gran,
+                sortBy = sortBy,
+                sortDir = NormalizeSortDir(sortDir),
+                prevNet = prevNet,
             },
         };
     }
@@ -245,6 +302,45 @@ public class ReportsService
     }
 
     private static decimal Round(decimal v) => Math.Round(v, 2);
+
+    private sealed class PerformanceRow
+    {
+        public string Key { get; set; } = "";
+        public decimal Income { get; set; }
+        public decimal Expense { get; set; }
+        public decimal Net { get; set; }
+        public int TransactionCount { get; set; }
+    }
+
+    private static string NormalizeSortDir(string? sortDir)
+        => string.Equals(sortDir, "asc", StringComparison.OrdinalIgnoreCase) ? "asc" : "desc";
+
+    /// <summary>Ordena la serie de performance por columna (server-side).</summary>
+    private static List<PerformanceRow> ApplySort(List<PerformanceRow> rows, string? sortBy, string? sortDir)
+    {
+        var desc = NormalizeSortDir(sortDir) == "desc";
+        return sortBy?.ToLowerInvariant() switch
+        {
+            "key" => desc
+                ? rows.OrderByDescending(r => r.Key).ToList()
+                : rows.OrderBy(r => r.Key).ToList(),
+            "income" => desc
+                ? rows.OrderByDescending(r => r.Income).ThenBy(r => r.Key).ToList()
+                : rows.OrderBy(r => r.Income).ThenBy(r => r.Key).ToList(),
+            "expense" => desc
+                ? rows.OrderByDescending(r => r.Expense).ThenBy(r => r.Key).ToList()
+                : rows.OrderBy(r => r.Expense).ThenBy(r => r.Key).ToList(),
+            "net" => desc
+                ? rows.OrderByDescending(r => r.Net).ThenBy(r => r.Key).ToList()
+                : rows.OrderBy(r => r.Net).ThenBy(r => r.Key).ToList(),
+            "transactionCount" => desc
+                ? rows.OrderByDescending(r => r.TransactionCount).ThenBy(r => r.Key).ToList()
+                : rows.OrderBy(r => r.TransactionCount).ThenBy(r => r.Key).ToList(),
+            _ => desc
+                ? rows.OrderByDescending(r => r.Key).ToList()
+                : rows.OrderBy(r => r.Key).ToList(),
+        };
+    }
 
     private sealed class Monthly
     {

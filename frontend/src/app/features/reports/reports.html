@@ -142,8 +142,8 @@
       </div>
 
       <!-- Performance + Gastos por Categoría -->
-      <div class="report-grid">
-        <mat-card class="section">
+      <div class="report-grid" [class.perf-fullscreen]="perfFullscreen()">
+        <mat-card class="section perf-card" [class.fullscreen]="perfFullscreen()">
           <mat-card-header>
             <mat-card-title>{{ perfTitle() }}</mat-card-title>
             <!-- Toggle de granularidad: SOLO para el panel de performance -->
@@ -157,25 +157,52 @@
                 >{{ g.label }}</button>
               }
             </div>
+            <!-- Fullscreen: solo en pantallas grandes (ocupa toda la fila) -->
+            <button
+              type="button"
+              class="fs-btn"
+              [class.active]="perfFullscreen()"
+              (click)="toggleFullscreen()"
+              matTooltip="{{ perfFullscreen() ? 'Restaurar' : 'Expandir' }}"
+              matTooltipPosition="left"
+              [attr.aria-label]="perfFullscreen() ? 'Restaurar panel' : 'Expandir panel'"
+            >
+              <mat-icon>{{ perfFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+            </button>
           </mat-card-header>
           <mat-card-content>
             @if (rows().length === 0) {
               <p class="empty">No hay datos para este período.</p>
             } @else {
               <div class="table-wrap monthly-table">
-                <table class="rpt-table">
+                <table class="rpt-table sortable">
                   <thead>
                     <tr>
-                      <th>{{ gran() === 'day' ? 'Día' : gran() === 'year' ? 'Año' : 'Mes' }}</th>
-                      <th class="right">Ingresos</th>
-                      <th class="right">Gastos</th>
-                      <th class="right">Neto</th>
-                      <th class="right">Transacciones</th>
+                      <th class="sort-th" (click)="setSort('key')">
+                        <span class="th-label">{{ gran() === 'day' ? 'Día' : gran() === 'year' ? 'Año' : 'Mes' }}</span>
+                        <mat-icon class="sort-icon">{{ sortIcon('key') }}</mat-icon>
+                      </th>
+                      <th class="right sort-th" (click)="setSort('income')">
+                        <span class="th-label">Ingresos</span>
+                        <mat-icon class="sort-icon">{{ sortIcon('income') }}</mat-icon>
+                      </th>
+                      <th class="right sort-th" (click)="setSort('expense')">
+                        <span class="th-label">Gastos</span>
+                        <mat-icon class="sort-icon">{{ sortIcon('expense') }}</mat-icon>
+                      </th>
+                      <th class="right sort-th" (click)="setSort('net')">
+                        <span class="th-label">Neto</span>
+                        <mat-icon class="sort-icon">{{ sortIcon('net') }}</mat-icon>
+                      </th>
+                      <th class="right sort-th" (click)="setSort('transactionCount')">
+                        <span class="th-label">Transacciones</span>
+                        <mat-icon class="sort-icon">{{ sortIcon('transactionCount') }}</mat-icon>
+                      </th>
                       <th class="center">Tendencia</th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (r of rows(); track r.key; let i = $index) {
+                    @for (r of rows(); track r.key) {
                       <tr>
                         <td>{{ rowLabel(r.key) }}</td>
                         <td class="right income">{{ fmtUsd(r.income) }}</td>
@@ -183,10 +210,10 @@
                         <td class="right" [class.income]="r.net >= 0" [class.expense]="r.net < 0">{{ fmtUsd(r.net) }}</td>
                         <td class="right"><span class="chip count-chip">{{ r.transactionCount }}</span></td>
                         <td class="center">
-                          @if (i > 0) {
-                            <span class="chip trend-chip" [class.pos]="r.net >= rows()[i - 1].net" [class.neg]="r.net < rows()[i - 1].net">
-                              <mat-icon>{{ r.net >= rows()[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
-                              {{ trendPct(rows()[i - 1].net, r.net) }}
+                          @if (prevNet() !== null) {
+                            <span class="chip trend-chip" [class.pos]="r.net >= (prevNet() ?? 0)" [class.neg]="r.net < (prevNet() ?? 0)">
+                              <mat-icon>{{ r.net >= (prevNet() ?? 0) ? 'trending_up' : 'trending_down' }}</mat-icon>
+                              {{ trendPct(prevNet() ?? 0, r.net) }}
                             </span>
                           }
                         </td>
@@ -198,7 +225,7 @@
 
               <!-- Acordeón móvil: cada fila como panel -->
               <mat-accordion multi="false" class="rpt-mobile-accordion">
-                @for (r of rows(); track r.key; let i = $index) {
+                @for (r of rows(); track r.key) {
                   <mat-expansion-panel class="rpt-mobile-panel">
                     <mat-expansion-panel-header>
                       <mat-panel-title class="m-panel-title">{{ rowLabel(r.key) }}</mat-panel-title>
@@ -211,12 +238,12 @@
                       <div class="pv-row"><span>Gastos</span><strong class="expense">{{ fmtUsd(r.expense) }}</strong></div>
                       <div class="pv-row"><span>Neto</span><strong [class.income]="r.net >= 0" [class.expense]="r.net < 0">{{ fmtUsd(r.net) }}</strong></div>
                       <div class="pv-row"><span>Transacciones</span><strong>{{ r.transactionCount }}</strong></div>
-                      @if (i > 0) {
+                      @if (prevNet() !== null) {
                         <div class="pv-row">
                           <span>Tendencia</span>
-                          <span class="chip trend-chip" [class.pos]="r.net >= rows()[i - 1].net" [class.neg]="r.net < rows()[i - 1].net">
-                            <mat-icon>{{ r.net >= rows()[i - 1].net ? 'trending_up' : 'trending_down' }}</mat-icon>
-                            {{ trendPct(rows()[i - 1].net, r.net) }}
+                          <span class="chip trend-chip" [class.pos]="r.net >= (prevNet() ?? 0)" [class.neg]="r.net < (prevNet() ?? 0)">
+                            <mat-icon>{{ r.net >= (prevNet() ?? 0) ? 'trending_up' : 'trending_down' }}</mat-icon>
+                            {{ trendPct(prevNet() ?? 0, r.net) }}
                           </span>
                         </div>
                       }
@@ -224,6 +251,16 @@
                   </mat-expansion-panel>
                 }
               </mat-accordion>
+
+              <!-- Paginación server-side del performance -->
+              <mat-paginator
+                class="perf-paginator"
+                [length]="perfTotal()"
+                [pageSize]="limit()"
+                [pageIndex]="page() - 1"
+                [pageSizeOptions]="pageSizeOptions"
+                (page)="onPage($event)"
+              />
             }
           </mat-card-content>
         </mat-card>

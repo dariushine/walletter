@@ -8,6 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
@@ -17,6 +19,10 @@ import { formatNumber, formatWithCode } from '../../core/utils/money';
 type RateType = 'bcv' | 'paralelo';
 type PeriodId = 'month' | 'year' | 'custom' | 'all';
 type Granularity = 'day' | 'month' | 'year';
+type SortKey = 'key' | 'income' | 'expense' | 'net' | 'transactionCount';
+type SortDir = 'asc' | 'desc';
+
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 const PERIODS: { id: PeriodId; label: string }[] = [
   { id: 'month', label: 'Mes' },
@@ -55,6 +61,8 @@ function currentParts(): { y: number; m: number } {
     MatInputModule,
     MatAccordion,
     MatExpansionModule,
+    MatPaginatorModule,
+    MatTooltipModule,
   ],
   templateUrl: './reports.html',
   styleUrls: ['./reports.scss'],
@@ -70,6 +78,18 @@ export class Reports implements OnInit {
 
   data = signal<ReportData | null>(null);
   loading = signal(true);
+
+  // Paginación server-side del performance.
+  page = signal(1);
+  limit = signal(5);
+  readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+
+  // Ordenamiento server-side: por defecto fecha-hora descendente (key desc).
+  sortBy = signal<SortKey>('key');
+  sortDir = signal<SortDir>('desc');
+
+  // Fullscreen: el panel de performance ocupa toda la fila.
+  perfFullscreen = signal(false);
 
   rateType = signal<RateType>(this.prefs.rate('reports', 'bcv'));
   period = signal<PeriodId>((this.prefs.period('reports', 'month') as PeriodId) || 'month');
@@ -101,6 +121,12 @@ export class Reports implements OnInit {
     }));
   });
 
+  /** Total de filas antes de paginar (para el paginador). */
+  readonly perfTotal = computed(() => this.data()?.performanceTotal ?? this.rows().length);
+
+  /** Neto del periodo anterior (referencia de tendencia), desde el backend. */
+  readonly prevNet = computed(() => this.data()?.meta?.prevNet ?? null);
+
   load(): void {
     this.loading.set(true);
     const params: {
@@ -111,11 +137,19 @@ export class Reports implements OnInit {
       refDate?: string;
       from?: string;
       to?: string;
+      sortBy?: string;
+      sortDir?: string;
+      page?: number;
+      limit?: number;
     } = {
       period: this.period(),
       rate: this.rateType(),
       tz: this.settings.timezone(),
       granularity: this.gran(),
+      sortBy: this.sortBy(),
+      sortDir: this.sortDir(),
+      page: this.page(),
+      limit: this.limit(),
     };
     if (this.period() === 'month') params.refDate = this.refMonth();
     else if (this.period() === 'year') params.refDate = this.refYear();
@@ -139,6 +173,7 @@ export class Reports implements OnInit {
     if (this.rateType() === rate) return;
     this.rateType.set(rate);
     this.prefs.setRate('reports', rate);
+    this.page.set(1);
     this.load();
   }
 
@@ -157,6 +192,7 @@ export class Reports implements OnInit {
         this.prefs.setPeriod('reports.to', this.customTo());
       }
     }
+    this.page.set(1);
     this.load();
   }
 
@@ -164,19 +200,49 @@ export class Reports implements OnInit {
     if (this.gran() === g) return;
     this.gran.set(g);
     this.prefs.setPeriod('reports.gran', g);
+    this.page.set(1);
     this.load();
   }
 
   setCustomFrom(v: string): void {
     this.customFrom.set(v);
     this.prefs.setPeriod('reports.from', v);
+    this.page.set(1);
     this.load();
   }
 
   setCustomTo(v: string): void {
     this.customTo.set(v);
     this.prefs.setPeriod('reports.to', v);
+    this.page.set(1);
     this.load();
+  }
+
+  /** Alterna orden por columna: misma columna → cambia dirección; nueva → desc (o asc si ya está desc). */
+  setSort(col: SortKey): void {
+    if (this.sortBy() === col) {
+      this.sortDir.set(this.sortDir() === 'desc' ? 'asc' : 'desc');
+    } else {
+      this.sortBy.set(col);
+      this.sortDir.set('desc');
+    }
+    this.page.set(1);
+    this.load();
+  }
+
+  sortIcon(col: SortKey): string {
+    if (this.sortBy() !== col) return 'unfold_more';
+    return this.sortDir() === 'desc' ? 'arrow_drop_down' : 'arrow_drop_up';
+  }
+
+  onPage(e: PageEvent): void {
+    this.page.set(e.pageIndex + 1);
+    this.limit.set(e.pageSize);
+    this.load();
+  }
+
+  toggleFullscreen(): void {
+    this.perfFullscreen.set(!this.perfFullscreen());
   }
 
   canGoPrev(): boolean {
@@ -199,11 +265,13 @@ export class Reports implements OnInit {
       const d = new Date(y, m - 2, 1);
       this.refMonth.set(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}`);
       this.prefs.setPeriod('reports.refMonth', this.refMonth());
+      this.page.set(1);
       this.load();
     } else if (this.period() === 'year') {
       const ny = Number(this.refYear()) - 1;
       this.refYear.set(String(ny));
       this.prefs.setPeriod('reports.refYear', this.refYear());
+      this.page.set(1);
       this.load();
     }
   }
@@ -215,11 +283,13 @@ export class Reports implements OnInit {
       const d = new Date(y, m, 1);
       this.refMonth.set(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}`);
       this.prefs.setPeriod('reports.refMonth', this.refMonth());
+      this.page.set(1);
       this.load();
     } else if (this.period() === 'year') {
       const ny = Number(this.refYear()) + 1;
       this.refYear.set(String(ny));
       this.prefs.setPeriod('reports.refYear', this.refYear());
+      this.page.set(1);
       this.load();
     }
   }

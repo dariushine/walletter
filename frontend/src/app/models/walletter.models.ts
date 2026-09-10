@@ -255,6 +255,8 @@ export interface ReportData {
     net: number;
     transactionCount: number;
   }[];
+  /** Total de filas de performance ANTES de paginar (para el paginador). */
+  performanceTotal: number;
   /** Alias legado de performance (misma data). */
   monthly: {
     month: string;
@@ -286,6 +288,12 @@ export interface ReportData {
     from?: string;
     to?: string;
     granularity?: 'day' | 'month' | 'year';
+    /** Columna de orden aplicada por el backend (server-side). */
+    sortBy?: string | null;
+    /** Dirección de orden (asc | desc). */
+    sortDir?: 'asc' | 'desc' | null;
+    /** Neto del periodo inmediato anterior (referencia de tendencia, serie completa). */
+    prevNet?: number | null;
   };
 }
 

@@ -226,6 +226,87 @@
   }
 }
 
+/* Botón fullscreen del performance (solo útil en pantallas grandes) */
+.fs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  margin-left: 8px;
+  transition: background 0.15s, color 0.15s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  &.active {
+    background: #3f51b5;
+    color: #fff;
+    border-color: #3f51b5;
+  }
+}
+
+/* Fullscreen: el performance ocupa toda la fila (el de categorías se va abajo) */
+.report-grid.perf-fullscreen {
+  grid-template-columns: 1fr;
+}
+
+/* Headers ordenables */
+.sort-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+
+  .th-label {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .sort-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    vertical-align: middle;
+    margin-left: 2px;
+    color: rgba(0, 0, 0, 0.35);
+  }
+
+  &:hover {
+    color: #3f51b5;
+
+    .sort-icon {
+      color: #3f51b5;
+    }
+  }
+}
+
+/* Paginador del performance */
+.perf-paginator {
+  margin-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 599px) {
+  .perf-paginator {
+    display: flex;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 599px) {
   .nav-arrows {
     flex: 1;

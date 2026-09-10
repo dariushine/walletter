@@ -25,6 +25,10 @@ public class ReportsController : ControllerBase
         [FromQuery] string? from,
         [FromQuery] string? to,
         [FromQuery] string? granularity,
+        [FromQuery] string? sortBy,
+        [FromQuery] string? sortDir,
+        [FromQuery] int? page,
+        [FromQuery] int? limit,
         CancellationToken ct)
-        => Ok(await _service.Overview(period, rate, tz, refDate, from, to, granularity, ct));
+        => Ok(await _service.Overview(period, rate, tz, refDate, from, to, granularity, sortBy, sortDir, page, limit, ct));
 }
