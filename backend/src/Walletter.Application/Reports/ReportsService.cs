@@ -173,8 +173,8 @@ public class ReportsService
             {
                 period = period,
                 rateType = useParalelo ? "paralelo" : "bcv",
-                from = range.FromWall.ToString("yyyy-MM-dd"),
-                to = range.ToWall.ToString("yyyy-MM-dd"),
+                from = range.FromWall == DateTime.MinValue ? null : range.FromWall.ToString("yyyy-MM-dd"),
+                to = range.ToWall == DateTime.MinValue ? null : range.ToWall.ToString("yyyy-MM-dd"),
                 granularity = gran,
             },
         };

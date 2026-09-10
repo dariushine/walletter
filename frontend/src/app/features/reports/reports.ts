@@ -16,13 +16,14 @@ import { ReportData } from '../../models/walletter.models';
 import { formatNumber, formatWithCode } from '../../core/utils/money';
 
 type RateType = 'bcv' | 'paralelo';
-type PeriodId = 'month' | 'year' | 'custom';
+type PeriodId = 'month' | 'year' | 'custom' | 'all';
 type Granularity = 'day' | 'month' | 'year';
 
 const PERIODS: { id: PeriodId; label: string }[] = [
   { id: 'month', label: 'Mes' },
   { id: 'year', label: 'Año' },
   { id: 'custom', label: 'Personalizado' },
+  { id: 'all', label: 'Todo' },
 ];
 
 const GRANS: { id: Granularity; label: string }[] = [
@@ -120,10 +121,11 @@ export class Reports implements OnInit {
     };
     if (this.period() === 'month') params.refDate = this.refMonth();
     else if (this.period() === 'year') params.refDate = this.refYear();
-    else {
+    else if (this.period() === 'custom') {
       params.from = this.customFrom() || undefined;
       params.to = this.customTo() || undefined;
     }
+    // 'all' no manda refDate ni from/to: el backend toma todo el historial.
     this.api
       .reports(params)
       .subscribe({
