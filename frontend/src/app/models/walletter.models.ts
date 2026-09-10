@@ -297,6 +297,21 @@ export interface ReportData {
   };
 }
 
+/** Respuesta del endpoint /api/reports/performance (solo performance + meta) */
+export interface PerformanceResponse {
+  performance: {
+    key: string;
+    income: number;
+    expense: number;
+    net: number;
+    transactionCount: number;
+  }[];
+  performanceTotal: number;
+  meta?: {
+    prevNet?: number | null;
+  };
+}
+
 /** Sesión de acceso (GET /api/auth/sessions) */
 export interface SessionInfo {
   jti: string;

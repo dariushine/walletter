@@ -22,6 +22,7 @@ import {
   Stats,
   CategoryStat,
   ReportData,
+  PerformanceResponse,
   SessionInfo,
   ApiToken,
   WalletReport,
@@ -351,6 +352,22 @@ export class WalletterApiService {
     limit?: number;
   } = {}): Observable<ReportData> {
     return this.http.get<ReportData>(`${this.base}/reports`, { params: this.toParams(params) });
+  }
+
+  reportsPerformance(params: {
+    period?: string;
+    rate?: string;
+    tz?: string;
+    refDate?: string;
+    from?: string;
+    to?: string;
+    granularity?: string;
+    sortBy?: string;
+    sortDir?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Observable<PerformanceResponse> {
+    return this.http.get<PerformanceResponse>(`${this.base}/reports/performance`, { params: this.toParams(params) });
   }
 
   // ===== Health =====
