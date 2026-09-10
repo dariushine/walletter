@@ -226,6 +226,141 @@
   }
 }
 
+/* Botón fullscreen del performance (solo útil en pantallas grandes) */
+.fs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  margin-left: 8px;
+  transition: background 0.15s, color 0.15s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  &.active {
+    background: #3f51b5;
+    color: #fff;
+    border-color: #3f51b5;
+  }
+}
+
+/* Fullscreen: el performance ocupa toda la fila; debajo, categorías a la
+   izquierda y un hueco decorativo (icono gris) a la derecha. */
+.report-grid.perf-fullscreen {
+  grid-template-columns: minmax(0, 560px) 1fr;
+
+  .perf-card {
+    grid-column: 1 / -1;
+  }
+
+  /* La tarjeta de categorías no lleva margin-bottom acá: el .section global
+     le agrega 24px y, como el placeholder no tiene margen, los fondos de
+     ambos paneles quedan desalineados en fullscreen. */
+  .cat-card {
+    margin-bottom: 0;
+  }
+
+  .perf-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    height: 100%;
+    border: 1px dashed rgba(0, 0, 0, 0.16);
+    border-radius: 12px;
+    color: rgba(0, 0, 0, 0.22);
+
+    mat-icon {
+      font-size: 44px;
+      width: 44px;
+      height: 44px;
+    }
+  }
+}
+
+/* Panel fantasma: oculto por defecto, solo en fullscreen + desktop */
+.perf-placeholder {
+  display: none;
+}
+
+/* En pantallas no-desktop el grid ya es 1 columna: el botón no aporta nada */
+@media (max-width: 960px) {
+  .fs-btn {
+    display: none;
+  }
+
+  /* Si el fullscreen quedó activo y se encoge la ventana, vuelve a 1 columna */
+  .report-grid.perf-fullscreen {
+    grid-template-columns: 1fr;
+
+    .perf-card {
+      grid-column: auto;
+    }
+
+    .perf-placeholder {
+      display: none;
+    }
+  }
+}
+
+/* Headers ordenables */
+.sort-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+
+  .th-label {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .sort-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    vertical-align: middle;
+    margin-left: 2px;
+    color: rgba(0, 0, 0, 0.35);
+  }
+
+  &:hover {
+    color: #3f51b5;
+
+    .sort-icon {
+      color: #3f51b5;
+    }
+  }
+}
+
+/* Paginador del performance */
+.perf-paginator {
+  margin-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 599px) {
+  .perf-paginator {
+    display: flex;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 599px) {
   .nav-arrows {
     flex: 1;
@@ -388,11 +523,14 @@
   grid-template-columns: 2fr 1fr;
   gap: 16px;
   margin-bottom: 24px;
+  /* Sin animación: cambio instantáneo */
 
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
   }
 }
+
+/* Aparece con un fade+scale suave al activar fullscreen */
 
 .table-wrap {
   overflow-x: auto;
