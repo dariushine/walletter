@@ -127,7 +127,7 @@ export class Reports implements OnInit {
   /** Neto del periodo anterior (referencia de tendencia), desde el backend. */
   readonly prevNet = computed(() => this.data()?.meta?.prevNet ?? null);
 
-  load(performanceOnly = false): void {
+  load(): void {
     this.loading.set(true);
     const params: {
       period: string;
@@ -158,18 +158,11 @@ export class Reports implements OnInit {
       params.to = this.customTo() || undefined;
     }
     // 'all' no manda refDate ni from/to: el backend toma todo el historial.
-    const observable = performanceOnly
-      ? this.api.reportsPerformance(params)
-      : this.api.reports(params);
-    observable
+    this.api
+      .reports(params)
       .subscribe({
         next: (r) => {
-          if (performanceOnly) {
-            // Actualiza solo performance y performanceTotal, mantiene el resto de data
-            this.data.update(d => d ? { ...d, performance: (r as any).performance, performanceTotal: (r as any).performanceTotal } : d);
-          } else {
-            this.data.set(r as ReportData);
-          }
+          this.data.set(r);
           this.loading.set(false);
         },
         error: () => this.loading.set(false),
@@ -234,7 +227,7 @@ export class Reports implements OnInit {
       this.sortDir.set('desc');
     }
     this.page.set(1);
-    this.load(true); // performance only
+    this.load();
   }
 
   sortIcon(col: SortKey): string {
@@ -245,7 +238,7 @@ export class Reports implements OnInit {
   onPage(e: PageEvent): void {
     this.page.set(e.pageIndex + 1);
     this.limit.set(e.pageSize);
-    this.load(true); // performance only
+    this.load();
   }
 
   toggleFullscreen(): void {
