@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Walletter.Application.Rates;
 
+/// <summary>Resultado tipado de la tasa efectiva (reutilizado por TransactionsService).</summary>
+public record EffectiveRate(string Date, decimal Bcv, decimal Paralelo, string? Note = null);
+
 public class RatesService
 {
     private readonly IAppDbContext _db;
@@ -17,9 +20,6 @@ public class RatesService
     }
 
     private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
-
-    /// <summary>Resultado tipado de la tasa efectiva.</summary>
-    public record EffectiveRate(string Date, decimal Bcv, decimal Paralelo, string? Note = null);
 
     private static string TodayInTz()
     {

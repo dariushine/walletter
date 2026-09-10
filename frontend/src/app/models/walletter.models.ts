@@ -36,6 +36,10 @@ export interface Transaction {
   parentTransactionId?: number | null;
   date: string; // YYYY-MM-DD en la zona del usuario
   time: string; // HH:MM en la zona del usuario
+  /** Equivalente en USD de una transacción VES (tasa BCV y paralelo del día). Null si no es VES. */
+  usdEquivalent?: { bcv: number; paralelo: number } | null;
+  /** Tasa utilizada para el equivalente (fecha real, puede retroceder a un día hábil previo). */
+  rateUsed?: { date: string; bcv: number; paralelo: number } | null;
 }
 
 /** Detalle de transacción (GET /api/transactions/:id) */
@@ -71,6 +75,8 @@ export interface TransactionCreated {
   category?: string;
   fee?: number;
   datetime_utc?: string;
+  usdEquivalent?: { bcv: number; paralelo: number } | null;
+  rateUsed?: { date: string; bcv: number; paralelo: number } | null;
 }
 
 /** Categoría (GET /api/categories) */

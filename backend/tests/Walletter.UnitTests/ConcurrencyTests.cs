@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Walletter.Application.Categories;
 using Walletter.Application.Common;
 using Walletter.Application.Exchanges;
+using Walletter.Application.Rates;
 using Walletter.Application.Transactions;
 using Walletter.Domain;
 using Walletter.Domain.Entities;
@@ -32,6 +33,7 @@ public class ConcurrencyTests : IDisposable
         services.AddScoped<CategoriesService>();
         services.AddScoped<TransactionsService>();
         services.AddScoped<ExchangesService>();
+        services.AddScoped<RatesService>();
 
         _serviceProvider = services.BuildServiceProvider();
 
