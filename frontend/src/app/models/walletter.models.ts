@@ -334,3 +334,50 @@ export interface WalletReportTransaction {
   datetimeUtc: string;
   parentTransactionId?: number | null;
 }
+
+// ====== NUEVAS INTERFACES PARA ENDPOINTS SEPARADOS ======
+
+/** Respuesta del endpoint /reports/performance */
+export interface PerformanceResponse {
+  performance: {
+    key: string;
+    income: number;
+    expense: number;
+    net: number;
+    transactionCount: number;
+  }[];
+  performanceTotal: number;
+}
+
+/** Respuesta del endpoint /reports/categories */
+export interface CategoriesResponse {
+  categories: {
+    name: string;
+    total: number;
+    count: number;
+  }[];
+  total: number;
+}
+
+/** Respuesta del endpoint /reports/summary */
+export interface SummaryResponse {
+  totalIncome: number;
+  totalExpenses: number;
+  totalTransactions: number;
+  net: number;
+}
+
+/** Respuesta del endpoint /reports/exchanges */
+export interface ExchangeStatsResponse {
+  totalExchanges: number;
+  totalFromAmount: number;
+  totalToAmount: number;
+  totalFee: number;
+}
+
+/** Respuesta del endpoint /reports/wallets */
+export type WalletsResponse = Array<{
+  name: string;
+  balance: number;
+  currency: string;
+}>;

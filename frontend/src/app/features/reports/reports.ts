@@ -13,7 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
-import { ReportData } from '../../models/walletter.models';
+import { ReportData, PerformanceResponse } from '../../models/walletter.models';
 import { formatNumber, formatWithCode } from '../../core/utils/money';
 
 type RateType = 'bcv' | 'paralelo';
@@ -169,6 +169,51 @@ export class Reports implements OnInit {
       });
   }
 
+  /** Carga solo los datos de performance usando el endpoint específico */
+  loadPerformanceOnly(): void {
+    const params = {
+      period: this.period(),
+      rate: this.rateType(),
+      tz: this.settings.timezone(),
+      granularity: this.gran(),
+      sortBy: this.sortBy(),
+      sortDir: this.sortDir(),
+      page: this.page(),
+      limit: this.limit(),
+      refDate: this.period() === 'month' ? this.refMonth() : 
+               this.period() === 'year' ? this.refYear() : undefined,
+      from: this.period() === 'custom' ? this.customFrom() || undefined : undefined,
+      to: this.period() === 'custom' ? this.customTo() || undefined : undefined,
+    };
+    
+    this.api
+      .performance(params)
+      .subscribe({
+        next: (response) => {
+          // Actualizar solo los datos de performance manteniendo el resto
+          const currentData = this.data();
+          if (currentData) {
+            this.data.set({
+              ...currentData,
+              performance: response.performance,
+              performanceTotal: response.performanceTotal,
+              monthly: response.performance.map(p => ({
+                month: p.key,
+                income: p.income,
+                expense: p.expense,
+                net: p.net,
+                transactionCount: p.transactionCount
+              })),
+            });
+          }
+        },
+        error: () => {
+          // Si falla el endpoint específico, cargar todo
+          this.load();
+        },
+      });
+  }
+
   setRate(rate: RateType): void {
     if (this.rateType() === rate) return;
     this.rateType.set(rate);
@@ -227,7 +272,8 @@ export class Reports implements OnInit {
       this.sortDir.set('desc');
     }
     this.page.set(1);
-    this.load();
+    // Solo recargar performance, no todo
+    this.loadPerformanceOnly();
   }
 
   sortIcon(col: SortKey): string {
@@ -238,7 +284,8 @@ export class Reports implements OnInit {
   onPage(e: PageEvent): void {
     this.page.set(e.pageIndex + 1);
     this.limit.set(e.pageSize);
-    this.load();
+    // Solo recargar performance, no todo
+    this.loadPerformanceOnly();
   }
 
   toggleFullscreen(): void {

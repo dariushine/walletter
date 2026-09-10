@@ -25,6 +25,11 @@ import {
   SessionInfo,
   ApiToken,
   WalletReport,
+  PerformanceResponse,
+  CategoriesResponse,
+  SummaryResponse,
+  ExchangeStatsResponse,
+  WalletsResponse,
 } from '../../models/walletter.models';
 
 /**
@@ -351,6 +356,61 @@ export class WalletterApiService {
     limit?: number;
   } = {}): Observable<ReportData> {
     return this.http.get<ReportData>(`${this.base}/reports`, { params: this.toParams(params) });
+  }
+
+  // ===== Nuevos endpoints separados =====
+
+  performance(params: {
+    period?: string;
+    rate?: string;
+    tz?: string;
+    refDate?: string;
+    from?: string;
+    to?: string;
+    granularity?: string;
+    sortBy?: string;
+    sortDir?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Observable<PerformanceResponse> {
+    return this.http.get<PerformanceResponse>(`${this.base}/reports/performance`, { params: this.toParams(params) });
+  }
+
+  reportCategories(params: {
+    period?: string;
+    rate?: string;
+    tz?: string;
+    refDate?: string;
+    from?: string;
+    to?: string;
+  } = {}): Observable<CategoriesResponse> {
+    return this.http.get<CategoriesResponse>(`${this.base}/reports/categories`, { params: this.toParams(params) });
+  }
+
+  summary(params: {
+    period?: string;
+    rate?: string;
+    tz?: string;
+    refDate?: string;
+    from?: string;
+    to?: string;
+  } = {}): Observable<SummaryResponse> {
+    return this.http.get<SummaryResponse>(`${this.base}/reports/summary`, { params: this.toParams(params) });
+  }
+
+  exchangeStats(params: {
+    period?: string;
+    rate?: string;
+    tz?: string;
+    refDate?: string;
+    from?: string;
+    to?: string;
+  } = {}): Observable<ExchangeStatsResponse> {
+    return this.http.get<ExchangeStatsResponse>(`${this.base}/reports/exchanges`, { params: this.toParams(params) });
+  }
+
+  reportWallets(): Observable<WalletsResponse> {
+    return this.http.get<WalletsResponse>(`${this.base}/reports/wallets`);
   }
 
   // ===== Health =====
