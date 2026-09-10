@@ -259,22 +259,54 @@
   }
 }
 
-/* Fullscreen: el performance ocupa toda la fila (el de categorías se va abajo) */
+/* Fullscreen: el performance ocupa toda la fila; debajo, categorías a la
+   izquierda y un hueco decorativo (icono gris) a la derecha. */
 .report-grid.perf-fullscreen {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 560px) 1fr;
 
-  /* El panel de categorías queda compacto y centrado, no estirado a lo ancho */
-  .section:not(.perf-card) {
-    max-width: 560px;
-    width: 100%;
-    justify-self: center;
+  .perf-card {
+    grid-column: 1 / -1;
   }
+
+  .perf-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    border: 1px dashed rgba(0, 0, 0, 0.16);
+    border-radius: 12px;
+    color: rgba(0, 0, 0, 0.22);
+
+    mat-icon {
+      font-size: 44px;
+      width: 44px;
+      height: 44px;
+    }
+  }
+}
+
+/* Panel fantasma: oculto por defecto, solo en fullscreen + desktop */
+.perf-placeholder {
+  display: none;
 }
 
 /* En pantallas no-desktop el grid ya es 1 columna: el botón no aporta nada */
 @media (max-width: 960px) {
   .fs-btn {
     display: none;
+  }
+
+  /* Si el fullscreen quedó activo y se encoge la ventana, vuelve a 1 columna */
+  .report-grid.perf-fullscreen {
+    grid-template-columns: 1fr;
+
+    .perf-card {
+      grid-column: auto;
+    }
+
+    .perf-placeholder {
+      display: none;
+    }
   }
 }
 
