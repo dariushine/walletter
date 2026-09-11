@@ -347,17 +347,87 @@ public class ReportsService
         int? limit = null,
         CancellationToken ct = default)
     {
-        // Primero obtener los datos completos del Overview
-        var overview = await Overview(period, rateType, tz, refDate, from, to, granularity, sortBy, sortDir, page, limit, ct);
+        var userTz = tz ?? DefaultTz();
+        var useParalelo = string.Equals(rateType, "paralelo", StringComparison.OrdinalIgnoreCase);
+        var gran = NormalizeGranularity(granularity);
+        var today = TodayInTz(userTz);
+        var range = ResolveRange(period, refDate, from, to, today, userTz);
+
+        // Obtener transacciones en el rango
+        var txns = await _db.Transactions
+            .AsNoTracking()
+            .Include(t => t.Wallet)
+            .Include(t => t.Category)
+            .Include(t => t.Parent).ThenInclude(p => p!.Category)
+            .Where(t => !t.Deleted && t.DatetimeUtc >= range.Start && t.DatetimeUtc < range.End)
+            .ToListAsync(ct);
+
+        // Cache de tasas
+        var rateCache = new Dictionary<string, decimal?>();
+        async Task<decimal?> RateFor(string date)
+        {
+            if (rateCache.TryGetValue(date, out var v)) return v;
+            var eff = await _rates.Effective(date, ct);
+            var r = useParalelo ? (eff.Paralelo > 0 ? eff.Paralelo : eff.Bcv) : (eff.Bcv > 0 ? eff.Bcv : eff.Paralelo);
+            rateCache[date] = r;
+            return r;
+        }
+
+        var grouped = new SortedDictionary<string, PerformanceRow>();
         
-        // Extraer solo los datos de performance
-        var performance = ((dynamic)overview).performance as List<PerformanceRow> ?? new List<PerformanceRow>();
-        var performanceTotal = ((dynamic)overview).performanceTotal as int? ?? 0;
-        
+        foreach (var t in txns)
+        {
+            if (IsExchangeTx(t)) continue; // Excluir exchanges y sus fees
+            
+            var (dateStr, _) = TimeZoneHelper.UtcToWallClock(t.DatetimeUtc, userTz);
+            var key = gran switch
+            {
+                "day" => dateStr,
+                "year" => dateStr.Substring(0, 4),
+                _ => dateStr.Substring(0, 7), // yyyy-MM
+            };
+            
+            var amountUsd = await ToUsd(t, dateStr, useParalelo, RateFor, ct);
+            
+            if (!grouped.TryGetValue(key, out var row))
+                row = grouped[key] = new PerformanceRow { Key = key, Income = 0, Expense = 0, Net = 0, TransactionCount = 0 };
+            
+            row.TransactionCount++;
+            if (t.Type == TransactionTypes.Income)
+            {
+                row.Income += amountUsd;
+            }
+            else
+            {
+                row.Expense += amountUsd;
+            }
+            row.Net = row.Income - row.Expense;
+        }
+
+        var performance = grouped.Select(kv => new PerformanceRow
+        {
+            Key = kv.Key,
+            Income = Round(kv.Value.Income),
+            Expense = Round(kv.Value.Expense),
+            Net = Round(kv.Value.Income - kv.Value.Expense),
+            TransactionCount = kv.Value.TransactionCount,
+        }).ToList();
+
+        // Ordenar
+        performance = ApplySort(performance, sortBy, sortDir);
+
+        // Paginación
+        var total = performance.Count;
+        if (page.HasValue && limit.HasValue && limit.Value > 0)
+        {
+            var skip = (page.Value - 1) * limit.Value;
+            performance = performance.Skip(skip).Take(limit.Value).ToList();
+        }
+
         return new PerformanceResponse
         {
             Performance = performance,
-            PerformanceTotal = performanceTotal
+            PerformanceTotal = total
         };
     }
 
