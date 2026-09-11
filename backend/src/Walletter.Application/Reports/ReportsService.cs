@@ -431,7 +431,7 @@ public class ReportsService
         };
     }
 
-    // Método CategoriesAsync - versión simplificada
+    // Método CategoriesAsync - implementación completa
     public async Task<CategoryResponse> CategoriesAsync(
         string? period,
         string? rateType,
@@ -441,19 +441,66 @@ public class ReportsService
         string? to = null,
         CancellationToken ct = default)
     {
-        var overview = await Overview(period, rateType, tz, refDate, from, to, null, null, null, null, null, ct);
-        
-        var byCategory = ((dynamic)overview).byCategory as List<CategoryStat> ?? new List<CategoryStat>();
-        var byCategoryTotal = ((dynamic)overview).byCategoryTotal as decimal? ?? 0;
-        
+        var userTz = tz ?? DefaultTz();
+        var useParalelo = string.Equals(rateType, "paralelo", StringComparison.OrdinalIgnoreCase);
+        var today = TodayInTz(userTz);
+        var range = ResolveRange(period, refDate, from, to, today, userTz);
+
+        // Obtener transacciones en el rango
+        var txns = await _db.Transactions
+            .AsNoTracking()
+            .Include(t => t.Wallet)
+            .Include(t => t.Category)
+            .Where(t => !t.Deleted && t.DatetimeUtc >= range.Start && t.DatetimeUtc < range.End)
+            .ToListAsync(ct);
+
+        // Cache de tasas
+        var rateCache = new Dictionary<string, decimal?>();
+        async Task<decimal?> RateFor(string date)
+        {
+            if (rateCache.TryGetValue(date, out var v)) return v;
+            var eff = await _rates.Effective(date, ct);
+            var r = useParalelo ? (eff.Paralelo > 0 ? eff.Paralelo : eff.Bcv) : (eff.Bcv > 0 ? eff.Bcv : eff.Paralelo);
+            rateCache[date] = r;
+            return r;
+        }
+
+        var byCat = new Dictionary<string, (string Name, decimal Total, int Count)>();
+        decimal byCategoryTotal = 0;
+
+        foreach (var t in txns)
+        {
+            if (IsExchangeTx(t)) continue;
+            if (t.Type != TransactionTypes.Expense) continue;
+            
+            var catName = t.Category?.Name ?? "Sin categoría";
+            var (dateStr, _) = TimeZoneHelper.UtcToWallClock(t.DatetimeUtc, userTz);
+            var amountUsd = await ToUsd(t, dateStr, useParalelo, RateFor, ct);
+            
+            if (!byCat.TryGetValue(catName, out var cat))
+                cat = (catName, 0, 0);
+            
+            cat.Total += amountUsd;
+            cat.Count++;
+            byCat[catName] = cat;
+            byCategoryTotal += amountUsd;
+        }
+
+        var categories = byCat.Select(kv => new CategoryStat
+        {
+            Name = kv.Value.Name,
+            Total = Round(kv.Value.Total),
+            Count = kv.Value.Count,
+        }).ToList();
+
         return new CategoryResponse
         {
-            Categories = byCategory,
-            Total = byCategoryTotal
+            Categories = categories,
+            Total = Round(byCategoryTotal),
         };
     }
 
-    // Método SummaryAsync - versión simplificada
+    // Método SummaryAsync - implementación completa
     public async Task<SummaryResponse> SummaryAsync(
         string? period,
         string? rateType,
@@ -463,20 +510,58 @@ public class ReportsService
         string? to = null,
         CancellationToken ct = default)
     {
-        var overview = await Overview(period, rateType, tz, refDate, from, to, null, null, null, null, null, ct);
-        
-        var summary = ((dynamic)overview).summary;
-        
+        var userTz = tz ?? DefaultTz();
+        var useParalelo = string.Equals(rateType, "paralelo", StringComparison.OrdinalIgnoreCase);
+        var today = TodayInTz(userTz);
+        var range = ResolveRange(period, refDate, from, to, today, userTz);
+
+        // Obtener transacciones en el rango
+        var txns = await _db.Transactions
+            .AsNoTracking()
+            .Include(t => t.Wallet)
+            .Include(t => t.Category)
+            .Where(t => !t.Deleted && t.DatetimeUtc >= range.Start && t.DatetimeUtc < range.End)
+            .ToListAsync(ct);
+
+        // Cache de tasas
+        var rateCache = new Dictionary<string, decimal?>();
+        async Task<decimal?> RateFor(string date)
+        {
+            if (rateCache.TryGetValue(date, out var v)) return v;
+            var eff = await _rates.Effective(date, ct);
+            var r = useParalelo ? (eff.Paralelo > 0 ? eff.Paralelo : eff.Bcv) : (eff.Bcv > 0 ? eff.Bcv : eff.Paralelo);
+            rateCache[date] = r;
+            return r;
+        }
+
+        decimal totalIncome = 0, totalExpense = 0;
+        int totalTransactions = 0;
+
+        foreach (var t in txns)
+        {
+            if (IsExchangeTx(t)) continue;
+            
+            var (dateStr, _) = TimeZoneHelper.UtcToWallClock(t.DatetimeUtc, userTz);
+            var amountUsd = await ToUsd(t, dateStr, useParalelo, RateFor, ct);
+            
+            if (t.Type == TransactionTypes.Income)
+                totalIncome += amountUsd;
+            else
+                totalExpense += amountUsd;
+            
+            totalTransactions++;
+        }
+
         return new SummaryResponse
         {
-            TotalIncome = summary?.totalIncome ?? 0,
-            TotalExpenses = summary?.totalExpenses ?? 0,
-            TotalTransactions = summary?.totalTransactions ?? 0,
-            Net = summary?.net ?? 0
+            TotalIncome = Round(totalIncome),
+            TotalExpenses = Round(totalExpense),
+            TotalTransactions = totalTransactions,
+            Net = Round(totalIncome - totalExpense),
         };
     }
 
-    // Método ExchangeStatsAsync - versión simplificada
+    // Método ExchangeStatsAsync - implementación completa
     public async Task<object> ExchangeStatsAsync(
         string? period,
         string? rateType,
@@ -486,8 +571,16 @@ public class ReportsService
         string? to = null,
         CancellationToken ct = default)
     {
-        var overview = await Overview(period, rateType, tz, refDate, from, to, null, null, null, null, null, ct);
-        return ((dynamic)overview).exchangeStats;
+        var userTz = tz ?? DefaultTz();
+        var useParalelo = string.Equals(rateType, "paralelo", StringComparison.OrdinalIgnoreCase);
+        var today = TodayInTz(userTz);
+        var range = ResolveRange(period, refDate, from, to, today, userTz);
+
+        return await ExchangeStats(range.Start, range.End, useParalelo, userTz, async (date) =>
+        {
+            var eff = await _rates.Effective(date, ct);
+            return useParalelo ? (eff.Paralelo > 0 ? eff.Paralelo : eff.Bcv) : (eff.Bcv > 0 ? eff.Bcv : eff.Paralelo);
+        }, ct);
     }
 
     // Método WalletsAsync
