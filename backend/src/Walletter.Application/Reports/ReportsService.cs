@@ -491,7 +491,10 @@ public class ReportsService
             Name = kv.Value.Name,
             Total = Round(kv.Value.Total),
             Count = kv.Value.Count,
-        }).ToList();
+        })
+        .OrderByDescending(c => c.Total) // Ordenar descendiente por total
+        .ThenBy(c => c.Name) // Desempate alfabético
+        .ToList();
 
         return new CategoryResponse
         {
