@@ -98,6 +98,17 @@ body {
   max-width: 520px;
 }
 
+/* En móvil el diálogo no debe desbordar: se adapta al ancho del panel.
+   Igual que .op-dialog, quitamos el min-width fijo para que el contenido
+   encaja en el panel (Material lo limita a ~80vw / 95vw en <600px). */
+@media (max-width: 599px) {
+  .dlg {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 .dlg-head {
   display: flex;
   align-items: center;
@@ -117,6 +128,10 @@ body {
 
 .dlg-content {
   padding: 8px 16px 0;
+  /* Evita scroll horizontal DENTRO del diálogo: el contenido debe poder
+     encogerse al ancho del panel, nunca empujarlo. */
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .dlg-form {
@@ -190,9 +205,30 @@ body {
 .dlg-row {
   display: flex;
   gap: 12px;
+  min-width: 0;
 
   mat-form-field {
     flex: 1;
+    min-width: 0;
+  }
+
+  app-money-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* En pantallas muy chicas los campos de la fila pueden apilarse (p. ej. los
+   montos con sufijo USD/VES caben justos en ~300px y no deben desbordar). */
+@media (max-width: 599px) {
+  .dlg-row {
+    flex-wrap: wrap;
+  }
+
+  .dlg-row > mat-form-field,
+  .dlg-row > app-money-input {
+    flex: 1 1 auto;
+    min-width: 140px;
   }
 }
 
