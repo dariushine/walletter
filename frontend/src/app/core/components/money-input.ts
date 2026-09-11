@@ -36,6 +36,7 @@ import { formatNumber } from '../utils/money';
         (input)="onInput($event)"
         (keydown)="onKeyDown($event)"
         (keydown.backspace)="onBackspace($event)"
+        (beforeinput)="onBeforeInput($event)"
         (paste)="onPaste($event)"
         (focus)="forceEnd()"
         (click)="forceEnd()"
@@ -141,6 +142,20 @@ export class MoneyInput implements ControlValueAccessor {
     // Bloquear cualquier tecla que NO sea un dígito (letras, espacio, símbolos).
     // 'e.key.length === 1' = tecla imprimible; los .length>1 son teclas especiales.
     if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  }
+
+  // --- Antes de insertar: cierra la brecha de teclados móviles ---
+  // En el escritorio el keydown bloquea el '.' y otros símbolos, pero en
+  // móviles (teclado numérico) la inserción llega por beforeinput, no por
+  // keydown con un key reconocible. Aquí bloqueamos cualquier inserción que
+  // no sea dígito ANTES de que corrompa el buffer (p. ej. '1' + '.' → '0,01').
+  onBeforeInput(e: InputEvent): void {
+    // Dejar pasar el pegado/arrastre: se maneja en onPaste con la lógica especial.
+    if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop') return;
+    const data = e.data;
+    if (data && /[^0-9]/.test(data)) {
       e.preventDefault();
     }
   }
