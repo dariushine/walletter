@@ -37,6 +37,10 @@ public class TransactionsService
         var commission = Money.ToInt(cmd.Fee);
         var datetimeUtc = TimeZoneHelper.ToUtcInstant(cmd.Date, cmd.Time, tz);
 
+        // Lectura DENTRO del lock (BeginTransactionAsync ya serializa en SQLite).
+        // No debe reutilizar una instancia obsoleta del change tracker de la
+        // misma petición: los callers que pre-lean la wallet para validar/armar
+        // el response deben hacerlo con AsNoTracking (ver CreateFull).
         var wallet = await _db.Wallets.FirstOrDefaultAsync(w => w.Id == cmd.WalletId && w.IsActive, ct)
             ?? throw new BusinessException("Wallet no encontrada");
 
@@ -115,14 +119,13 @@ public class TransactionsService
         var commission = Money.ToInt(cmd.Fee);
         var datetimeUtc = TimeZoneHelper.ToUtcInstant(cmd.Date, cmd.Time, tz);
 
-        var wallet = await _db.Wallets.FirstOrDefaultAsync(w => w.Id == cmd.WalletId && w.IsActive, ct)
+        // AsNoTracking: este pre-lee la wallet SOLO para validar y armar el
+        // response. Si quedara trackeada, Create() (que abre la transacción y
+        // debe leer el balance fresco DENTRO del lock) devolvería esta instancia
+        // obsoleta del change tracker en vez de ir a la BD → lost update.
+        var wallet = await _db.Wallets.AsNoTracking().FirstOrDefaultAsync(w => w.Id == cmd.WalletId && w.IsActive, ct)
             ?? throw new BusinessException("Wallet no encontrada");
         var category = await _categories.GetOrCreateCategory(cmd.CategoryName, cmd.Type, ct);
-
-        var total = amountInt + commission;
-        var newBalance = cmd.Type == TransactionTypes.Expense
-            ? wallet.Balance - total
-            : wallet.Balance + amountInt - commission;
 
         var result = await Create(cmd, ct);
 
