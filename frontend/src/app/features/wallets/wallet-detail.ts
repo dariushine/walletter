@@ -49,8 +49,10 @@ export class WalletDetail implements OnInit, AfterViewInit {
     if (!r) return null;
     let income = 0;
     let expense = 0;
+    // El fee ya viene representado por su propia fila de egreso, por lo que
+    // aquí se suman los montos brutos para no descontarlo dos veces.
     for (const t of r.transactions) {
-      if (t.type === 'income') income += t.amount - t.fee;
+      if (t.type === 'income') income += t.amount;
       else expense += t.amount;
     }
     return { income, expense, net: income - expense };
