@@ -397,11 +397,17 @@ public class TransactionsService
 
         // Si la transacción editada es una COMISIÓN (fee hijo), recalcular el fee
         // denormalizado del padre para que siga reflejando la suma de sus comisiones.
+        // OJO: la suma corre ANTES del SaveChangesAsync, así que el Amount editado
+        // aún no está en la BD. Excluimos este hijo de la query y sumamos su monto
+        // nuevo (en memoria) para no dejar el fee stale.
         if (t.ParentId != null && t.Category?.Name == "fee")
         {
             var parent = await _db.Transactions.FirstOrDefaultAsync(x => x.Id == t.ParentId, ct);
             if (parent != null)
-                parent.Fee = await SumChildFees(parent.Id, ct);
+            {
+                var others = await SumChildFees(parent.Id, ct, excludeId: t.Id);
+                parent.Fee = others + t.Amount;
+            }
         }
 
         await _db.SaveChangesAsync(ct);
@@ -417,24 +423,59 @@ public class TransactionsService
             .Include(x => x.Wallet)
             .Include(x => x.Category)
             .Include(x => x.Children).ThenInclude(c => c.Category)
-            .FirstOrDefaultAsync(x => x.Id == id && !x.Deleted, ct)
+            .FirstOrDefaultAsync(x => x.Id == id, ct)
             ?? throw new NotFoundException("Transacción no encontrada");
 
+        // IDEMPOTENCIA: si ya está borrada, no volver a tocar el balance. Un
+        // segundo DELETE del mismo id (o un reintento de la UI) devuelve success
+        // sin efecto. Nunca debe devolverse dos veces la misma operación.
+        if (t.Deleted)
+        {
+            await tx.CommitAsync(ct);
+            return new { success = true, id = t.Id, alreadyDeleted = true };
+        }
+
+        if (t.IsFeeComision())
+        {
+            // Es una COMISIÓN (fee hijo). Su monto YA está contado dentro del fee
+            // denormalizado del padre, así que al borrarla hay que:
+            //  1) subir el balance por su monto (revertir la comisión),
+            //  2) recalcular el fee del padre SIN este hijo.
+            // El padre se ajusta con su propio efecto (monto + fee); como el fee del
+            // padre ya incluía esta comisión, no hay doble conteo: cada hijo se
+            // revierte exactamente por su monto, una sola vez.
+            if (t.Wallet != null)
+                t.Wallet.Balance += t.Amount;
+
+            // EL PADRE ES LA FUENTE DE VERDAD si está presente en el mismo grafo.
+            var parent = t.Parent
+                ?? await _db.Transactions.FirstOrDefaultAsync(x => x.Id == t.ParentId, ct);
+            if (parent != null && !parent.Deleted)
+            {
+                var others = await SumChildFees(parent.Id, ct, excludeId: t.Id);
+                parent.Fee = others; // el hijo borrado queda excluido explícitamente
+            }
+
+            t.Deleted = true;
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            return new { success = true, id = t.Id };
+        }
+
+        // Es un PADRE (o una transacción suelta). Revertimos UNA sola vez el efecto
+        // completo de la operación: el fee del padre (que agrupa sus comisiones) y
+        // todos los hijos NO-fee (asociadas). Los hijos fee NO se revierten aquí
+        // porque ya están incluidos en t.Fee del padre; solo se marcan Deleted.
         if (t.Wallet != null)
         {
-            // Revertir el efecto del padre sobre el balance (fórmula del Create:
-            // income = +monto - fee, expense = -(monto + fee); t.Fee denormalizado
-            // ya incluye los fees hijos).
             var parentEffect = t.Type == TransactionTypes.Income
                 ? t.Amount - t.Fee
                 : -(t.Amount + t.Fee);
             t.Wallet.Balance -= parentEffect;
 
-            // Revertir y eliminar hijos NO-fee (asociadas) con su propio efecto.
-            // Los hijos de categoría fee ya están reflejados en t.Fee del padre.
             foreach (var child in t.Children.Where(c => !c.Deleted))
             {
-                if (!string.Equals(child.Category?.Name, "fee", StringComparison.OrdinalIgnoreCase))
+                if (!child.IsFeeComision())
                 {
                     var childEffect = child.Type == TransactionTypes.Income
                         ? child.Amount - child.Fee
@@ -444,21 +485,16 @@ public class TransactionsService
                 child.Deleted = true;
             }
         }
-
-        t.Deleted = true;
-
-        // Si la transacción eliminada es una COMISIÓN (fee hijo), quitar su monto del
-        // fee denormalizado del padre (la sumamos al revertir; aquí se recalcula).
-        if (t.ParentId != null && t.Category?.Name == "fee")
+        else
         {
-            var parent = await _db.Transactions.FirstOrDefaultAsync(x => x.Id == t.ParentId, ct);
-            if (parent != null)
-                parent.Fee = await SumChildFees(parent.Id, ct);
+            foreach (var child in t.Children.Where(c => !c.Deleted))
+                child.Deleted = true;
         }
 
+        t.Deleted = true;
         await _db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
-        return new { success = true };
+        return new { success = true, id = t.Id };
     }
 
     public async Task<object> AddFee(int id, AddFeeCommand cmd, CancellationToken ct = default)
@@ -561,10 +597,17 @@ public class TransactionsService
         return new { success = true, associateId = child.Id };
     }
 
-    private async Task<int> SumChildFees(int parentId, CancellationToken ct)
+    /// <summary>
+    /// Suma los montos de las comisiones (hijas de categoría fee) vigentes de un
+    /// padre. <paramref name="excludeId"/> permite excluir explícitamente una
+    /// hija concreta: necesario cuando la query corre ANTES del SaveChangesAsync
+    /// y el flag Deleted (o el Amount editado) de esa hija todavía no está en la BD.
+    /// </summary>
+    private async Task<int> SumChildFees(int parentId, CancellationToken ct, int? excludeId = null)
     {
         return await _db.Transactions
-            .Where(x => x.ParentId == parentId && !x.Deleted && x.Category!.Name == "fee")
+            .Where(x => x.ParentId == parentId && !x.Deleted && x.Category!.Name == "fee"
+                        && (excludeId == null || x.Id != excludeId))
             .SumAsync(x => (int?)x.Amount, ct) ?? 0;
     }
 }

@@ -33,4 +33,12 @@ public class Transaction
 
     public ICollection<Exchange> DebitExchanges { get; set; } = new List<Exchange>();
     public ICollection<Exchange> CreditExchanges { get; set; } = new List<Exchange>();
+
+    /// <summary>
+    /// true si esta transacción es una COMISIÓN (fee): hija (ParentId != null)
+    /// de categoría "fee". El monto de una comisión está contado dentro del fee
+    /// denormalizado de su padre; identificarla evita revertirla dos veces.
+    /// </summary>
+    public bool IsFeeComision() =>
+        ParentId != null && string.Equals(Category?.Name, "fee", StringComparison.OrdinalIgnoreCase);
 }
