@@ -111,12 +111,16 @@ export class EditExchangeDialog {
     if (this.form.invalid) return;
     this.loading.set(true);
     const v = this.form.value;
+    // OJO: enviar SIEMPRE los números tal cual (no `|| undefined`). Si el usuario
+    // pone fee=0, `0 || undefined` === undefined y el campo se OMITE del JSON: el
+    // backend recibe null y conserva el fee viejo en silencio (bug "dice
+    // actualizado pero no cambia"). 0 es un valor válido que debe aplicarse.
     this.api
       .updateExchange(this.data.ex.id, {
-        fromAmount: Number(v.fromAmount) || undefined,
-        toAmount: Number(v.toAmount) || undefined,
-        fee: Number(v.fee) || undefined,
-        creditFee: Number(v.creditFee) || undefined,
+        fromAmount: Number(v.fromAmount),
+        toAmount: Number(v.toAmount),
+        fee: Number(v.fee ?? 0),
+        creditFee: Number(v.creditFee ?? 0),
         description: v.description || undefined,
       })
       .subscribe({

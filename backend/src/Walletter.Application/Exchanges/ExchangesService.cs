@@ -398,6 +398,10 @@ public class ExchangesService
                 };
                 _db.Transactions.Add(newFeeTx);
             }
+            // Mantener el fee denormalizado del débito sincronizado con la comisión
+            // real (0 cuando se quitó). Sin esto el ledger y el campo Fee divergen y
+            // un Remove posterior revertiría un fee que ya no existe.
+            if (ex.Debit != null) ex.Debit.Fee = newFee;
         }
         if (cmd.CreditFee is decimal)
         {
@@ -425,6 +429,7 @@ public class ExchangesService
                 };
                 _db.Transactions.Add(newCfTx);
             }
+            if (ex.Credit != null) ex.Credit.Fee = newCreditFee;
         }
 
         ex.FromAmount = newFrom;
