@@ -17,6 +17,7 @@ import { UiPreferenceStore } from '../../core/services/ui-preference.store';
 import { Exchange, Wallet } from '../../models/walletter.models';
 import { todayInTimeZone } from '../../core/utils/dates';
 import { ExchangeDialog } from './exchange-dialog';
+import { ImportDialog } from '../import/import-dialog';
 
 interface PeriodOption {
   value: string;
@@ -154,6 +155,20 @@ export class Exchanges implements OnInit, AfterViewInit {
         this.notifier.success('Exchange registrado');
         this.load();
       }
+    });
+  }
+
+  /** Abre la carga por lote (CSV) de exchanges. */
+  openImport(): void {
+    this.settings.loadTimezone();
+    const tz = this.settings.timezone();
+    const ref = this.dialog.open(ImportDialog, {
+      width: '620px',
+      maxWidth: '95vw',
+      data: { mode: 'exchanges', wallets: this.wallets(), tz },
+    });
+    ref.afterClosed().subscribe((imported) => {
+      if (imported) this.load();
     });
   }
 

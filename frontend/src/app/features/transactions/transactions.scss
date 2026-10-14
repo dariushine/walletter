@@ -7,6 +7,13 @@
   margin-bottom: 12px;
 }
 
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .tx-count {
   display: inline-block;
   margin-top: 4px;

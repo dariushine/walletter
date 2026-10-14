@@ -18,6 +18,7 @@ import { Transaction, Wallet } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
 import { TransactionDialog } from './transaction-dialog';
+import { ImportDialog } from '../import/import-dialog';
 
 interface PeriodOption {
   value: string;
@@ -158,6 +159,20 @@ export class Transactions implements OnInit, AfterViewInit {
     const ref = this.dialog.open(TransactionDialog, { width: '460px', data: { wallets: this.wallets(), tz: this.tz } });
     ref.afterClosed().subscribe((created) => {
       if (created) this.load();
+    });
+  }
+
+  /** Abre la carga por lote (CSV) de transacciones. */
+  openImport(): void {
+    this.settings.loadTimezone();
+    const tz = this.settings.timezone();
+    const ref = this.dialog.open(ImportDialog, {
+      width: '620px',
+      maxWidth: '95vw',
+      data: { mode: 'transactions', wallets: this.wallets(), tz },
+    });
+    ref.afterClosed().subscribe((imported) => {
+      if (imported) this.load();
     });
   }
 

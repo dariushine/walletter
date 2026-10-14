@@ -30,6 +30,7 @@ import {
   SummaryResponse,
   ExchangeStatsResponse,
   WalletsResponse,
+  ImportResult,
 } from '../../models/walletter.models';
 
 /**
@@ -411,6 +412,17 @@ export class WalletterApiService {
 
   reportWallets(): Observable<WalletsResponse> {
     return this.http.get<WalletsResponse>(`${this.base}/reports/wallets`);
+  }
+
+  // ===== Import (carga por lote CSV) =====
+  /** POST /import/transactions — carga por lote de transacciones desde CSV (dryRun = preview). */
+  importTransactions(data: { csv: string; tz?: string; dryRun?: boolean }): Observable<ImportResult> {
+    return this.http.post<ImportResult>(`${this.base}/import/transactions`, data);
+  }
+
+  /** POST /import/exchanges — carga por lote de exchanges desde CSV (dryRun = preview). */
+  importExchanges(data: { csv: string; tz?: string; dryRun?: boolean }): Observable<ImportResult> {
+    return this.http.post<ImportResult>(`${this.base}/import/exchanges`, data);
   }
 
   // ===== Health =====

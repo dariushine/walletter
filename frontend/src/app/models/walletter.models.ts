@@ -381,3 +381,23 @@ export type WalletsResponse = Array<{
   balance: number;
   currency: string;
 }>;
+
+/** Resultado por fila de una importación CSV (row = 1-based, sin encabezado). */
+export interface ImportRowResult {
+  row: number;
+  ok: boolean;
+  error?: string | null;
+  data?: any;
+}
+
+/** Resultado global de una importación CSV (dryRun = preview). */
+export interface ImportResult {
+  dryRun: boolean;
+  total: number;
+  imported: number;
+  failed: number;
+  rows: ImportRowResult[];
+}
+
+/** Modo de carga por lote CSV. */
+export type CsvImportMode = 'transactions' | 'exchanges';
