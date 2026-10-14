@@ -1,0 +1,107 @@
+<div class="imp-dialog">
+  <div class="imp-head">
+    <h2 class="imp-title">{{ title() }}</h2>
+    <button mat-icon-button (click)="close()" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="imp-content">
+    <p class="imp-help">
+      Adjunta un archivo CSV o pega su contenido. Cada fila se registra con la misma lógica que
+      la creación individual. Primero valida (preview) y luego confirma.
+    </p>
+
+    <div class="imp-actions-top">
+      <button mat-stroked-button type="button" (click)="fileInput.click()">
+        <mat-icon>upload_file</mat-icon> Elegir archivo CSV
+      </button>
+      <button mat-button type="button" (click)="downloadTemplate()">
+        <mat-icon>download</mat-icon> Plantilla
+      </button>
+      <input #fileInput type="file" accept=".csv,text/csv" hidden (change)="onFileSelected($event)" />
+      @if (fileName()) {
+        <span class="imp-file"><mat-icon>description</mat-icon>{{ fileName() }}</span>
+      }
+    </div>
+
+    <mat-form-field appearance="outline" class="imp-full">
+      <mat-label>Contenido CSV</mat-label>
+      <textarea
+        matInput
+        rows="7"
+        [value]="csv()"
+        (input)="onPaste($event)"
+        placeholder="fecha,hora,tipo,billetera,categoria,monto,fee,descripcion"
+      ></textarea>
+    </mat-form-field>
+
+    @if (error(); as err) {
+      <div class="imp-error"><mat-icon>error</mat-icon><span>{{ err }}</span></div>
+    }
+
+    @if (loading()) {
+      <mat-spinner class="imp-spinner" diameter="36" />
+    }
+
+    <!-- Preview (dryRun) -->
+    @if (preview(); as p) {
+      <div class="imp-summary">
+        <span class="ok">{{ p.imported }} válidas</span>
+        @if (p.failed > 0) {
+          <span class="bad">{{ p.failed }} con error</span>
+        }
+        <span class="total">de {{ p.total }}</span>
+      </div>
+      <div class="imp-rows">
+        @for (r of p.rows; track r.row) {
+          <div class="imp-row" [class.err]="!r.ok">
+            <span class="imp-num">{{ r.row }}</span>
+            <span class="imp-ico">
+              <mat-icon>{{ r.ok ? 'check_circle' : 'cancel' }}</mat-icon>
+            </span>
+            <span class="imp-text">{{ rowSummary(r) }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Resultado real -->
+    @if (result(); as res) {
+      <div class="imp-summary">
+        <span class="ok">{{ res.imported }} importadas</span>
+        @if (res.failed > 0) {
+          <span class="bad">{{ res.failed }} con error</span>
+        }
+      </div>
+      @if (res.failed > 0) {
+        <div class="imp-rows">
+          @for (r of res.rows; track r.row) {
+            @if (!r.ok) {
+              <div class="imp-row err">
+                <span class="imp-num">{{ r.row }}</span>
+                <span class="imp-ico"><mat-icon>cancel</mat-icon></span>
+                <span class="imp-text">{{ rowSummary(r) }}</span>
+              </div>
+            }
+          }
+        </div>
+      }
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="imp-action">
+    <button mat-button (click)="close()">Cerrar</button>
+    <button mat-stroked-button color="primary" (click)="validate()" [disabled]="loading() || !csv().trim()">
+      Validar
+    </button>
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="confirm()"
+      [disabled]="loading() || !preview() || preview()!.imported === 0"
+    >
+      {{ loading() ? 'Procesando…' : 'Importar' }}
+    </button>
+  </mat-dialog-actions>
+</div>

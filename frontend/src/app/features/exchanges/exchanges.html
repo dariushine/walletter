@@ -4,10 +4,16 @@
       <h1 class="page-title">Exchanges</h1>
       <p class="page-subtitle">Cambios entre billeteras y monedas</p>
     </div>
-    <button mat-flat-button color="primary" (click)="exportCSV()" aria-label="Exportar CSV">
-      <mat-icon>file_download</mat-icon>
-      Exportar
-    </button>
+    <div class="head-actions">
+      <button mat-stroked-button color="primary" (click)="openImport()" aria-label="Cargar por lote">
+        <mat-icon>upload_file</mat-icon>
+        Cargar CSV
+      </button>
+      <button mat-flat-button color="primary" (click)="exportCSV()" aria-label="Exportar CSV">
+        <mat-icon>file_download</mat-icon>
+        Exportar
+      </button>
+    </div>
   </header>
 
   <!-- Filtro por periodo -->
