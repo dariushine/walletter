@@ -21,6 +21,21 @@ public class RatesService
 
     private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
 
+    // Cache del último fetch externo (dolarapi). Antes, cada fecha histórica
+    // disparaba su PROPIA llamada HTTP a dolarapi; un reporte con N fechas
+    // distintas hacía N llamadas (~40-80 ms cada una → 2-3 s). Como la fuente
+    // solo devuelve la tasa actual, todas esas llamadas traían el mismo valor.
+    // Con este cache, un reporte hace como máximo UNA llamada externa.
+    private static readonly SemaphoreSlim ExternalFetchLock = new(1, 1);
+    private static (decimal Bcv, decimal Paralelo, DateTime? Fecha)? _lastExternalFetch;
+    private static DateTime _lastExternalFetchAt;
+    private static readonly TimeSpan ExternalFetchTtl = TimeSpan.FromMinutes(2);
+
+    // Cache de tasas efectivas resueltas por fecha. Evita recomputar (y volver a
+    // consultar) todas las fechas al cambiar de página o reabrir el reporte.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (EffectiveRate Rate, DateTime At)> _effectiveCache = new();
+    private static readonly TimeSpan EffectiveTtl = TimeSpan.FromMinutes(5);
+
     private static string TodayInTz()
     {
         var (d, _) = TimeZoneHelper.UtcToWallClock(DateTime.UtcNow, TimeZoneHelper.DefaultTimeZone);
@@ -41,6 +56,20 @@ public class RatesService
     {
         var target = DateTime.ParseExact(date ?? TodayInTz(), "yyyy-MM-dd", null);
 
+        // Cache en memoria por fecha solicitada. Un reporte pide la tasa de CADA
+        // fecha distinta del rango y, al cambiar de página, volvía a pedirlas
+        // todas: sin caché, cada cambio de página repetía todo el trabajo.
+        var cacheKey = target.ToString("yyyy-MM-dd");
+        if (_effectiveCache.TryGetValue(cacheKey, out var hit) && DateTime.UtcNow - hit.At < EffectiveTtl)
+            return hit.Rate;
+
+        var resolved = await EffectiveCore(target, ct);
+        _effectiveCache[cacheKey] = (resolved, DateTime.UtcNow);
+        return resolved;
+    }
+
+    private async Task<EffectiveRate> EffectiveCore(DateTime target, CancellationToken ct)
+    {
         for (var i = 0; i < 92; i++)
         {
             var day = target.AddDays(-i);
@@ -81,7 +110,9 @@ public class RatesService
     /// <summary>Consulta dolarapi y persiste la tasa. Devuelve null si no hay datos.</summary>
     private async Task<(decimal Bcv, decimal Paralelo)?> FetchAndStore(DateTime day, CancellationToken ct)
     {
-        var (bcv, paralelo, fecha) = await FetchFromDolarApi(ct);
+        var fetched = await FetchExternalCached(ct);
+        if (fetched is null) return null;
+        var (bcv, paralelo, fecha) = fetched.Value;
         if (bcv == 0 && paralelo == 0) return null;
 
         // Guarda con la fecha real de la fuente (si existe), si no con el día consultado.
@@ -106,6 +137,37 @@ public class RatesService
         }
         await _db.SaveChangesAsync(ct);
         return (bcv, paralelo);
+    }
+
+    /// <summary>
+    /// Envuelve FetchFromDolarApi con caché de corta vida + exclusión mutua.
+    /// La fuente externa devuelve la tasa ACTUAL, así que resolver N fechas
+    /// históricas disparaba N llamadas que traían el MISMO valor. Con este caché
+    /// (TTL corto) un reporte completo hace como máximo UNA llamada externa.
+    /// </summary>
+    private async Task<(decimal Bcv, decimal Paralelo, DateTime? Fecha)?> FetchExternalCached(CancellationToken ct)
+    {
+        if (_lastExternalFetch is not null && DateTime.UtcNow - _lastExternalFetchAt < ExternalFetchTtl)
+            return _lastExternalFetch;
+
+        await ExternalFetchLock.WaitAsync(ct);
+        try
+        {
+            if (_lastExternalFetch is not null && DateTime.UtcNow - _lastExternalFetchAt < ExternalFetchTtl)
+                return _lastExternalFetch;
+
+            var result = await FetchFromDolarApi(ct);
+            if (result.Bcv > 0 || result.Paralelo > 0)
+            {
+                _lastExternalFetch = result;
+                _lastExternalFetchAt = DateTime.UtcNow;
+            }
+            return result;
+        }
+        finally
+        {
+            ExternalFetchLock.Release();
+        }
     }
 
     /// <summary>Obtiene BCV (oficial) y paralelo desde dolarapi.</summary>

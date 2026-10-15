@@ -273,7 +273,7 @@
             @if (d.byCategory.length === 0) {
               <p class="empty">No hay datos por categoría.</p>
             } @else {
-              @for (c of d.byCategory.slice(0, 6); track c.category) {
+              @for (c of catRows(); track c.category) {
                 <div class="cat-row">
                   <div class="cat-top">
                     <span class="cat-name">{{ c.category }}</span>
@@ -284,13 +284,18 @@
                   </div>
                 </div>
               }
-              @if (d.byCategory.length > 6) {
-                <p class="cat-more">+{{ d.byCategory.length - 6 }} categorías más</p>
-              }
               <div class="cat-total-row">
                 <span class="cat-total-label">Total</span>
                 <span class="cat-total-amount expense">{{ fmtUsd(d.byCategoryTotal || d.summary.totalExpenses) }}</span>
               </div>
+              <mat-paginator
+                class="cat-paginator"
+                [length]="catTotalAll()"
+                [pageSize]="catLimit()"
+                [pageIndex]="catPage() - 1"
+                [pageSizeOptions]="catPageSizeOptions"
+                (page)="onCatPage($event)"
+              />
             }
           </mat-card-content>
         </mat-card>
