@@ -85,6 +85,13 @@ export class Reports implements OnInit {
   limit = signal(5);
   readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
 
+  // Paginación (client-side) de "Gastos por Categoría". El backend ya devuelve
+  // el listado completo de categorías; antes el front solo mostraba las 6
+  // primeras ("+N categorías más").
+  catPage = signal(1);
+  catLimit = signal(5);
+  readonly catPageSizeOptions = [5, 10, 20, 50];
+
   // Ordenamiento server-side: por defecto fecha-hora descendente (key desc).
   sortBy = signal<SortKey>('key');
   sortDir = signal<SortDir>('desc');
@@ -125,11 +132,22 @@ export class Reports implements OnInit {
   /** Total de filas antes de paginar (para el paginador). */
   readonly perfTotal = computed(() => this.data()?.performanceTotal ?? this.rows().length);
 
+  /** Categorías totales (todas, sin recortar). */
+  readonly catTotalAll = computed(() => this.data()?.byCategory?.length ?? 0);
+
+  /** Página actual de "Gastos por Categoría". */
+  readonly catRows = computed(() => {
+    const cats = this.data()?.byCategory ?? [];
+    const start = (this.catPage() - 1) * this.catLimit();
+    return cats.slice(start, start + this.catLimit());
+  });
+
   /** Neto del periodo anterior (referencia de tendencia), desde el backend. */
   readonly prevNet = computed(() => this.data()?.meta?.prevNet ?? null);
 
   load(): void {
     this.loading.set(true);
+    this.catPage.set(1);
     
     // Parámetros comunes
     const commonParams = {
@@ -364,6 +382,12 @@ export class Reports implements OnInit {
     this.limit.set(e.pageSize);
     // Solo recargar performance, no todo
     this.loadPerformanceOnly();
+  }
+
+  /** Paginación client-side de "Gastos por Categoría" (no requiere red). */
+  onCatPage(e: PageEvent): void {
+    this.catPage.set(e.pageIndex + 1);
+    this.catLimit.set(e.pageSize);
   }
 
   toggleFullscreen(): void {
