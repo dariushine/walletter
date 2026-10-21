@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Walletter.Application.Exchanges;
 
 public class CreateExchangeCommand
@@ -14,6 +16,7 @@ public class CreateExchangeCommand
     public string? Tz { get; set; }
 }
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public class UpdateExchangeCommand
 {
     public decimal? FromAmount { get; set; }

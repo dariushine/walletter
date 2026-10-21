@@ -181,8 +181,9 @@ public class TransactionsService
             }
             if (!string.IsNullOrEmpty(query.To))
             {
-                var to = TimeZoneHelper.ToUtcInstant(query.To, "00:00", tz);
-                q = q.Where(t => t.DatetimeUtc < to);
+                var toDate = TimeZoneHelper.ToUtcInstant(query.To, "00:00", tz);
+                var toExclusive = toDate.AddDays(1);
+                q = q.Where(t => t.DatetimeUtc < toExclusive);
             }
         }
 
@@ -293,8 +294,10 @@ public class TransactionsService
             parentTransactionId = t.ParentId,
             date,
             time,
-            // Balance en vivo de la billetera = saldo resultante tras esta transacción.
-            resultingBalance = Money.ToNum(t.Wallet?.Balance ?? 0),
+            // Saldo resultante REAL de esa fila (running sum en vivo, anclado al
+            // saldo actual). Antes era el saldo ACTUAL de la billetera, que se leía
+            // como histórico y descuadraba auditorías. No se persiste.
+            resultingBalance = await ResultingBalanceFor(t, ct),
             // true si es débito/crédito de exchange, o una comisión cuyo padre lo es.
             isExchange = IsExchangeTransaction(t),
             // id del exchange al que pertenece (si es transacción de exchange). Null si no.
@@ -311,6 +314,25 @@ public class TransactionsService
                 ? new { date = usdRate.Date, bcv = usdRate.Bcv, paralelo = usdRate.Paralelo }
                 : null,
         };
+    }
+
+    /// <summary>
+    /// Saldo resultante REAL tras esta transacción: saldo ACTUAL de la billetera
+    /// menos el efecto de ledger de las transacciones ESTRICTAMENTE posteriores
+    /// (mismo orden que el listado: DatetimeUtc asc, Id asc). Calculado en vivo,
+    /// nunca persistido. El efecto por fila usa el Amount crudo con signo
+    /// (income/expense): las comisiones son filas hijas propias, así que no hay
+    /// doble conteo y el resultado coincide con el ledger.
+    /// </summary>
+    private async Task<decimal> ResultingBalanceFor(Transaction t, CancellationToken ct)
+    {
+        var after = await _db.Transactions.AsNoTracking()
+            .Where(x => x.WalletId == t.WalletId && !x.Deleted
+                && (x.DatetimeUtc > t.DatetimeUtc
+                    || (x.DatetimeUtc == t.DatetimeUtc && x.Id > t.Id)))
+            .SumAsync(x => (int?)(x.Type == TransactionTypes.Income ? x.Amount : -x.Amount), ct) ?? 0;
+        var current = t.Wallet?.Balance ?? 0;
+        return Money.ToNum(current - after);
     }
 
     /// <summary>

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Walletter.Application.Transactions;
 
 public class CreateTransactionCommand
@@ -13,6 +15,7 @@ public class CreateTransactionCommand
     public string? Tz { get; set; }
 }
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public class UpdateTransactionCommand
 {
     public string? Description { get; set; }

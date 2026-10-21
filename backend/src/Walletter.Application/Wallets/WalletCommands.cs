@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Walletter.Application.Wallets;
 
 public class CreateWalletCommand
@@ -14,6 +16,7 @@ public class CreateWalletCommand
     public bool HideInDashboard { get; set; }
 }
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public class UpdateWalletCommand
 {
     public string? Name { get; set; }
