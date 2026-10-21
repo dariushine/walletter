@@ -283,6 +283,67 @@ public class ImportTests : IDisposable
         Assert.Equal(1200m, 1000m + await LedgerSumAsync(walletId));
     }
 
+    // ================= BUG 3 (categorías de sistema) =================
+
+    [Theory]
+    [InlineData("exchange_in")]
+    [InlineData("exchange_out")]
+    [InlineData("fee")]
+    public async Task Transactions_SystemCategory_RejectedPerRow_WithHint(string systemCategory)
+    {
+        var walletId = await CreateWalletAsync("SysCat", 1000m);
+        var csv = $"fecha,tipo,billetera,categoria,monto\n2026-01-15,gasto,SysCat,{systemCategory},100";
+
+        var res = await ImportTxAsync(csv);
+
+        Assert.Equal(1, res.Total);
+        Assert.Equal(0, res.Imported);
+        Assert.Equal(1, res.Failed);
+        var err = res.Rows.Single(r => !r.Ok).Error ?? "";
+        Assert.Contains("sistema", err, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("exchange", err, StringComparison.OrdinalIgnoreCase);
+        // Nada se escribió: el saldo no se movió.
+        Assert.Equal(1000m, await GetBalanceAsync(walletId));
+        Assert.Equal(0m, await LedgerSumAsync(walletId));
+    }
+
+    [Fact]
+    public async Task Transactions_SystemCategory_DoesNotAbortOtherRows()
+    {
+        var walletId = await CreateWalletAsync("MixedSys", 1000m);
+        var csv = string.Join('\n', new[]
+        {
+            "fecha,tipo,billetera,categoria,monto",
+            "2026-01-15,gasto,MixedSys,exchange_in,100",   // sistema -> rechazada
+            "2026-01-16,gasto,MixedSys,comida,50",         // ok
+            "2026-01-17,ingreso,MixedSys,exchange_out,200",// sistema -> rechazada
+            "2026-01-18,ingreso,MixedSys,salario,300",     // ok
+        });
+
+        var res = await ImportTxAsync(csv);
+
+        Assert.Equal(4, res.Total);
+        Assert.Equal(2, res.Imported);
+        Assert.Equal(2, res.Failed);
+        // Solo las filas válidas tocaron el balance: 1000 - 50 + 300 = 1250.
+        Assert.Equal(1250m, await GetBalanceAsync(walletId));
+        Assert.Equal(1250m, 1000m + await LedgerSumAsync(walletId));
+    }
+
+    [Fact]
+    public async Task Transactions_SystemCategory_DryRunAlsoRejected()
+    {
+        await CreateWalletAsync("SysDry", 1000m);
+        var csv = "fecha,tipo,billetera,categoria,monto\n2026-01-15,gasto,SysDry,exchange_in,100";
+        var res = await ImportTxAsync(csv, dryRun: true);
+
+        // El dryRun valida por fila igual que el commit: no puede "aprobar"
+        // algo que el commit rechazaría.
+        Assert.Equal(1, res.Total);
+        Assert.Equal(0, res.Imported);
+        Assert.Equal(1, res.Failed);
+    }
+
     [Fact]
     public async Task Transactions_MissingRequiredHeader_Throws()
     {

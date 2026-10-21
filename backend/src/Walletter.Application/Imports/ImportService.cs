@@ -79,6 +79,8 @@ public class ImportService
                 var category = (GetCell(r, header, CategoryHeaders) ?? string.Empty).Trim();
                 if (category.Length == 0)
                     throw new BusinessException("Categoría vacía");
+                if (Walletter.Domain.SystemCategories.IsSystem(category))
+                    throw new BusinessException($"La categoría '{category}' es de sistema; usa el endpoint de exchanges para importar exchanges.");
                 var fee = ImportParsing.ParseMoney(GetCell(r, header, FeeHeaders)) ?? 0m;
                 var description = (GetCell(r, header, DescHeaders) ?? string.Empty).Trim();
 

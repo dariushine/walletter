@@ -22,7 +22,7 @@ public class CategoriesService
     /// Busca una categoría activa por nombre+tipo; si no existe la crea.
     /// No permite crear categorías de sistema.
     /// </summary>
-    public async Task<Category> GetOrCreateCategory(string categoryName, string type, CancellationToken ct = default)
+    public async Task<Category> GetOrCreateCategory(string categoryName, string type, CancellationToken ct = default, string? color = null)
     {
         var name = (categoryName ?? string.Empty).Trim();
         if (name.Length == 0)
@@ -44,8 +44,12 @@ public class CategoriesService
         if (SystemCategories.IsSystem(name))
             throw new BusinessException($"No puedes crear la categoría de sistema '{name}'");
 
-        var color = type == TransactionTypes.Income ? "#2ecc71" : "#e74c3c";
-        var created = new Category { Name = name, Type = type, Color = color, IsActive = true, CreatedAt = DateTime.UtcNow };
+        // Color explícito si viene informado; el default por tipo solo si viene
+        // vacío/null. Antes se ignoraba siempre y se forzaba el default.
+        var resolvedColor = string.IsNullOrWhiteSpace(color)
+            ? (type == TransactionTypes.Income ? "#2ecc71" : "#e74c3c")
+            : color!.Trim();
+        var created = new Category { Name = name, Type = type, Color = resolvedColor, IsActive = true, CreatedAt = DateTime.UtcNow };
         _db.Categories.Add(created);
         try
         {
@@ -85,7 +89,7 @@ public class CategoriesService
     {
         if (SystemCategories.IsSystem(cmd.Name))
             throw new BusinessException($"No puedes crear la categoría de sistema '{cmd.Name}'");
-        return Map(await GetOrCreateCategory(cmd.Name, cmd.Type, ct));
+        return Map(await GetOrCreateCategory(cmd.Name, cmd.Type, ct, cmd.Color));
     }
 
     public async Task<object> Update(int id, UpdateCategoryCommand cmd, CancellationToken ct = default)

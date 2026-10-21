@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Walletter.Application.Categories;
 
 public class CreateCategoryCommand
@@ -7,6 +9,7 @@ public class CreateCategoryCommand
     public string? Color { get; set; }
 }
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public class UpdateCategoryCommand
 {
     public string? Name { get; set; }

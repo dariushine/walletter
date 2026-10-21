@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Walletter.Application.Recurring;
 
 public class CreateRecurringCommand
@@ -15,6 +17,7 @@ public class CreateRecurringCommand
     public int? BillingDay { get; set; }
 }
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public class UpdateRecurringCommand
 {
     public string? Name { get; set; }

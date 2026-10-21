@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Walletter.Application.Pending;
 
 public class CreatePendingPaymentCommand
@@ -16,6 +18,7 @@ public class CreatePendingPaymentCommand
     public string? DueDate { get; set; }
 }
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public class UpdatePendingPaymentCommand
 {
     public string? Name { get; set; }
