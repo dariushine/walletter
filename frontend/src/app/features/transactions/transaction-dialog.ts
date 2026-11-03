@@ -11,7 +11,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Wallet } from '../../models/walletter.models';
-import { todayInTimeZone, formatInTimeZone } from '../../core/utils/dates';
+import { todayInTimeZone, formatInTimeZone, normalizeBillingDate } from '../../core/utils/dates';
 import { of } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { MoneyInput } from '../../core/components/money-input';
@@ -154,12 +154,4 @@ export class TransactionDialog {
   dialogTitle(): string {
     return this.preset?.title ?? 'Nueva transacción';
   }
-}
-
-/** Convierte el valor del datepicker a yyyy-MM-dd en la zona indicada. */
-function normalizeBillingDate(value: string | Date | null | undefined, tz: string): string | null {
-  if (!value) return null;
-  const d = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return null;
-  return formatInTimeZone(d, tz, 'yyyy-MM-dd');
 }
