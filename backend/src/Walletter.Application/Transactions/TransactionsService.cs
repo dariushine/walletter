@@ -172,6 +172,18 @@ public class TransactionsService
         var q = _db.Transactions.AsNoTracking().Where(t => !t.Deleted);
         if (query.WalletId is int wid)
             q = q.Where(t => t.WalletId == wid);
+        if (query.CategoryId is int cid)
+            q = q.Where(t => t.CategoryId == cid);
+        if (!string.IsNullOrWhiteSpace(query.Type) && TransactionTypes.IsValid(query.Type))
+            q = q.Where(t => t.Type == query.Type);
+        // Búsqueda de texto libre por descripción, case-insensitive y traducida a
+        // SQL: ToLower() en ambos lados se compila a `instr(lower(col), lower(@p)) > 0`
+        // en SQLite, así que el filtro se aplica en la BD (no en memoria).
+        if (!string.IsNullOrWhiteSpace(query.Query))
+        {
+            var term = query.Query.Trim().ToLowerInvariant();
+            q = q.Where(t => t.Description != null && t.Description.ToLower().Contains(term));
+        }
         if (!string.IsNullOrEmpty(query.From) || !string.IsNullOrEmpty(query.To))
         {
             if (!string.IsNullOrEmpty(query.From))

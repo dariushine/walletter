@@ -54,6 +54,10 @@ export class PendingDialog {
   isEdit = !!this.data?.item;
 
   readonly form = this.fb.group({
+    // NOTA: 'currency' puede quedar deshabilitado cuando hay billetera (su
+    // moneda manda). Con el control deshabilitado, form.value.currency es
+    // undefined → por eso save() y currencyValue() usan getRawValue().
+
     name: [this.data?.item?.name ?? '', Validators.required],
     type: [(this.data?.item?.type ?? 'expense') as 'expense' | 'income', Validators.required],
     amount: [this.data?.item?.amount ?? 0, [Validators.required, Validators.min(0.01)]],
@@ -64,6 +68,29 @@ export class PendingDialog {
     dueDate: [this.data?.item?.dueDate ?? ''],
     description: [this.data?.item?.description ?? ''],
   });
+
+  constructor() {
+    // Estado inicial + reacción a cambios de billetera.
+    this.syncCurrencyWithWallet((this.form.value.walletId as number | null) ?? null);
+    this.form
+      .get('walletId')!
+      .valueChanges.subscribe((id) => this.syncCurrencyWithWallet((id as number | null) ?? null));
+  }
+
+  /**
+   * Si hay billetera, la moneda del pendiente se deriva de ella y queda fija
+   * (deshabilitada). Sin billetera, el usuario la elige a mano.
+   */
+  private syncCurrencyWithWallet(walletId: number | null): void {
+    const currencyCtrl = this.form.get('currency')!;
+    const wallet = walletId != null ? this.data.wallets.find((w) => w.id === walletId) : undefined;
+    if (wallet) {
+      currencyCtrl.setValue(wallet.currency);
+      currencyCtrl.disable({ emitEvent: false });
+    } else {
+      currencyCtrl.enable({ emitEvent: false });
+    }
+  }
 
   /** Cambia el tipo: limpia la categoría y recarga sugerencias (autocomplete recarga por [type]). */
   changeType(type: 'income' | 'expense'): void {
@@ -79,7 +106,8 @@ export class PendingDialog {
       return;
     }
     this.loading = true;
-    const v = this.form.value;
+    // getRawValue() incluye controles deshabilitados (currency con billetera).
+    const v = this.form.getRawValue();
     const dueDate = normalizeDueDate(v.dueDate, this.data.tz);
     const payload = {
       name: v.name!,
@@ -113,7 +141,7 @@ export class PendingDialog {
 
   /** Código de moneda seleccionado en el form (o null → 'USD/VES'). */
   currencyValue(): string | null {
-    const c = this.form.value.currency;
+    const c = this.form.getRawValue().currency;
     return typeof c === 'string' && c ? c : null;
   }
 }

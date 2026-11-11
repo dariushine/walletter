@@ -28,16 +28,39 @@
   margin: 40px auto;
 }
 
-/* Filtro por periodo — sin recuadro blanco. */
+/* Filtros — sin recuadro blanco. Todos se aplican server-side. */
 .filter-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin: 0 0 16px;
   flex-wrap: wrap;
 
+  .search-field {
+    flex: 1 1 220px;
+    min-width: 200px;
+  }
+
   .period-select {
-    width: 220px;
+    width: 160px;
+  }
+
+  .cat-select,
+  .wallet-select,
+  .type-select {
+    width: 160px;
+  }
+
+  .date-field {
+    width: 150px;
+  }
+
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Alinea los botones con los inputs (que tienen el label encima). */
+    padding-top: 8px;
   }
 
   ::ng-deep .mat-mdc-text-field-wrapper {

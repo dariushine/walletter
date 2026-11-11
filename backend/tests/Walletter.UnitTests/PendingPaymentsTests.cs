@@ -58,14 +58,14 @@ public class PendingPaymentsTests : IDisposable
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { }
     }
 
-    private async Task<int> CreateWalletAsync(string name, decimal balance)
+    private async Task<int> CreateWalletAsync(string name, decimal balance, string currency = "USD")
     {
         using var scope = _serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<WalletterDbContext>();
         var wallet = new Wallet
         {
             Name = name,
-            Currency = "USD",
+            Currency = currency,
             Balance = Money.ToInt(balance),
             Type = "bank",
             IsActive = true,
@@ -334,6 +334,107 @@ public class PendingPaymentsTests : IDisposable
     }
 
     // ============ LISTA CON HISTORIAL ============
+
+    // ============ MONEDA vs BILLETERA ============
+
+    [Fact]
+    public async Task Create_WalletCurrencyMismatch_Throws()
+    {
+        var walletId = await CreateWalletAsync("Bancamiga", 1000m, currency: "VES");
+
+        using var scope = _serviceProvider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PendingPaymentsService>();
+        // Helper siempre envía Currency = "USD"; con billetera VES debe fallar.
+        await Assert.ThrowsAsync<BusinessException>(() => service.Create(new CreatePendingPaymentCommand
+        {
+            Name = "Luz",
+            Amount = 100m,
+            Currency = "USD",
+            Type = "expense",
+            CategoryName = "Servicios",
+            WalletId = walletId,
+        }));
+    }
+
+    [Fact]
+    public async Task Create_WalletCurrencyMatch_NormalizesToWalletCurrency()
+    {
+        var walletId = await CreateWalletAsync("Bancamiga", 1000m, currency: "VES");
+
+        using var scope = _serviceProvider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PendingPaymentsService>();
+        var p = await service.Create(new CreatePendingPaymentCommand
+        {
+            Name = "Luz",
+            Amount = 100m,
+            Currency = "VES",
+            Type = "expense",
+            CategoryName = "Servicios",
+            WalletId = walletId,
+        });
+
+        Assert.Equal("VES", p.Currency);
+        Assert.Equal("Bancamiga", p.WalletName);
+        Assert.Equal("VES", p.WalletCurrency);
+    }
+
+    [Fact]
+    public async Task Create_WithoutWallet_KeepsChosenCurrency()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PendingPaymentsService>();
+        var p = await service.Create(new CreatePendingPaymentCommand
+        {
+            Name = "Luz",
+            Amount = 100m,
+            Currency = "VES",
+            Type = "expense",
+            CategoryName = "Servicios",
+        });
+
+        Assert.Equal("VES", p.Currency);
+        Assert.Null(p.WalletId);
+        Assert.Null(p.WalletName);
+        Assert.Null(p.WalletCurrency);
+    }
+
+    [Fact]
+    public async Task Update_WalletCurrencyMismatch_Throws_AndStaysUntouched()
+    {
+        var vesWallet = await CreateWalletAsync("Bancamiga", 1000m, currency: "VES");
+        var p = await CreatePendingAsync("Luz", 100m); // USD, sin billetera
+
+        using var scope = _serviceProvider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PendingPaymentsService>();
+        // Asignar billetera VES sin cambiar currency (USD) debe fallar.
+        await Assert.ThrowsAsync<BusinessException>(() => service.Update(p.Id, new UpdatePendingPaymentCommand
+        {
+            WalletId = vesWallet,
+        }));
+
+        var detail = await service.Detail(p.Id);
+        Assert.Equal("USD", detail.Currency);
+        Assert.Null(detail.WalletId);
+    }
+
+    [Fact]
+    public async Task Update_WalletMatch_ResolvesWalletFields()
+    {
+        var vesWallet = await CreateWalletAsync("Bancamiga", 1000m, currency: "VES");
+        var p = await CreatePendingAsync("Luz", 100m); // USD, sin billetera
+
+        using var scope = _serviceProvider.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<PendingPaymentsService>();
+        var updated = await service.Update(p.Id, new UpdatePendingPaymentCommand
+        {
+            WalletId = vesWallet,
+            Currency = "VES",
+        });
+
+        Assert.Equal("VES", updated.Currency);
+        Assert.Equal("Bancamiga", updated.WalletName);
+        Assert.Equal("VES", updated.WalletCurrency);
+    }
 
     [Fact]
     public async Task List_IncludePaid_ReturnsPaidOnes()
