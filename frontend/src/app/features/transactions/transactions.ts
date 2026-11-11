@@ -7,6 +7,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
@@ -14,7 +17,7 @@ import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { WalletterApiService } from '../../core/services/walletter-api.service';
 import { SettingsStore } from '../../core/services/settings-store';
 import { UiPreferenceStore } from '../../core/services/ui-preference.store';
-import { Transaction, Wallet } from '../../models/walletter.models';
+import { Category, Transaction, TransactionType, Wallet } from '../../models/walletter.models';
 import { formatMoney } from '../../core/utils/money';
 import { todayInTimeZone } from '../../core/utils/dates';
 import { TransactionDialog } from './transaction-dialog';
@@ -35,6 +38,9 @@ interface PeriodOption {
     MatPaginatorModule,
     MatFormFieldModule,
     MatSelectModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     RouterLink,
     FormsModule,
     MatAccordion,
@@ -57,6 +63,7 @@ export class Transactions implements OnInit, AfterViewInit {
 
   transactions = signal<Transaction[]>([]);
   wallets = signal<Wallet[]>([]);
+  categories = signal<Category[]>([]);
   total = signal(0);
   loading = signal(true);
 
@@ -69,6 +76,39 @@ export class Transactions implements OnInit, AfterViewInit {
   /** Rango de fechas aplicado (from/to) deducido del periodo elegido. */
   private appliedFrom: string | undefined;
   private appliedTo: string | undefined;
+
+  // ===== Filtros adicionales (se aplican SIEMPRE en el servidor) =====
+  /** Búsqueda de texto libre sobre la descripción. */
+  filterQuery = '';
+  /** Id de categoría seleccionada (null = todas). */
+  filterCategoryId: number | null = null;
+  /** Id de billetera seleccionada (null = todas). */
+  filterWalletId: number | null = null;
+  /** Tipo seleccionado ('' = todos). */
+  filterType: TransactionType | '' = '';
+  /** Rango de fechas explícito (tiene prioridad sobre el periodo). */
+  filterFrom: Date | null = null;
+  filterTo: Date | null = null;
+
+  /**
+   * Categorías visibles en el desplegable según el Tipo seleccionado:
+   * '' → todas, 'expense' → solo gasto, 'income' → solo ingreso.
+   * Es solo el filtrado de la LISTA del dropdown (pocos ítems); el filtrado
+   * de la lista de TRANSACCIONES sigue siendo server-side.
+   */
+  visibleCategories(): Category[] {
+    const t = this.filterType;
+    if (!t) return this.categories();
+    return this.categories().filter((c) => c.type === t);
+  }
+
+  /**
+   * Al cambiar el Tipo se limpia la categoría seleccionada, que puede no
+   * aplicar al nuevo tipo. Comportamiento silencioso: sin avisos en la UI.
+   */
+  onTypeChange(): void {
+    this.filterCategoryId = null;
+  }
 
   readonly periods: PeriodOption[] = [
     { value: 'all', label: 'Todo' },
@@ -96,17 +136,24 @@ export class Transactions implements OnInit, AfterViewInit {
     this.settings.loadTimezone();
     this.tz = this.settings.timezone();
     this.api.wallets().subscribe((w) => this.wallets.set(w));
+    this.api.categories().subscribe((c) => this.categories.set(c));
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
+    // Todos los filtros viajan al backend y se aplican server-side en la query
+    // (antes de CountAsync/Skip/Take). NUNCA se filtra en el cliente.
     this.api
       .transactions({
         page: this.page,
         limit: this.limit,
         from: this.appliedFrom,
         to: this.appliedTo,
+        categoryId: this.filterCategoryId ?? undefined,
+        walletId: this.filterWalletId ?? undefined,
+        type: this.filterType || undefined,
+        query: this.filterQuery.trim() || undefined,
       })
       .subscribe({
         next: (res) => {
@@ -118,14 +165,46 @@ export class Transactions implements OnInit, AfterViewInit {
       });
   }
 
-  /** Aplica el rango del periodo elegido y recarga desde la página 1. */
-  applyPeriod(): void {
+  /**
+   * Aplica el periodo y los filtros adicionales, y recarga desde la página 1.
+   * Si el usuario escribió un rango de fechas explícito, este tiene prioridad
+   * sobre el periodo (el periodo queda como atajo del rango).
+   */
+  applyFilters(): void {
     this.prefs.setPeriod('transactions', this.selectedPeriod);
+    if (this.filterFrom || this.filterTo) {
+      this.appliedFrom = this.filterFrom ? this.toYmd(this.filterFrom) : undefined;
+      this.appliedTo = this.filterTo ? this.toYmd(this.filterTo) : undefined;
+    } else {
+      const range = this.resolveRange(this.selectedPeriod);
+      this.appliedFrom = range.from;
+      this.appliedTo = range.to;
+    }
+    this.page = 1;
+    this.load();
+  }
+
+  /** Limpia los filtros adicionales y el rango explícito, y recarga. */
+  clearFilters(): void {
+    this.filterQuery = '';
+    this.filterCategoryId = null;
+    this.filterWalletId = null;
+    this.filterType = '';
+    this.filterFrom = null;
+    this.filterTo = null;
+    // Vuelve a deducir el rango del periodo seleccionado.
     const range = this.resolveRange(this.selectedPeriod);
     this.appliedFrom = range.from;
     this.appliedTo = range.to;
     this.page = 1;
     this.load();
+  }
+
+  /** Fecha local → YYYY-MM-DD (sin desfase por zona horaria). */
+  private toYmd(d: Date): string {
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
   }
 
   private resolveRange(period: string): { from?: string; to?: string } {

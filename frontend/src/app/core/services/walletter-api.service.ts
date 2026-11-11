@@ -127,6 +127,9 @@ export class WalletterApiService {
     from?: string;
     to?: string;
     walletId?: number;
+    categoryId?: number;
+    type?: TransactionType;
+    query?: string;
   } = {}): Observable<TransactionList> {
     return this.http.get<TransactionList>(`${this.base}/transactions`, { params: this.toParams(params) });
   }

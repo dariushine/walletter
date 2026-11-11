@@ -16,8 +16,14 @@
     </div>
   </header>
 
-  <!-- Filtro por periodo (sin recuadro blanco) -->
+  <!-- Filtros (todos se aplican server-side). Sin recuadro blanco. -->
   <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Buscar descripción</mat-label>
+      <input matInput [(ngModel)]="filterQuery" (keyup.enter)="applyFilters()" placeholder="Ej. supermercado" />
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+
     <mat-form-field appearance="outline" class="period-select">
       <mat-label>Periodo</mat-label>
       <mat-select [(ngModel)]="selectedPeriod">
@@ -26,7 +32,54 @@
         }
       </mat-select>
     </mat-form-field>
-    <button mat-flat-button color="primary" (click)="applyPeriod()">Aplicar</button>
+
+    <mat-form-field appearance="outline" class="type-select">
+      <mat-label>Tipo</mat-label>
+      <mat-select [(ngModel)]="filterType" (selectionChange)="onTypeChange()">
+        <mat-option value="">Todos</mat-option>
+        <mat-option value="income">Ingreso</mat-option>
+        <mat-option value="expense">Gasto</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cat-select">
+      <mat-label>Categoría</mat-label>
+      <mat-select [(ngModel)]="filterCategoryId">
+        <mat-option [value]="null">Todas</mat-option>
+        @for (c of visibleCategories(); track c.id) {
+          <mat-option [value]="c.id">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="wallet-select">
+      <mat-label>Billetera</mat-label>
+      <mat-select [(ngModel)]="filterWalletId">
+        <mat-option [value]="null">Todas</mat-option>
+        @for (w of wallets(); track w.id) {
+          <mat-option [value]="w.id">{{ w.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>Desde</mat-label>
+      <input matInput [matDatepicker]="fromPicker" [(ngModel)]="filterFrom" />
+      <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+      <mat-datepicker #fromPicker />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>Hasta</mat-label>
+      <input matInput [matDatepicker]="toPicker" [(ngModel)]="filterTo" />
+      <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+      <mat-datepicker #toPicker />
+    </mat-form-field>
+
+    <div class="filter-actions">
+      <button mat-flat-button color="primary" (click)="applyFilters()">Aplicar</button>
+      <button mat-stroked-button (click)="clearFilters()">Limpiar</button>
+    </div>
   </div>
 
   @if (loading()) {

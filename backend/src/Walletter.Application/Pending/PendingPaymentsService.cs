@@ -19,6 +19,8 @@ public record PendingPaymentDto(
     string? Category,
     int CategoryId,
     int? WalletId,
+    string? WalletName,
+    string? WalletCurrency,
     string? DueDate,
     bool IsPaid,
     DateTime? PaidAt,
@@ -53,7 +55,12 @@ public class PendingPaymentsService
             .ThenBy(p => p.DueDate)
             .ThenBy(p => p.Name)
             .ToListAsync(ct);
-        return rows.Select(Map).ToList();
+
+        // La entidad PendingPayment no tiene navegación a Wallet (se decidió no
+        // tocar el schema ni el DbContext), así que resolvemos nombre/moneda de
+        // la billetera con un lookup batcheado por WalletId.
+        var wallets = await LoadWalletsAsync(rows.Select(p => p.WalletId), ct);
+        return rows.Select(p => Map(p, WalletFor(wallets, p.WalletId))).ToList();
     }
 
     public async Task<PendingPaymentDto> Create(CreatePendingPaymentCommand cmd, CancellationToken ct = default)
@@ -72,13 +79,17 @@ public class PendingPaymentsService
 
         ValidateDueDate(cmd.DueDate);
 
+        // Con billetera, la moneda efectiva se deriva de ella (y si el usuario
+        // pidió otra, es un error). Sin billetera, se respeta la elegida.
+        var currency = await ResolveCurrencyAsync(cmd.Currency, cmd.WalletId, ct);
+
         var row = new PendingPayment
         {
             Name = cmd.Name,
             Description = cmd.Description,
             Amount = Money.ToInt(cmd.Amount),
             Fee = Money.ToInt(cmd.Fee),
-            Currency = cmd.Currency,
+            Currency = currency,
             Type = cmd.Type,
             CategoryId = categoryId.Value,
             WalletId = cmd.WalletId,
@@ -92,7 +103,8 @@ public class PendingPaymentsService
         await _db.SaveChangesAsync(ct);
         var loadedCategory = await _db.Categories.FindAsync(new object?[] { row.CategoryId }, ct);
         row.Category = loadedCategory!;
-        return Map(row);
+        var wallet = await LookupWalletAsync(row.WalletId, ct);
+        return Map(row, wallet);
     }
 
     public async Task<PendingPaymentDto> Remove(int id, CancellationToken ct = default)
@@ -102,7 +114,8 @@ public class PendingPaymentsService
             throw new BusinessException("No se puede eliminar un pago pendiente ya pagado");
         row.IsCancelled = true;
         await _db.SaveChangesAsync(ct);
-        return Map(row);
+        var wallet = await LookupWalletAsync(row.WalletId, ct);
+        return Map(row, wallet);
     }
 
     public async Task<PendingPaymentDto> Detail(int id, CancellationToken ct = default)
@@ -111,7 +124,8 @@ public class PendingPaymentsService
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id, ct)
             ?? throw new NotFoundException("Pago pendiente no encontrado");
-        return Map(row);
+        var wallet = await LookupWalletAsync(row.WalletId, ct);
+        return Map(row, wallet);
     }
 
     public async Task<PendingPaymentDto> Update(int id, UpdatePendingPaymentCommand cmd, CancellationToken ct = default)
@@ -119,11 +133,18 @@ public class PendingPaymentsService
         var existing = await GetActiveAsync(id, ct);
         if (existing.IsPaid)
             throw new BusinessException("No se puede editar un pago pendiente ya pagado");
+
+        // Validar el estado EFECTIVO antes de mutar (WalletId/Currency pueden
+        // venir nulos = "no cambiar"). Si hay billetera, su moneda manda.
+        var effectiveWalletId = cmd.WalletId ?? existing.WalletId;
+        var effectiveCurrency = cmd.Currency ?? existing.Currency;
+        var resolvedCurrency = await ResolveCurrencyAsync(effectiveCurrency, effectiveWalletId, ct);
+
         if (cmd.Name != null) existing.Name = cmd.Name;
         if (cmd.Description != null) existing.Description = cmd.Description;
         if (cmd.Amount is decimal a) existing.Amount = Money.ToInt(a);
         if (cmd.Fee is decimal f) existing.Fee = Money.ToInt(f);
-        if (cmd.Currency != null) existing.Currency = cmd.Currency;
+        if (cmd.Currency != null || cmd.WalletId != null) existing.Currency = resolvedCurrency;
         if (cmd.Type != null) existing.Type = cmd.Type;
         if (cmd.WalletId is int w) existing.WalletId = w;
         if (cmd.DueDate != null)
@@ -140,7 +161,8 @@ public class PendingPaymentsService
         await _db.SaveChangesAsync(ct);
         var loadedCategory = await _db.Categories.FindAsync(new object?[] { existing.CategoryId }, ct);
         existing.Category = loadedCategory!;
-        return Map(existing);
+        var wallet = await LookupWalletAsync(existing.WalletId, ct);
+        return Map(existing, wallet);
     }
 
     /// <summary>
@@ -215,7 +237,8 @@ public class PendingPaymentsService
         await _db.SaveChangesAsync(ct);
         var loadedCategory = await _db.Categories.FindAsync(new object?[] { row.CategoryId }, ct);
         row.Category = loadedCategory!;
-        return Map(row);
+        var wallet = await LookupWalletAsync(row.WalletId, ct);
+        return Map(row, wallet);
     }
 
     private async Task<PendingPayment> GetActiveAsync(int id, CancellationToken ct)
@@ -235,7 +258,43 @@ public class PendingPaymentsService
             throw new BusinessException("Fecha de vencimiento inválida (use yyyy-MM-dd)");
     }
 
-    private static PendingPaymentDto Map(PendingPayment p) => new(
+    /// <summary>
+    /// Resuelve la moneda efectiva de un pendiente sin navegación a Wallet.
+    /// Si hay billetera, la moneda debe coincidir con la de ella (y se
+    /// normaliza a la de la billetera); si no, se usa la elegida (default USD).
+    /// </summary>
+    private async Task<string> ResolveCurrencyAsync(string? requested, int? walletId, CancellationToken ct)
+    {
+        if (walletId == null)
+            return string.IsNullOrWhiteSpace(requested) ? "USD" : requested!;
+
+        var wallet = await _db.Wallets.FindAsync(new object?[] { walletId.Value }, ct)
+            ?? throw new BusinessException("Billetera no encontrada");
+
+        if (!string.IsNullOrWhiteSpace(requested) &&
+            !string.Equals(requested, wallet.Currency, StringComparison.OrdinalIgnoreCase))
+            throw new BusinessException(
+                $"La moneda del pendiente ({requested}) no coincide con la de la billetera {wallet.Name} ({wallet.Currency})");
+
+        return wallet.Currency;
+    }
+
+    private async Task<Wallet?> LookupWalletAsync(int? walletId, CancellationToken ct)
+        => walletId is int id ? await _db.Wallets.FindAsync(new object?[] { id }, ct) : null;
+
+    /// <summary>Carga en un solo query las billeteras referenciadas por la página.</summary>
+    private async Task<Dictionary<int, Wallet>> LoadWalletsAsync(IEnumerable<int?> walletIds, CancellationToken ct)
+    {
+        var ids = walletIds.Where(x => x.HasValue).Select(x => x!.Value).Distinct().ToList();
+        if (ids.Count == 0) return new Dictionary<int, Wallet>();
+        var wallets = await _db.Wallets.Where(w => ids.Contains(w.Id)).ToListAsync(ct);
+        return wallets.ToDictionary(w => w.Id);
+    }
+
+    private static Wallet? WalletFor(Dictionary<int, Wallet> wallets, int? walletId)
+        => walletId is int id && wallets.TryGetValue(id, out var w) ? w : null;
+
+    private static PendingPaymentDto Map(PendingPayment p, Wallet? wallet) => new(
         Id: p.Id,
         Name: p.Name,
         Description: p.Description,
@@ -246,6 +305,8 @@ public class PendingPaymentsService
         Category: p.Category?.Name,
         CategoryId: p.CategoryId,
         WalletId: p.WalletId,
+        WalletName: wallet?.Name,
+        WalletCurrency: wallet?.Currency,
         DueDate: p.DueDate,
         IsPaid: p.IsPaid,
         PaidAt: p.PaidAt,

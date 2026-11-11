@@ -185,6 +185,8 @@ export interface PendingPayment {
   category?: string;
   categoryId: number;
   walletId?: number | null;
+  walletName?: string | null;
+  walletCurrency?: string | null;
   dueDate?: string | null; // yyyy-MM-dd en la zona del usuario
   isPaid: boolean;
   paidAt?: string | null;

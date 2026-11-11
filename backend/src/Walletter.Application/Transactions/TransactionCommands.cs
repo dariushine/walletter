@@ -53,6 +53,15 @@ public class ListTransactionsQuery
     public string? From { get; set; }
     public string? To { get; set; }
     public int? WalletId { get; set; }
+
+    /// <summary>Búsqueda de texto libre sobre la descripción (case-insensitive).</summary>
+    public string? Query { get; set; }
+
+    /// <summary>Filtra por id de categoría.</summary>
+    public int? CategoryId { get; set; }
+
+    /// <summary>Filtra por tipo: income | expense.</summary>
+    public string? Type { get; set; }
 }
 
 /// <summary>Resultado de crear una transacción (y su posible fee inline).</summary>

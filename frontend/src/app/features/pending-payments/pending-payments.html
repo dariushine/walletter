@@ -36,14 +36,14 @@
                 </mat-icon>
                 <div class="pending-info">
                   <span class="pending-name">{{ p.name }}</span>
-                  <span class="pending-meta">{{ p.category }} · {{ p.walletId ? 'billetera ' + p.walletId : 'sin billetera' }}</span>
+                  <span class="pending-meta">{{ p.category }} · {{ p.walletName ?? 'sin billetera' }}</span>
                 </div>
                 <span class="pending-amount" [class.income]="p.type === 'income'">
-                  {{ format(p.amount, p.currency) }}
+                  {{ format(p.amount, p.walletCurrency ?? p.currency) }}
                 </span>
               </div>
               @if (p.fee > 0) {
-                <div class="pending-fee">+ comisión {{ format(p.fee, p.currency) }}</div>
+                <div class="pending-fee">+ comisión {{ format(p.fee, p.walletCurrency ?? p.currency) }}</div>
               }
               @if (!p.isPaid) {
                 @if (dueStatus(p); as st) {
